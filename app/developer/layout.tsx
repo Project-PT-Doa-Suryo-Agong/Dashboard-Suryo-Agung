@@ -3,8 +3,17 @@ import Topbar from '@/components/topbar';
 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: 'LayoutDashboard' },
-  { label: 'Master Data', href: '/master-data', icon: 'Database' }, 
-  { label: 'User', href: '/users', icon: 'User'}
+  {
+    label: 'Master Data',
+    href: '/master-data',
+    icon: 'Database',
+    children: [
+      { label: 'Vendor', href: '/master-data/vendor', icon: 'Truck' },
+      { label: 'Produk Induk', href: '/master-data/produk', icon: 'Package' },
+      { label: 'Varian Produk', href: '/master-data/varian', icon: 'Tags' },
+    ],
+  },
+  { label: 'User', href: '/users', icon: 'User' },
 ];
 
 export default function CreativeLayout({

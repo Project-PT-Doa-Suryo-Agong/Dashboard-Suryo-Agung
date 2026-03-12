@@ -14,7 +14,7 @@ const MASTER_DATA_CARDS = [
     bg: 'bg-blue-50',
   },
   {
-    label: 'Produk Induk',
+    label: 'Produk',
     href: '/developer/master-data/produk',
     icon: Package,
     description: 'Manajemen produk utama beserta kategorinya sebelum dibentuk varian.',
@@ -40,17 +40,17 @@ export default function MasterDataPage() {
       {/* Header */}
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-3">
-          <Link href="/developer" className="hover:text-slate-600 transition-colors">Developer</Link>
-          <ChevronRight size={13} className="text-slate-300" />
-          <span className="text-slate-700 font-medium">Master Data</span>
+          <Link href="/developer" className="hover:text-slate-300 text-slate-100 transition-colors">Developer</Link>
+          <ChevronRight size={13} className="text-slate-30" />
+          <span className="text-blue-300 font-medium">Master Data</span>
         </nav>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#BC934B]/10 flex items-center justify-center">
-            <Database size={18} className="text-[#BC934B]" />
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+            <Database size={18} className="text-slate-50" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Master Data Management</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Kelola data referensi inti yang digunakan di seluruh sistem.</p>
+            <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Master Data Management</h2>
+            <p className="text-sm text-slate-300 mt-0.5">Kelola data referensi inti yang digunakan di seluruh sistem.</p>
           </div>
         </div>
       </div>

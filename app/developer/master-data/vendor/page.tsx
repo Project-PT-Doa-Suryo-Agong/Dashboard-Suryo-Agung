@@ -74,19 +74,19 @@ export default function VendorPage() {
       {/* Header */}
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-3">
-          <Link href="/developer" className="hover:text-slate-600 transition-colors">Developer</Link>
-          <ChevronRight size={13} className="text-slate-300" />
-          <Link href="/developer/master-data" className="hover:text-slate-600 transition-colors">Master Data</Link>
-          <ChevronRight size={13} className="text-slate-300" />
-          <span className="text-slate-700 font-medium">Vendor</span>
+          <Link href="/developer" className="hover:text-slate-300 text-slate-100 transition-colors">Developer</Link>
+          <ChevronRight size={13} className="text-slate-30" />
+          <Link href="/developer/master-data" className="hover:text-slate-300 text-slate-100 transition-colors">Master Data</Link>
+          <ChevronRight size={13} className="text-slate-30" />
+          <span className="text-blue-300 font-medium">Vendor</span>
         </nav>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
             <Truck size={18} className="text-blue-500" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Master Data: Vendor</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Kelola data vendor &amp; supplier yang terdaftar di sistem.</p>
+            <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Master Data: Vendor</h2>
+            <p className="text-sm text-slate-200 mt-0.5">Kelola data vendor &amp; supplier yang terdaftar di sistem.</p>
           </div>
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function VendorPage() {
       {/* Form Card */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-6">
-          <PlusCircle size={18} className="text-[#BC934B]" />
+          <PlusCircle size={18} className="text-slate-400" />
           <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
             {editingId ? 'Edit Vendor' : 'Tambah Vendor Baru'}
           </h3>
@@ -119,7 +119,7 @@ export default function VendorPage() {
               onChange={(e) => setNamaVendor(e.target.value)}
               required
               placeholder="contoh: PT. Sinar Abadi Tekstil"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-[#BC934B]/20 focus:border-[#BC934B] text-sm outline-none transition-all"
+              className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-500 text-sm outline-none transition-all"
             />
           </div>
 
@@ -133,14 +133,14 @@ export default function VendorPage() {
               onChange={(e) => setKontak(e.target.value)}
               required
               placeholder="contoh: 0812-3456-7890 atau email@vendor.com"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-[#BC934B]/20 focus:border-[#BC934B] text-sm outline-none transition-all"
+              className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-500 text-sm outline-none transition-all"
             />
           </div>
 
           <div className="md:col-span-2 flex justify-end">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 bg-[#BC934B] hover:bg-[#a87e3e] text-white font-bold py-3 px-8 rounded-xl shadow-md shadow-yellow-100 transition-all"
+              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow-md shadow-green-200 transition-all"
             >
               <Save size={17} />
               {editingId ? 'Simpan Perubahan' : 'Save Vendor'}
@@ -166,7 +166,7 @@ export default function VendorPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari nama vendor atau kontak..."
-              className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-[#BC934B]/20 focus:border-[#BC934B] transition-all"
+              className="w-full pl-9 pr-4 py-2.5 bg-slate-200 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-slate-200/20 focus:border-slate-500 transition-all"
             />
           </div>
         </div>

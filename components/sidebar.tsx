@@ -13,7 +13,7 @@ import {
   Receipt, ShieldCheck, Factory,
   Headphones,
   Database, UserCog, Code2,
-  LogOut, User,
+  LogOut, User, Tags, ChevronDown,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -25,13 +25,14 @@ const ICONS: Record<string, LucideIcon> = {
   ClipboardList, Package, RotateCcw, Truck,
   Receipt, ShieldCheck, Factory,
   Headphones,
-  Database, UserCog, Code2, User, 
+  Database, UserCog, Code2, User, Tags,
 };
 
 export interface NavItem {
   label: string;
   href: string;
   icon: string;
+  children?: NavItem[];
 }
 
 export interface SidebarFooterAction {
@@ -85,20 +86,57 @@ export default function Sidebar({
           {/* Navigation */}
           <nav className="space-y-1">
             {navItems.map((item) => {
+              const isGroupOpen =
+                pathname === item.href || pathname.startsWith(item.href + '/');
               const isActive = item.href === activeHref;
+              const hasChildren = !!item.children?.length;
+
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
-                    isActive
-                      ? 'text-white bg-primary'
-                      : 'text-slate-400 hover:bg-slate-700 hover:text-white'
-                  }`}
-                >
-                  <Icon name={item.icon} size={18} />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </Link>
+                <div key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
+                      isActive || (hasChildren && isGroupOpen)
+                        ? 'text-white bg-primary'
+                        : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                    }`}
+                  >
+                    <Icon name={item.icon} size={18} />
+                    <span className="text-sm font-medium flex-1">{item.label}</span>
+                    {hasChildren && (
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform duration-200 ${
+                          isGroupOpen ? 'rotate-0' : '-rotate-90'
+                        }`}
+                      />
+                    )}
+                  </Link>
+
+                  {hasChildren && isGroupOpen && (
+                    <div className="mt-1 ml-2 pl-3 border-l border-slate-600 space-y-0.5">
+                      {item.children!.map((child) => {
+                        const isChildActive =
+                          pathname === child.href ||
+                          pathname.startsWith(child.href + '/');
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-colors ${
+                              isChildActive
+                                ? 'text-white bg-white/15'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                            }`}
+                          >
+                            <Icon name={child.icon} size={14} />
+                            <span className="text-xs font-medium">{child.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
