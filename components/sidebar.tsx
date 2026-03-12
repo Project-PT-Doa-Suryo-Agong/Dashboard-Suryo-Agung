@@ -13,7 +13,7 @@ import {
   Receipt, ShieldCheck, Factory,
   Headphones,
   Database, UserCog, Code2,
-  LogOut, User,
+  LogOut, User, Tags, ChevronDown,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -25,13 +25,14 @@ const ICONS: Record<string, LucideIcon> = {
   ClipboardList, Package, RotateCcw, Truck,
   Receipt, ShieldCheck, Factory,
   Headphones,
-  Database, UserCog, Code2, User, 
+  Database, UserCog, Code2, User, Tags,
 };
 
 export interface NavItem {
   label: string;
   href: string;
   icon: string;
+  children?: NavItem[];
 }
 
 export interface SidebarFooterAction {
@@ -46,6 +47,8 @@ export interface SidebarProps {
   logoIcon?: string;
   navItems: NavItem[];
   footerAction?: SidebarFooterAction;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 function Icon({ name, size }: { name: string; size: number }) {
@@ -60,6 +63,8 @@ export default function Sidebar({
   logoIcon,
   navItems,
   footerAction,
+  isMobileOpen = false,
+  onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -75,43 +80,89 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="w-64 bg-slate-800 text-slate-100 flex flex-col shrink-0 h-screen">
-        <div className="p-6">
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 md:w-72 bg-slate-800 text-slate-100 flex flex-col h-screen transform transition-transform duration-300 md:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="p-4 md:p-6">
           {/* Logo & Title */}
-          <div className="flex items-center gap-3 mb-8">
-            <Image src="/logo.png" alt="logo" width={100} height={28} className="h-7 w-auto" />
+          <div className="mb-4 flex flex-col items-start gap-2 md:mb-5">
+            <Image src="/logo.png" alt="logo" width={100} height={28} className="h-9 w-auto md:h-10" />
+            <p className="text-xs text-slate-400">{subtitle}</p>
           </div>
 
           {/* Navigation */}
           <nav className="space-y-1">
             {navItems.map((item) => {
+              const isGroupOpen =
+                pathname === item.href || pathname.startsWith(item.href + '/');
               const isActive = item.href === activeHref;
+              const hasChildren = !!item.children?.length;
+
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
-                    isActive
-                      ? 'text-white bg-primary'
-                      : 'text-slate-400 hover:bg-slate-700 hover:text-white'
-                  }`}
-                >
-                  <Icon name={item.icon} size={18} />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </Link>
+                <div key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => {
+                      if (onCloseMobile) onCloseMobile();
+                    }}
+                    className={`flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-lg md:rounded-xl transition-colors min-w-0 ${
+                      isActive || (hasChildren && isGroupOpen)
+                        ? 'text-white bg-primary'
+                        : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                    }`}
+                  >
+                    <Icon name={item.icon} size={16} />
+                    <span className="text-xs md:text-sm font-medium flex-1 truncate">{item.label}</span>
+                    {hasChildren && (
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform duration-200 ${
+                          isGroupOpen ? 'rotate-0' : '-rotate-90'
+                        }`}
+                      />
+                    )}
+                  </Link>
+
+                  {hasChildren && isGroupOpen && (
+                    <div className="mt-1 ml-2 pl-3 border-l border-slate-600 space-y-0.5">
+                      {item.children!.map((child) => {
+                        const isChildActive =
+                          pathname === child.href ||
+                          pathname.startsWith(child.href + '/');
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => {
+                              if (onCloseMobile) onCloseMobile();
+                            }}
+                            className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-md md:rounded-lg transition-colors min-w-0 ${
+                              isChildActive
+                                ? 'text-white bg-white/15'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                            }`}
+                          >
+                            <Icon name={child.icon} size={12} />
+                            <span className="text-[10px] md:text-xs font-medium truncate">{child.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
         </div>
 
         {/* Logout Button */}
-        <div className="mt-auto p-6">
+        <div className="mt-auto p-4 md:p-6">
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 justify-center rounded-xl text-white bg-red-500 hover:bg-red-700 hover:text-red-350 transition-colors"
+            className="w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 justify-center rounded-lg md:rounded-xl text-white bg-red-500 hover:bg-red-700 hover:text-red-350 transition-colors"
           >
-            <LogOut size={18} />
-            <span className="text-sm text-white font-medium">Logout</span>
+            <LogOut size={16} />
+            <span className="text-xs md:text-sm text-white font-medium">Logout</span>
           </button>
         </div>
       </aside>
@@ -125,15 +176,15 @@ export default function Sidebar({
             onClick={() => setShowLogoutConfirm(false)}
           />
           {/* Dialog */}
-          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-80 flex flex-col items-center gap-4">
+          <div className="relative bg-white rounded-2xl shadow-2xl p-4 md:p-6 w-72 md:w-80 flex flex-col items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <LogOut size={22} className="text-red-500" />
+              <LogOut size={20} className="text-red-500" />
             </div>
             <div className="text-center">
-              <h3 className="text-base font-bold text-slate-900">Konfirmasi Logout</h3>
-              <p className="text-sm text-slate-500 mt-1">Apakah kamu yakin ingin keluar dari sesi ini?</p>
+              <h3 className="text-sm md:text-base font-bold text-slate-900">Konfirmasi Logout</h3>
+              <p className="text-xs md:text-sm text-slate-500 mt-1">Apakah kamu yakin ingin keluar dari sesi ini?</p>
             </div>
-            <div className="flex gap-3 w-full">
+            <div className="flex gap-2 md:gap-3 w-full">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"

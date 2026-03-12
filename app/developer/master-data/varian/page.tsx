@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
-import { Tag, Save, Search, Edit, Trash2, ChevronDown, PackageOpen } from 'lucide-react';
+import Link from 'next/link';
+import { Tag, Save, Search, Edit, Trash2, ChevronDown, PackageOpen, ChevronRight } from 'lucide-react';
 
 // Simulasi data produk induk (nantinya dari Supabase core.m_produk)
 const PRODUK_LIST = [
@@ -103,16 +104,30 @@ export default function VarianPage() {
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
 
-      {/* ── PAGE HEADER ── */}
+      {/* â”€â”€ PAGE HEADER â”€â”€ */}
       <div>
-        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Master Data: Varian Produk</h2>
-        <p className="text-sm text-slate-500 mt-1">Kelola data varian SKU yang terhubung ke produk induk.</p>
+        <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-3">
+          <Link href="/developer" className="hover:text-slate-300 text-slate-100 transition-colors">Developer</Link>
+          <ChevronRight size={13} className="text-slate-30" />
+          <Link href="/developer/master-data" className="hover:text-slate-300 text-slate-100 transition-colors">Master Data</Link>
+          <ChevronRight size={13} className="text-slate-30" />
+          <span className="text-orange-300 font-medium">Varian</span>
+        </nav>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center">
+            <Tag size={18} className="text-orange-500" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Master Data: Varian Produk</h2>
+            <p className="text-sm text-slate-200 mt-0.5">Kelola data varian SKU yang terhubung ke produk induk.</p>
+          </div>
+        </div>
       </div>
 
-      {/* ── FORM CARD ── */}
+      {/* â”€â”€ FORM CARD â”€â”€ */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-6">
-          <Tag size={18} className="text-[#BC934B]" />
+          <Tag size={18} className="text-orange-500" />
           <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
             {editingId ? 'Edit Varian' : 'Tambah Varian Baru'}
           </h3>
@@ -128,22 +143,16 @@ export default function VarianPage() {
           {/* Produk Induk */}
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
-              Produk Induk <span className="text-red-400">*</span>
+              Nama Varian <span className="text-red-400">*</span>
             </label>
-            <div className="relative">
-              <select
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
-                required
-                className="w-full appearance-none px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-[#BC934B]/30 focus:border-[#BC934B] text-sm outline-none transition-all cursor-pointer"
-              >
-                <option value="" disabled>— Pilih Produk Induk —</option>
-                {PRODUK_LIST.map((p) => (
-                  <option key={p.id} value={p.id}>{p.nama_produk}</option>
-                ))}
-              </select>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
-            </div>
+            <input
+              type="text"
+              value={namaVarian}
+              onChange={(e) => setNamaVarian(e.target.value)}
+              required
+              placeholder="contoh: Kaos Polos"
+              className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all"
+            />
           </div>
 
           {/* Nama Varian */}
@@ -157,7 +166,7 @@ export default function VarianPage() {
               onChange={(e) => setNamaVarian(e.target.value)}
               required
               placeholder="contoh: Merah - XL"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-[#BC934B]/30 focus:border-[#BC934B] text-sm outline-none transition-all"
+              className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all"
             />
           </div>
 
@@ -172,7 +181,7 @@ export default function VarianPage() {
               onChange={(e) => setSku(e.target.value)}
               required
               placeholder="contoh: TS-MRH-XL"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-[#BC934B]/30 focus:border-[#BC934B] text-sm outline-none transition-all font-mono"
+              className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all font-mono"
             />
           </div>
 
@@ -192,7 +201,7 @@ export default function VarianPage() {
                 onChange={(e) => setHarga(e.target.value)}
                 required
                 placeholder="85000"
-                className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-r-xl focus:ring-2 focus:ring-[#BC934B]/30 focus:border-[#BC934B] text-sm outline-none transition-all"
+                className="flex-1 px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-r-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all"
               />
             </div>
           </div>
@@ -201,7 +210,7 @@ export default function VarianPage() {
           <div className="md:col-span-2 flex justify-end">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 bg-[#BC934B] hover:bg-[#a87e3e] text-white font-bold py-3 px-8 rounded-xl shadow-md shadow-yellow-100 transition-all"
+              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow-md shadow-green-100 transition-all"
             >
               <Save size={17} />
               {editingId ? 'Simpan Perubahan' : 'Tambah Varian'}
@@ -211,7 +220,7 @@ export default function VarianPage() {
         </form>
       </section>
 
-      {/* ── TABLE CARD ── */}
+      {/* â”€â”€ TABLE CARD â”€â”€ */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 
         {/* Table Header Bar */}
@@ -230,7 +239,7 @@ export default function VarianPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari SKU, varian, produk..."
-              className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-[#BC934B]/30 focus:border-[#BC934B] transition-all"
+              className="w-full pl-9 pr-4 py-2.5 bg-slate-200 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 transition-all"
             />
           </div>
         </div>
@@ -240,11 +249,11 @@ export default function VarianPage() {
           <table className="w-full text-left">
             <thead className="bg-slate-50/80">
               <tr>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">SKU</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Produk</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Varian</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Harga</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">SKU</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Nama Produk</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Nama Varian</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Harga</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -265,7 +274,7 @@ export default function VarianPage() {
                       <div className="inline-flex items-center gap-1">
                         <button
                           onClick={() => handleEdit(v)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-[#BC934B] hover:bg-yellow-50 transition-colors"
+                          className="p-2 rounded-lg text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-colors"
                           title="Edit Varian"
                         >
                           <Edit size={15} />
@@ -305,3 +314,4 @@ export default function VarianPage() {
     </div>
   );
 }
+

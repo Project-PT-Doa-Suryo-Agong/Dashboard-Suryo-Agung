@@ -1,88 +1,87 @@
-import React from 'react';
 import { TrendingUp, TrendingDown, Banknote, Users, FileText, Tv2, Clapperboard, Camera, Play } from 'lucide-react';
 
 export default function CreativeDashboard() {
   return (
-    <div className="p-8 space-y-8">
+    <div className="mx-auto w-full max-w-7xl space-y-3 p-3 md:space-y-4 md:p-4 lg:space-y-8 lg:p-8">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-2 md:gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
         {/* Card 1 */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium">Total Sales Revenue</p>
-            <h3 className="text-2xl font-bold text-slate-900 mt-1">$128,430</h3>
-            <div className="flex items-center text-green-500  gap-1 mt-2 text-success">
-              <TrendingUp size={16} />
-              <span className="text-xs font-bold">+12.5%</span>
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4 lg:p-6">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500 md:text-sm lg:text-base">Total Sales Revenue</p>
+            <h3 className="mt-1 text-lg font-bold text-slate-900 md:text-2xl lg:text-3xl">$128,430</h3>
+            <div className="mt-2 flex items-center gap-1 text-green-500 text-success">
+              <TrendingUp className="h-4 w-4 flex-shrink-0 md:h-5 md:w-5" />
+              <span className="text-xs font-bold md:text-sm lg:text-base">+12.5%</span>
             </div>
           </div>
-          <div className="bg-primary/10 p-3 rounded-lg text-slate-600">
-            <Banknote size={24} />
+          <div className="rounded-lg bg-primary/10 p-2 text-slate-600 md:p-3">
+            <Banknote className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
           </div>
         </div>
 
         {/* Card 2 */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium">Active Affiliators</p>
-            <h3 className="text-2xl font-bold text-slate-900 mt-1">1,240</h3>
-            <div className="flex items-center text-green-500 gap-1 mt-2 text-success">
-              <TrendingUp size={16} />
-              <span className="text-xs font-bold">+5.2%</span>
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4 lg:p-6">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500 md:text-sm lg:text-base">Active Affiliators</p>
+            <h3 className="mt-1 text-lg font-bold text-slate-900 md:text-2xl lg:text-3xl">1,240</h3>
+            <div className="mt-2 flex items-center gap-1 text-green-500 text-success">
+              <TrendingUp className="h-4 w-4 flex-shrink-0 md:h-5 md:w-5" />
+              <span className="text-xs font-bold md:text-sm lg:text-base">+5.2%</span>
             </div>
           </div>
-          <div className="bg-primary/10 p-3 rounded-lg text-slate-600">
-            <Users size={24} />
+          <div className="rounded-lg bg-primary/10 p-2 text-slate-600 md:p-3">
+            <Users className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
           </div>
         </div>
 
         {/* Card 3 */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium">Total Content Planned</p>
-            <h3 className="text-2xl font-bold text-slate-900 mt-1">84</h3>
-            <div className="flex items-center gap-1 mt-2 text-[#F0AD4E]">
-              <TrendingDown size={16} />
-              <span className="text-xs font-bold">-2.1%</span>
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4 lg:p-6">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500 md:text-sm lg:text-base">Total Content Planned</p>
+            <h3 className="mt-1 text-lg font-bold text-slate-900 md:text-2xl lg:text-3xl">84</h3>
+            <div className="mt-2 flex items-center gap-1 text-[#F0AD4E]">
+              <TrendingDown className="h-4 w-4 flex-shrink-0 md:h-5 md:w-5" />
+              <span className="text-xs font-bold md:text-sm lg:text-base">-2.1%</span>
             </div>
           </div>
-          <div className="bg-primary/10 p-3 rounded-lg text-slate-600">
-            <FileText size={24} />
+          <div className="rounded-lg bg-primary/10 p-2 text-slate-600 md:p-3">
+            <FileText className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
           </div>
         </div>
 
         {/* Card 4 */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium">Live Stream Revenue</p>
-            <h3 className="text-2xl font-bold text-slate-900 mt-1">$42,150</h3>
-            <div className="flex items-center text-green-500  gap-1 mt-2 text-success">
-              <TrendingUp size={16} />
-              <span className="text-xs font-bold">+8.4%</span>
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4 lg:p-6">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500 md:text-sm lg:text-base">Live Stream Revenue</p>
+            <h3 className="mt-1 text-lg font-bold text-slate-900 md:text-2xl lg:text-3xl">$42,150</h3>
+            <div className="mt-2 flex items-center gap-1 text-green-500 text-success">
+              <TrendingUp className="h-4 w-4 flex-shrink-0 md:h-5 md:w-5" />
+              <span className="text-xs font-bold md:text-sm lg:text-base">+8.4%</span>
             </div>
           </div>
-          <div className="bg-primary/10 p-3 rounded-lg text-slate-600">
-            <Tv2 size={24} />
+          <div className="rounded-lg bg-primary/10 p-2 text-slate-600 md:p-3">
+            <Tv2 className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
           </div>
         </div>
       </div>
 
       {/* Middle Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-2 md:gap-3 lg:grid-cols-3 lg:gap-4">
         
         {/* Area Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Live Performance Revenue</h3>
-              <p className="text-sm text-slate-500">Revenue growth tracked over the last 30 days</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm lg:col-span-2 md:p-4 lg:p-6">
+          <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center md:mb-6 md:gap-4">
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-900 md:text-base lg:text-lg">Live Performance Revenue</h3>
+              <p className="text-xs text-slate-500 md:text-sm lg:text-base">Revenue growth tracked over the last 30 days</p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-slate-900">$42,150</span>
-              <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-[10px] font-bold">LIVE</span>
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <span className="text-lg font-bold text-slate-900 md:text-2xl lg:text-3xl">$42,150</span>
+              <span className="whitespace-nowrap rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-600 md:text-xs">LIVE</span>
             </div>
           </div>
-          <div className="h-64 w-full">
+          <div className="h-48 w-full md:h-56 lg:h-64">
             <svg className="w-full h-full" viewBox="0 0 500 200">
               <defs>
                 <linearGradient id="chart-poly" x1="0" x2="0" y1="0" y2="1">
@@ -104,70 +103,70 @@ export default function CreativeDashboard() {
         </div>
 
         {/* Content Planner List */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-slate-900">Content Planner</h3>
-            <button className="text-slate-500 text-sm font-bold hover:underline">View All</button>
+        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-4 lg:p-6">
+          <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center md:mb-6">
+            <h3 className="text-sm font-bold text-slate-900 md:text-base lg:text-lg">Content Planner</h3>
+            <button className="text-xs font-bold text-slate-500 hover:underline md:text-sm lg:text-base">View All</button>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4 lg:space-y-6">
             {/* List Items */}
-            <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-              <div className="flex-1">
-                <p className="text-sm font-bold text-slate-900">TikTok Promo - Fall Gear</p>
-                <p className="text-xs text-slate-500">Added Oct 12, 2026</p>
+            <div className="flex items-center gap-3 rounded-xl border border-transparent p-3 transition-colors hover:border-slate-100 hover:bg-slate-50 md:gap-4 md:p-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate whitespace-nowrap text-sm font-bold text-slate-900 md:text-base lg:text-lg">TikTok Promo - Fall Gear</p>
+                <p className="truncate whitespace-nowrap text-xs text-slate-500 md:text-sm lg:text-base">Added Oct 12, 2026</p>
               </div>
-              <div className="px-2 py-1 rounded bg-slate-100 text-[10px] font-bold text-slate-500 uppercase">TikTok</div>
+              <div className="whitespace-nowrap rounded bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-500 md:text-xs">TikTok</div>
             </div>
             
-            <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-              <div className="flex-1">
-                <p className="text-sm font-bold text-slate-900">IG Reels - Workflow</p>
-                <p className="text-xs text-slate-500">Added Oct 12, 2026</p>
+            <div className="flex items-center gap-3 rounded-xl border border-transparent p-3 transition-colors hover:border-slate-100 hover:bg-slate-50 md:gap-4 md:p-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate whitespace-nowrap text-sm font-bold text-slate-900 md:text-base lg:text-lg">IG Reels - Workflow</p>
+                <p className="truncate whitespace-nowrap text-xs text-slate-500 md:text-sm lg:text-base">Added Oct 12, 2026</p>
               </div>
-              <div className="px-2 py-1 rounded bg-slate-100 text-[10px] font-bold text-slate-500 uppercase">IG</div>
+              <div className="whitespace-nowrap rounded bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-500 md:text-xs">IG</div>
             </div>
             
-            <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-              <div className="flex-1">
-                <p className="text-sm font-bold text-slate-900">YouTube Shorts Review</p>
-                <p className="text-xs text-slate-500">Added Oct 11, 2026</p>
+            <div className="flex items-center gap-3 rounded-xl border border-transparent p-3 transition-colors hover:border-slate-100 hover:bg-slate-50 md:gap-4 md:p-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate whitespace-nowrap text-sm font-bold text-slate-900 md:text-base lg:text-lg">YouTube Shorts Review</p>
+                <p className="truncate whitespace-nowrap text-xs text-slate-500 md:text-sm lg:text-base">Added Oct 11, 2026</p>
               </div>
-              <div className="px-2 py-1 rounded bg-slate-100 text-[10px] font-bold text-slate-500 uppercase">YT</div>
+              <div className="whitespace-nowrap rounded bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-500 md:text-xs">YT</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Recent Affiliate Sales Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900">Recent Affiliate Sales</h3>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 p-3 md:p-4 lg:p-6">
+          <h3 className="text-sm font-bold text-slate-900 md:text-base lg:text-lg">Recent Affiliate Sales</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-full text-left">
             <thead>
-              <tr className="bg-slate-50/80 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-6 py-4">Order ID</th>
-                <th className="px-6 py-4">Product Variant</th>
-                <th className="px-6 py-4">Affiliator Name</th>
-                <th className="px-6 py-4">Platform</th>
-                <th className="px-6 py-4">Quantity</th>
-                <th className="px-6 py-4">Total Price</th>
+              <tr className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:text-xs">
+                <th className="whitespace-nowrap px-3 py-3 md:px-4 md:py-4 lg:px-6">Order ID</th>
+                <th className="whitespace-nowrap px-3 py-3 md:px-4 md:py-4 lg:px-6">Product Variant</th>
+                <th className="whitespace-nowrap px-3 py-3 md:px-4 md:py-4 lg:px-6">Affiliator Name</th>
+                <th className="whitespace-nowrap px-3 py-3 md:px-4 md:py-4 lg:px-6">Platform</th>
+                <th className="whitespace-nowrap px-3 py-3 md:px-4 md:py-4 lg:px-6">Quantity</th>
+                <th className="whitespace-nowrap px-3 py-3 md:px-4 md:py-4 lg:px-6">Total Price</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4 text-sm font-medium text-slate-700">#ORD-9021</td>
-                <td className="px-6 py-4 text-sm text-slate-700">Wireless Headphones (Onyx)</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-slate-200 bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDUmYFCQnZT7QcaqOs7wdMR5ZQhH_igdQSvwR_-uvUBI0MxM6rJexGzclVxc23dLQSvjHNfWNQlgrlk6r9IaXPvyNG4y_BJSiFnv8cMt4eAqc7wJniy_fopvm9loXesh8Nv1Ab99wpMXLu5fjncQ675MviXyDCUNWTyGzKDBha1unpsa6J1fmcfenayXFmUyEnDV6UAlxcVIk4lKJfgSa4i_EzqXmNCj8rem4Gox0dpoEvM3cqjD53C1Xon5Ydk0g_X_JuTRMSfdQI')" }}></div>
-                    <span className="text-sm text-slate-700">Sarah Jenkins</span>
+                <td className="whitespace-nowrap px-3 py-3 text-xs font-medium text-slate-700 md:px-4 md:py-4 md:text-sm lg:px-6 lg:text-base">#ORD-9021</td>
+                <td className="whitespace-nowrap px-3 py-3 text-xs text-slate-700 md:px-4 md:py-4 md:text-sm lg:px-6 lg:text-base">Wireless Headphones (Onyx)</td>
+                <td className="px-3 py-3 md:px-4 md:py-4 lg:px-6">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="h-7 w-7 flex-shrink-0 rounded-full bg-slate-200 bg-cover bg-center md:h-8 md:w-8" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDUmYFCQnZT7QcaqOs7wdMR5ZQhH_igdQSvwR_-uvUBI0MxM6rJexGzclVxc23dLQSvjHNfWNQlgrlk6r9IaXPvyNG4y_BJSiFnv8cMt4eAqc7wJniy_fopvm9loXesh8Nv1Ab99wpMXLu5fjncQ675MviXyDCUNWTyGzKDBha1unpsa6J1fmcfenayXFmUyEnDV6UAlxcVIk4lKJfgSa4i_EzqXmNCj8rem4Gox0dpoEvM3cqjD53C1Xon5Ydk0g_X_JuTRMSfdQI')" }}></div>
+                    <span className="whitespace-nowrap text-xs text-slate-700 md:text-sm lg:text-base">Sarah Jenkins</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600">TikTok Shop</td>
-                <td className="px-6 py-4 text-sm text-slate-600">2</td>
-                <td className="px-6 py-4 text-sm font-bold text-slate-900">$259.98</td>
+                <td className="whitespace-nowrap px-3 py-3 text-xs text-slate-600 md:px-4 md:py-4 md:text-sm lg:px-6 lg:text-base">TikTok Shop</td>
+                <td className="whitespace-nowrap px-3 py-3 text-xs text-slate-600 md:px-4 md:py-4 md:text-sm lg:px-6 lg:text-base">2</td>
+                <td className="whitespace-nowrap px-3 py-3 text-xs font-bold text-slate-900 md:px-4 md:py-4 md:text-sm lg:px-6 lg:text-base">$259.98</td>
               </tr>
               {/* Tambahkan baris tabel lainnya sesuai kebutuhan */}
             </tbody>
