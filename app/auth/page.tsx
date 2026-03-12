@@ -1,112 +1,115 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import Image from "next/image";
 import {
-  Mail,
-  Lock,
-  TriangleAlert,
+  ShieldAlert,
   LogIn,
-  ShieldCheck,
-  ArrowLeft,
+  Users
 } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // State untuk menyimpan role yang dipilih. Default arahkan ke Creative.
+  const [selectedRole, setSelectedRole] = useState("creative");
+
+  // Daftar role yang sesuai dengan subdomain di proxy.ts
+  const roles = [
+    { id: "developer", name: "Developer" },
+    { id: "management", name: "Management" },
+    { id: "finance", name: "Finance" },
+    { id: "hr", name: "Human Resources (HR)" },
+    { id: "produksi", name: "Produksi" },
+    { id: "logistik", name: "Logistik" },
+    { id: "creative", name: "Creative & Sales" },
+    { id: "support", name: "Office Support" },
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt with:", { email, password });
-    // Di sini nanti tempat logika redirect berdasarkan role
+    // Redirect langsung ke subdomain terpilih
+    const targetUrl = `http://${selectedRole}.localhost:3000`;
+    console.log(`Redirecting to: ${targetUrl}`);
+    window.location.href = targetUrl;
   };
 
   return (
-    <div className="bg-background-light dark:bg-[#999999] font-display min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
+    <div className="bg-background-light dark:bg-[#999999] font-display flex min-h-screen flex-col items-center justify-center p-3 transition-colors duration-300 md:p-4 lg:p-6">
+      
+      {/* Dev Warning Badge di luar card */}
+      <div className="mb-4 flex flex-col items-center gap-1 rounded-full bg-yellow-100 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-widest text-yellow-800 shadow-sm sm:flex-row sm:gap-2 md:mb-6 md:px-4 md:text-xs lg:text-sm">
+        <ShieldAlert className="h-4 w-4 shrink-0 md:h-5 md:w-5" />
+        <span>Development Mode - Mock Auth</span>
+      </div>
+
       {/* Main Login Card Container */}
-      <div className="w-full max-w-[440px] bg-white dark:bg-[#333333] rounded-xl shadow-2xl overflow-hidden flex flex-col">
+      <div className="flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-[#333333]">
+        
         {/* Header Image/Logo Section */}
-        <div className="pt-3 pb-3 px-8 flex flex-col items-center">
-          <div className="flex items-center justify-center mb-6">
+        <div className="flex flex-col items-center px-4 pb-3 pt-6 md:px-6 md:pt-8 lg:px-8">
+          <div className="mb-4 flex items-center justify-center md:mb-6">
             <Image
               src="/logo.png"
               alt="NexusCore Logo"
               width={160}
               height={48}
-              className="h-12 w-auto"
+              className="h-10 w-auto md:h-12 lg:h-14"
             />
           </div>
-          <h1 className="text-slate-900 dark:text-slate-100 text-2xl font-bold tracking-tight text-center">
-            Welcome Back
+          <h1 className="text-center text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl lg:text-3xl">
+            Simulate Login
           </h1>
-          <p className="text-slate-500 dark:text-[#999999] text-sm font-normal text-center mt-2 px-4">
-            Please enter your credentials to access your cluster
+          <p className="mt-2 px-2 text-center text-xs font-normal text-slate-500 dark:text-[#999999] md:px-4 md:text-sm lg:text-base">
+            Select a role below to access the respective division dashboard.
           </p>
         </div>
 
         {/* Login Form */}
-        <div className="px-8 pb-10">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Field */}
+        <div className="mt-3 px-4 pb-6 md:mt-4 md:px-6 md:pb-8 lg:px-8 lg:pb-10">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 lg:space-y-8">
+            
+            {/* Role Dropdown Field */}
             <div className="flex flex-col gap-2">
-              <label className="text-slate-700 dark:text-slate-300 text-sm font-semibold">
-                Email Address
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 md:text-base lg:text-lg">
+                <Users className="h-4 w-4 shrink-0 text-primary md:h-5 md:w-5" />
+                Select Your Role
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
+              <div className="relative min-w-0">
+                <select
                   required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#666666] text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400"
-                  placeholder="name@company.com"
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center">
-                <label className="text-slate-700 dark:text-slate-300 text-sm font-semibold">
-                  Password
-                </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-primary hover:text-primary/80 text-xs font-semibold transition-colors"
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-900 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-[#666666] dark:text-slate-100 md:px-4 md:text-sm lg:text-base"
                 >
-                  Forgot Password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
-                  required
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#666666] text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400"
-                  placeholder="••••••••"
-                />
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+                {/* Custom Dropdown Arrow */}
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center md:right-4">
+                  <svg className="h-4 w-4 text-slate-400 md:h-5 md:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
 
-            {/* Sign In Button */}
+            {/* Enter Dashboard Button */}
             <button
               type="submit"
-              className="w-full bg-slate-800    hover:bg-primary/90 text-white font-bold py-3.5 rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 mt-2"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#BC934B] py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-[#BC934B]/20 transition-all hover:bg-[#BC934B]/90 md:py-3.5 md:text-sm lg:text-base"
             >
-              <span>Sign In</span>
-              <LogIn className="w-5 h-5" />
+              <span>Enter Dashboard</span>
+              <LogIn className="h-4 w-4 shrink-0 md:h-5 md:w-5" />
             </button>
           </form>
         </div>
 
-        {/* Optional Bottom Bar */}
-        <div className="bg-slate-50 dark:bg-slate-800/50 py-4 px-8 border-t border-slate-100 dark:border-slate-800 text-center">
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold">
-            Enterprise Grade Infrastructure
+        {/* Bottom Bar */}
+        <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 text-center dark:border-slate-800 dark:bg-slate-800/50 md:px-6 md:py-4 lg:px-8">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 md:text-xs lg:text-sm">
+            Suryo Agong Enterprise Infrastructure
           </p>
         </div>
       </div>

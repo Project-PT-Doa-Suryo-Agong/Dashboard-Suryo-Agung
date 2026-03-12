@@ -1,154 +1,393 @@
 "use client";
 
-import React, { useState } from 'react';
-import { PlusCircle, ChevronDown, Save, List, Trash2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import {
+  ChevronDown,
+  List,
+  Pencil,
+  PlusCircle,
+  Save,
+  Trash2,
+  TriangleAlert,
+  X,
+} from 'lucide-react';
+
+type Platform = 'TikTok' | 'Instagram' | 'YouTube Shorts' | 'LinkedIn' | 'Twitter / X';
+
+type ContentItem = {
+  id: string;
+  title: string;
+  platform: Platform;
+  createdAt: string;
+};
+
+const PLATFORM_OPTIONS: Platform[] = ['TikTok', 'Instagram', 'YouTube Shorts', 'LinkedIn', 'Twitter / X'];
+
+const INITIAL_CONTENT: ContentItem[] = [
+  {
+    id: '#CT-8892',
+    title: 'Summer Beach Collection Reel',
+    platform: 'Instagram',
+    createdAt: '2026-10-24T09:00:00Z',
+  },
+  {
+    id: '#CT-8893',
+    title: 'Product Launch BTS',
+    platform: 'TikTok',
+    createdAt: '2026-10-25T13:30:00Z',
+  },
+];
+
+const PLATFORM_BADGE: Record<Platform, string> = {
+  TikTok: 'bg-slate-100 text-slate-700 before:bg-slate-900',
+  Instagram: 'bg-pink-50 text-pink-700 before:bg-pink-500',
+  'YouTube Shorts': 'bg-red-50 text-red-700 before:bg-red-500',
+  LinkedIn: 'bg-sky-50 text-sky-700 before:bg-sky-500',
+  'Twitter / X': 'bg-zinc-100 text-zinc-700 before:bg-zinc-900',
+};
+
+type ContentFormProps = {
+  title: string;
+  platform: string;
+  onTitleChange: (value: string) => void;
+  onPlatformChange: (value: Platform) => void;
+  submitLabel: string;
+  submitIcon?: React.ReactNode;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onCancel?: () => void;
+};
+
+function ContentForm({
+  title,
+  platform,
+  onTitleChange,
+  onPlatformChange,
+  submitLabel,
+  submitIcon,
+  onSubmit,
+  onCancel,
+}: ContentFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">
+            Content Title
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(event) => onTitleChange(event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+            placeholder="e.g., Summer Promo Video"
+            required
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">
+            Platform
+          </label>
+          <div className="relative">
+            <select
+              value={platform}
+              onChange={(event) => onPlatformChange(event.target.value as Platform)}
+              className="w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              required
+            >
+              <option value="" disabled>
+                Select Platform
+              </option>
+              {PLATFORM_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-end">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            Batal
+          </button>
+        )}
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BC934B] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#a88342]"
+        >
+          {submitIcon}
+          {submitLabel}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 export default function ContentPlannerPage() {
-  // State untuk form input (Persiapan untuk Insert ke Database nanti)
+  const [contents, setContents] = useState<ContentItem[]>(INITIAL_CONTENT);
   const [title, setTitle] = useState('');
-  const [platform, setPlatform] = useState('');
+  const [platform, setPlatform] = useState<Platform | ''>('');
 
-  const handleSaveContent = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Menyimpan data:", { title, platform });
-    // Logika Supabase INSERT akan masuk ke sini
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState<ContentItem | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const totalEntriesLabel = useMemo(() => `${contents.length} entries`, [contents.length]);
+
+  const resetCreateForm = () => {
+    setTitle('');
+    setPlatform('');
+  };
+
+  const handleSaveContent = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!title.trim() || !platform) return;
+
+    const newContent: ContentItem = {
+      id: `#CT-${Math.floor(1000 + Math.random() * 9000)}`,
+      title: title.trim(),
+      platform,
+      createdAt: new Date().toISOString(),
+    };
+
+    setContents((prev) => [newContent, ...prev]);
+    resetCreateForm();
+  };
+
+  const handleOpenEdit = (item: ContentItem) => {
+    setEditData(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditChange = <K extends keyof ContentItem>(key: K, value: ContentItem[K]) => {
+    setEditData((prev) => (prev ? { ...prev, [key]: value } : prev));
+  };
+
+  const handleSaveEdit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editData || !editData.title.trim()) return;
+
+    setContents((prev) => prev.map((item) => (item.id === editData.id ? { ...editData, title: editData.title.trim() } : item)));
+    setIsEditModalOpen(false);
+    setEditData(null);
+  };
+
+  const handleOpenDelete = (id: string) => {
+    setDeleteId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteId) return;
+    setContents((prev) => prev.filter((item) => item.id !== deleteId));
+    setIsDeleteModalOpen(false);
+    setDeleteId(null);
   };
 
   return (
-    <div className="p-8 space-y-6">
-      
-      {/* Header Halaman (Opsional jika ingin menegaskan judul halaman di bawah Topbar) */}
-      <div className="flex items-center gap-4 mb-2">
-        <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Content Planner</h2>
+    <div className="mx-auto w-full max-w-7xl space-y-4 p-4 md:space-y-6 md:p-6 lg:space-y-8 lg:p-8">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight text-slate-100 md:text-2xl lg:text-3xl">Content Planner</h2>
+          <p className="text-sm text-slate-300 md:text-base">Kelola daftar konten sales dengan edit dan delete flow yang lebih aman.</p>
+        </div>
       </div>
 
-      {/* Top Card: Quick Add Form */}
-      <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <div className="flex items-center gap-2 mb-6">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+        <div className="mb-5 flex items-center gap-2">
           <PlusCircle size={18} className="text-slate-800" />
-          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Quick Add Content</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">Quick Add Content</h3>
         </div>
-        
-        <form onSubmit={handleSaveContent} className="flex flex-wrap items-end gap-6">
-          <div className="flex-1 min-w-75">
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
-              Content Title
-            </label>
-            <input 
-              type="text" 
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-200 border text-slate-600 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm outline-none transition-all" 
-              placeholder="e.g., Summer Promo Video" 
-              required
-            />
-          </div>
-          
-          <div className="w-64">
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
-              Platform
-            </label>
-            <div className="relative">
-              <select 
-                value={platform}
-                onChange={(e) => setPlatform(e.target.value)}
-                className="w-full appearance-none px-4 py-3 bg-slate-200 border text-slate-500 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm outline-none transition-all cursor-pointer"
-                required
-              >
-                <option value="" disabled>Select Platform</option>
-                <option value="TikTok">TikTok</option>
-                <option value="Instagram">Instagram</option>
-                <option value="YouTube Shorts">YouTube Shorts</option>
-                <option value="LinkedIn">LinkedIn</option>
-                <option value="Twitter / X">Twitter / X</option>
-              </select>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
-            </div>
-          </div>
-          
-          <button 
-            type="submit"
-            className="bg-green-500 hover:bg-green-600 border border-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-green-200 transition-all flex items-center gap-2"
-          >
-            <Save size={18} />
-            Save Content
-          </button>
-        </form>
+
+        <ContentForm
+          title={title}
+          platform={platform}
+          onTitleChange={setTitle}
+          onPlatformChange={setPlatform}
+          submitLabel="Save Content"
+          submitIcon={<Save size={16} />}
+          onSubmit={handleSaveContent}
+        />
       </section>
 
-      {/* Bottom Card: Content Log Table */}
-      <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-2">
             <List size={18} className="text-slate-400" />
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Content Log</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">Content Log</h3>
           </div>
-          <button className="text-xs font-semibold text-primary hover:underline">
+          <button className="text-left text-xs font-semibold text-[#BC934B] transition-colors hover:text-[#a88342] sm:text-right">
             View All Schedule
           </button>
         </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-205 w-full text-left">
             <thead className="bg-slate-50/80">
               <tr>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Content ID</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Title</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Platform</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Date Added</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Content ID</th>
+                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Title</th>
+                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Platform</th>
+                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Date Added</th>
+                <th className="px-4 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              
-              {/* Dummy Data Row 1 */}
-              <tr className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-4 text-sm text-slate-500 font-mono">#CT-8892</td>
-                <td className="px-6 py-4 text-sm font-medium text-slate-800">Summer Beach Collection Reel</td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pink-50 text-pink-700 text-xs font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span> Instagram
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-500">Oct 24, 2026</td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete Content">
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-
-              {/* Dummy Data Row 2 */}
-              <tr className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-4 text-sm text-slate-500 font-mono">#CT-8893</td>
-                <td className="px-6 py-4 text-sm font-medium text-slate-800">Product Launch BTS</td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-900"></span> TikTok
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-500">Oct 25, 2026</td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete Content">
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-
+              {contents.map((item) => (
+                <tr key={item.id} className="transition-colors hover:bg-slate-50/50">
+                  <td className="px-4 py-4 font-mono text-sm text-slate-500 md:px-6">{item.id}</td>
+                  <td className="px-4 py-4 text-sm font-medium text-slate-800 md:px-6">{item.title}</td>
+                  <td className="px-4 py-4 md:px-6">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold before:h-1.5 before:w-1.5 before:rounded-full ${PLATFORM_BADGE[item.platform]}`}>
+                      {item.platform}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-slate-500 md:px-6">
+                    {new Intl.DateTimeFormat('en-US', {
+                      month: 'short',
+                      day: '2-digit',
+                      year: 'numeric',
+                    }).format(new Date(item.createdAt))}
+                  </td>
+                  <td className="px-4 py-4 md:px-6">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(item)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-[#BC934B] transition-all hover:-translate-y-0.5 hover:bg-amber-100"
+                        title="Edit Content"
+                      >
+                        <Pencil size={14} />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDelete(item.id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition-all hover:-translate-y-0.5 hover:bg-red-100"
+                        title="Delete Content"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-          <p className="text-xs text-slate-500">Showing 2 of 48 entries</p>
+
+        <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-6">
+          <p className="text-xs text-slate-500">Showing {contents.length} of {totalEntriesLabel}</p>
           <div className="flex gap-2">
-            <button className="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50">Previous</button>
-            <button className="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50">Next</button>
+            <button className="rounded border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
+              Previous
+            </button>
+            <button className="rounded border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">
+              Next
+            </button>
           </div>
         </div>
       </section>
 
+      {isEditModalOpen && editData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            className="absolute inset-0"
+            onClick={() => {
+              setIsEditModalOpen(false);
+              setEditData(null);
+            }}
+            aria-hidden="true"
+          />
+          <div className="animate-in fade-in zoom-in-95 duration-200 relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Edit Content</h3>
+                <p className="mt-1 text-sm text-slate-500">Perbarui judul dan platform untuk konten yang dipilih.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditData(null);
+                }}
+                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                aria-label="Close edit modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <ContentForm
+              title={editData.title}
+              platform={editData.platform}
+              onTitleChange={(value) => handleEditChange('title', value)}
+              onPlatformChange={(value) => handleEditChange('platform', value)}
+              submitLabel="Simpan Perubahan"
+              submitIcon={<Save size={16} />}
+              onSubmit={handleSaveEdit}
+              onCancel={() => {
+                setIsEditModalOpen(false);
+                setEditData(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            className="absolute inset-0"
+            onClick={() => {
+              setIsDeleteModalOpen(false);
+              setDeleteId(null);
+            }}
+            aria-hidden="true"
+          />
+          <div className="animate-in fade-in zoom-in-95 duration-200 relative w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <TriangleAlert size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Hapus Konten</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                Apakah Anda yakin ingin menghapus konten ini? Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setDeleteId(null);
+                }}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+              >
+                Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
