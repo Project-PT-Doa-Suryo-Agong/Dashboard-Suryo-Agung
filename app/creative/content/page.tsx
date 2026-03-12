@@ -8,9 +8,9 @@ import {
   PlusCircle,
   Save,
   Trash2,
-  TriangleAlert,
-  X,
 } from 'lucide-react';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Modal from '@/components/ui/Modal';
 
 type Platform = 'TikTok' | 'Instagram' | 'YouTube Shorts' | 'LinkedIn' | 'Twitter / X';
 
@@ -121,7 +121,7 @@ function ContentForm({
         )}
         <button
           type="submit"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BC934B] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#a88342]"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 shadow-green-500 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-green-600"
         >
           {submitIcon}
           {submitLabel}
@@ -225,7 +225,7 @@ export default function ContentPlannerPage() {
             <List size={18} className="text-slate-400" />
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">Content Log</h3>
           </div>
-          <button className="text-left text-xs font-semibold text-[#BC934B] transition-colors hover:text-[#a88342] sm:text-right">
+          <button className="text-left text-xs font-semibold text-slate-500 underline transition-colors hover:text-slate-700 sm:text-right">
             View All Schedule
           </button>
         </div>
@@ -300,94 +300,49 @@ export default function ContentPlannerPage() {
       </section>
 
       {isEditModalOpen && editData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div
-            className="absolute inset-0"
-            onClick={() => {
+        <Modal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditData(null);
+          }}
+          maxWidth="max-w-md"
+          title={
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Edit Content</h3>
+              <p className="mt-1 text-sm text-slate-500">Perbarui judul dan platform untuk konten yang dipilih.</p>
+            </div>
+          }
+        >
+          <ContentForm
+            title={editData.title}
+            platform={editData.platform}
+            onTitleChange={(value) => handleEditChange('title', value)}
+            onPlatformChange={(value) => handleEditChange('platform', value)}
+            submitLabel="Simpan Perubahan"
+            submitIcon={<Save size={16} />}
+            onSubmit={handleSaveEdit}
+            onCancel={() => {
               setIsEditModalOpen(false);
               setEditData(null);
             }}
-            aria-hidden="true"
           />
-          <div className="animate-in fade-in zoom-in-95 duration-200 relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Edit Content</h3>
-                <p className="mt-1 text-sm text-slate-500">Perbarui judul dan platform untuk konten yang dipilih.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditModalOpen(false);
-                  setEditData(null);
-                }}
-                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Close edit modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <ContentForm
-              title={editData.title}
-              platform={editData.platform}
-              onTitleChange={(value) => handleEditChange('title', value)}
-              onPlatformChange={(value) => handleEditChange('platform', value)}
-              submitLabel="Simpan Perubahan"
-              submitIcon={<Save size={16} />}
-              onSubmit={handleSaveEdit}
-              onCancel={() => {
-                setIsEditModalOpen(false);
-                setEditData(null);
-              }}
-            />
-          </div>
-        </div>
+        </Modal>
       )}
 
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div
-            className="absolute inset-0"
-            onClick={() => {
-              setIsDeleteModalOpen(false);
-              setDeleteId(null);
-            }}
-            aria-hidden="true"
-          />
-          <div className="animate-in fade-in zoom-in-95 duration-200 relative w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
-                <TriangleAlert size={24} />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">Hapus Konten</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                Apakah Anda yakin ingin menghapus konten ini? Tindakan ini tidak dapat dibatalkan.
-              </p>
-            </div>
-
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDeleteModalOpen(false);
-                  setDeleteId(null);
-                }}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
-              >
-                Ya, Hapus
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeleteId(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Konten"
+        description="Apakah Anda yakin ingin menghapus konten ini? Tindakan ini tidak dapat dibatalkan."
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+      />
     </div>
   );
 }
