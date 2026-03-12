@@ -1,12 +1,17 @@
-// proxy.ts (sebelumnya middleware.ts)
+// proxy.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Ubah nama fungsi dari middleware menjadi proxy
 export function proxy(req: NextRequest) {
   const url = req.nextUrl;
   
-  // Dapatkan hostname yang diketik user (contoh: "finance.localhost:3000" atau "produksi.perusahaan.com")
+  // 🚀 KUNCI PERBAIKAN: Abaikan file statis!
+  // Jika path mengandung titik (contoh: /icon.png, /logo.svg, /style.css), biarkan lewat!
+  if (url.pathname.includes('.')) {
+    return NextResponse.next();
+  }
+
+  // Dapatkan hostname yang diketik user (contoh: "finance.localhost:3000")
   const hostname = req.headers.get('host') || '';
 
   // Daftar nama folder/subdomain divisi kamu
@@ -20,6 +25,10 @@ export function proxy(req: NextRequest) {
 
   // Jika subdomainnya valid
   if (validSubdomains.includes(subdomain)) {
+    // Hindari double-prefix: jika path sudah diawali /{subdomain}, biarkan lewat
+    if (url.pathname.startsWith(`/${subdomain}`)) {
+      return NextResponse.next();
+    }
     // Arahkan (rewrite) secara gaib ke folder yang sesuai
     return NextResponse.rewrite(new URL(`/${subdomain}${url.pathname}`, req.url));
   }
@@ -31,6 +40,6 @@ export function proxy(req: NextRequest) {
 // Konfigurasi matcher tetap sama persis
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|icon.png|logo.svg|style.css).*)',
   ],
 }
