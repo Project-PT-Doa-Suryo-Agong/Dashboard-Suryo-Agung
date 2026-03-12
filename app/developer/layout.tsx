@@ -2,8 +2,9 @@ import Sidebar from '@/components/sidebar';
 import Topbar from '@/components/topbar';
 
 const navItems = [
-  { label: 'Master Data', href: '/', icon: 'LayoutDashboard' },
-  { label: 'Content Planner', href: '/content', icon: 'CalendarDays' }, 
+  { label: 'Dashboard', href: '/', icon: 'LayoutDashboard' },
+  { label: 'Master Data', href: '/master-data', icon: 'Database' }, 
+  { label: 'User', href: '/users', icon: 'User'}
 ];
 
 export default function CreativeLayout({
