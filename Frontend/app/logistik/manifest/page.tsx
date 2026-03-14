@@ -345,7 +345,7 @@ export default function ManifestPage() {
                   setCreateForm((prev) => ({ ...prev, order_id: event.target.value }))
                 }
                 placeholder="ORD-20260314-016"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
               />
             </label>
 
@@ -359,7 +359,7 @@ export default function ManifestPage() {
                   setCreateForm((prev) => ({ ...prev, resi: event.target.value }))
                 }
                 placeholder="RSI-260314-0016"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
               />
             </label>
 
@@ -373,7 +373,7 @@ export default function ManifestPage() {
                   setCreateForm((prev) => ({ ...prev, driver_name: event.target.value }))
                 }
                 placeholder="Nama kurir"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
               />
             </label>
 
@@ -387,7 +387,7 @@ export default function ManifestPage() {
                   setCreateForm((prev) => ({ ...prev, vehicle_number: event.target.value }))
                 }
                 placeholder="B 1234 ABC"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
               />
             </label>
 
@@ -401,7 +401,7 @@ export default function ManifestPage() {
                   setCreateForm((prev) => ({ ...prev, destination: event.target.value }))
                 }
                 placeholder="Kota tujuan"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
               />
             </label>
 
@@ -415,11 +415,11 @@ export default function ManifestPage() {
                     status: event.target.value as ManifestStatus,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
               >
-                <option value="preparing">preparing</option>
-                <option value="in_transit">in_transit</option>
-                <option value="delivered">delivered</option>
+                <option value="preparing">Persiapan</option>
+                <option value="in_transit">Di Perjalanan</option>
+                <option value="delivered">Terkirim</option>
               </select>
             </label>
           </div>
@@ -433,7 +433,7 @@ export default function ManifestPage() {
               onChange={(event) =>
                 setCreateForm((prev) => ({ ...prev, dispatch_date: event.target.value }))
               }
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             />
           </label>
 
@@ -479,7 +479,7 @@ export default function ManifestPage() {
             <select
               value={selectedStatus}
               onChange={(event) => setSelectedStatus(event.target.value as ManifestStatus)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             >
               <option value="preparing">preparing</option>
               <option value="in_transit">in_transit</option>

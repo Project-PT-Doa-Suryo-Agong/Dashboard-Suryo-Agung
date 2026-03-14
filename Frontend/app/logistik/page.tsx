@@ -155,7 +155,7 @@ export default function LogistikDashboardPage() {
                   <h3 className="text-sm md:text-base font-bold text-slate-900">{item.title}</h3>
                   <p className="mt-1 text-xs md:text-sm text-slate-600">{item.description}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 md:h-5 md:w-5 text-slate-400 transition group-hover:text-[#BC934B] group-hover:translate-x-0.5 shrink-0" />
+                <ArrowRight className="h-4 w-4 md:h-5 md:w-5 text-slate-400 transition group-hover:text-slate-500 group-hover:translate-x-0.5 shrink-0" />
               </div>
             </Link>
           ))}
