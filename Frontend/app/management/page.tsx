@@ -169,27 +169,27 @@ export default function ManagementDashboardPage() {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link
           href="/management/budget"
-          className="group rounded-xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#BC934B]"
+          className="group rounded-xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-slate-500"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1.5 min-w-0">
               <p className="text-sm md:text-base font-bold text-slate-900">Alokasi & Serapan Anggaran</p>
               <p className="text-xs md:text-sm text-slate-600">Pantau pengajuan anggaran, status persetujuan, dan progres serapan.</p>
             </div>
-            <ArrowRight className="h-5 w-5 text-slate-400 transition group-hover:text-[#BC934B] group-hover:translate-x-0.5 shrink-0" />
+            <ArrowRight className="h-5 w-5 text-slate-400 transition group-hover:text-slate-500 group-hover:translate-x-0.5 shrink-0" />
           </div>
         </Link>
 
         <Link
           href="/management/kpi"
-          className="group rounded-xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#BC934B]"
+          className="group rounded-xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-slate-500"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1.5 min-w-0">
               <p className="text-sm md:text-base font-bold text-slate-900">Indikator Kinerja Utama</p>
               <p className="text-xs md:text-sm text-slate-600">Analisis capaian KPI lintas divisi untuk pengambilan keputusan strategis.</p>
             </div>
-            <ArrowRight className="h-5 w-5 text-slate-400 transition group-hover:text-[#BC934B] group-hover:translate-x-0.5 shrink-0" />
+            <ArrowRight className="h-5 w-5 text-slate-400 transition group-hover:text-slate-500 group-hover:translate-x-0.5 shrink-0" />
           </div>
         </Link>
       </section>
