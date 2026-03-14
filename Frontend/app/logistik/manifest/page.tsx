@@ -19,6 +19,16 @@ type ManifestItem = {
   created_at: string;
 };
 
+type CreateManifestForm = {
+  order_id: string;
+  resi: string;
+  driver_name: string;
+  vehicle_number: string;
+  destination: string;
+  status: ManifestStatus;
+  dispatch_date: string;
+};
+
 const DUMMY_MANIFEST_ITEMS: ManifestItem[] = [
   {
     id: "4e2f0f20-8a3b-4e6a-9a5b-3a11a8d30011",
@@ -108,10 +118,22 @@ function statusLabel(status: ManifestStatus): string {
   return "Terkirim";
 }
 
+const INITIAL_CREATE_FORM: CreateManifestForm = {
+  order_id: "",
+  resi: "",
+  driver_name: "",
+  vehicle_number: "",
+  destination: "",
+  status: "preparing",
+  dispatch_date: "",
+};
+
 export default function ManifestPage() {
   const [items, setItems] = useState<ManifestItem[]>(DUMMY_MANIFEST_ITEMS);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<ManifestFilterStatus>("all");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [createForm, setCreateForm] = useState<CreateManifestForm>(INITIAL_CREATE_FORM);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
   const [selectedManifest, setSelectedManifest] = useState<ManifestItem | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ManifestStatus>("preparing");
@@ -134,6 +156,15 @@ export default function ManifestPage() {
     setIsUpdateModalOpen(true);
   };
 
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+    setCreateForm(INITIAL_CREATE_FORM);
+  };
+
   const handleCloseUpdateModal = () => {
     setIsUpdateModalOpen(false);
     setSelectedManifest(null);
@@ -150,6 +181,28 @@ export default function ManifestPage() {
     );
 
     handleCloseUpdateModal();
+  };
+
+  const handleCreateManifest = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const dispatchIsoDate = new Date(createForm.dispatch_date).toISOString();
+    const nowIsoDate = new Date().toISOString();
+
+    const newManifest: ManifestItem = {
+      id: crypto.randomUUID(),
+      order_id: createForm.order_id.trim(),
+      resi: createForm.resi.trim(),
+      driver_name: createForm.driver_name.trim(),
+      vehicle_number: createForm.vehicle_number.trim(),
+      destination: createForm.destination.trim(),
+      status: createForm.status,
+      dispatch_date: dispatchIsoDate,
+      created_at: nowIsoDate,
+    };
+
+    setItems((prev) => [newManifest, ...prev]);
+    handleCloseCreateModal();
   };
 
   return (
@@ -193,10 +246,11 @@ export default function ManifestPage() {
 
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BC934B] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#a17d3f]"
+          onClick={handleOpenCreateModal}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700"
         >
           <Plus size={17} />
-          Buat Manifest Baru
+          Tambah Manifest Baru
         </button>
       </div>
 
@@ -254,7 +308,7 @@ export default function ManifestPage() {
                     <button
                       type="button"
                       onClick={() => handleOpenUpdateModal(item)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#BC934B]/30 bg-[#BC934B]/10 px-3 py-2 text-xs font-semibold text-[#BC934B] transition hover:bg-[#BC934B]/15"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-yellow-400 bg-yellow-400/70 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-yellow-500"
                     >
                       <Truck size={15} />
                       Update Status
@@ -272,6 +326,134 @@ export default function ManifestPage() {
           </tbody>
         </table>
       </div>
+
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseCreateModal}
+        title="Tambah Manifest Baru"
+        maxWidth="max-w-2xl"
+      >
+        <form onSubmit={handleCreateManifest} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Order ID</span>
+              <input
+                type="text"
+                required
+                value={createForm.order_id}
+                onChange={(event) =>
+                  setCreateForm((prev) => ({ ...prev, order_id: event.target.value }))
+                }
+                placeholder="ORD-20260314-016"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              />
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Resi</span>
+              <input
+                type="text"
+                required
+                value={createForm.resi}
+                onChange={(event) =>
+                  setCreateForm((prev) => ({ ...prev, resi: event.target.value }))
+                }
+                placeholder="RSI-260314-0016"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              />
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Nama Kurir</span>
+              <input
+                type="text"
+                required
+                value={createForm.driver_name}
+                onChange={(event) =>
+                  setCreateForm((prev) => ({ ...prev, driver_name: event.target.value }))
+                }
+                placeholder="Nama kurir"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              />
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Nomor Kendaraan</span>
+              <input
+                type="text"
+                required
+                value={createForm.vehicle_number}
+                onChange={(event) =>
+                  setCreateForm((prev) => ({ ...prev, vehicle_number: event.target.value }))
+                }
+                placeholder="B 1234 ABC"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              />
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Tujuan</span>
+              <input
+                type="text"
+                required
+                value={createForm.destination}
+                onChange={(event) =>
+                  setCreateForm((prev) => ({ ...prev, destination: event.target.value }))
+                }
+                placeholder="Kota tujuan"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              />
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Status</span>
+              <select
+                value={createForm.status}
+                onChange={(event) =>
+                  setCreateForm((prev) => ({
+                    ...prev,
+                    status: event.target.value as ManifestStatus,
+                  }))
+                }
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              >
+                <option value="preparing">preparing</option>
+                <option value="in_transit">in_transit</option>
+                <option value="delivered">delivered</option>
+              </select>
+            </label>
+          </div>
+
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium text-slate-700">Waktu Berangkat</span>
+            <input
+              type="datetime-local"
+              required
+              value={createForm.dispatch_date}
+              onChange={(event) =>
+                setCreateForm((prev) => ({ ...prev, dispatch_date: event.target.value }))
+              }
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+            />
+          </label>
+
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={handleCloseCreateModal}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700"
+            >
+              Simpan Manifest
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       <Modal
         isOpen={isUpdateModalOpen}
@@ -316,7 +498,7 @@ export default function ManifestPage() {
             <button
               type="button"
               onClick={handleSaveStatus}
-              className="inline-flex items-center justify-center rounded-xl bg-[#BC934B] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
+              className="inline-flex items-center justify-center rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600"
             >
               Simpan Perubahan
             </button>

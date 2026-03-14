@@ -234,7 +234,7 @@ export default function ReturnsPage() {
                     <button
                       type="button"
                       onClick={() => openUpdateModal(item)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#BC934B]/30 bg-[#BC934B]/10 px-3 py-2 text-xs font-semibold text-[#BC934B] transition hover:bg-[#BC934B]/15"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-yellow-400 bg-yellow-400/70 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-yellow-500"
                     >
                       <RefreshCcw size={15} />
                       Proses Retur
@@ -283,7 +283,7 @@ export default function ReturnsPage() {
             <select
               value={selectedStatus}
               onChange={(event) => setSelectedStatus(event.target.value as ReturnStatus)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             >
               <option value="pending">pending</option>
               <option value="inspected">inspected</option>
@@ -303,7 +303,7 @@ export default function ReturnsPage() {
             <button
               type="button"
               onClick={handleSaveDecision}
-              className="inline-flex items-center justify-center rounded-xl bg-[#BC934B] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
+              className="inline-flex items-center justify-center rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700"
             >
               Simpan Keputusan
             </button>

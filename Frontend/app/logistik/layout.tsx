@@ -43,7 +43,7 @@ export default function CreativeLayout({
       <main className="flex-1 min-w-0 w-full overflow-x-hidden flex flex-col bg-slate-100/50">
         <Topbar
           title="Logistics Dashboard"
-          user={{ name: 'Soebardjo Djojokoesoemo', role: 'Developer' }}
+          user={{ name: 'I Made Trikusumo', role: 'Logistics Team' }}
           onMenuClick={() => setIsMobileSidebarOpen(true)}
         />
 

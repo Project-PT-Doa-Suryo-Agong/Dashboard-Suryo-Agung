@@ -214,7 +214,7 @@ export default function PackingPage() {
                       <button
                         type="button"
                         onClick={() => openUpdateModal(item)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#BC934B]/30 bg-[#BC934B]/10 px-3 py-2 text-xs font-semibold text-[#BC934B] transition hover:bg-[#BC934B]/15"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border bg-green-500 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-green-700 hover:text-white"
                       >
                         <CheckCircle2 size={15} />
                         Update Status
@@ -252,7 +252,7 @@ export default function PackingPage() {
             <select
               value={selectedStatus}
               onChange={(event) => setSelectedStatus(event.target.value as PackingStatusUI)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             >
               <option value="pending">pending</option>
               <option value="proses">proses</option>
@@ -271,7 +271,7 @@ export default function PackingPage() {
             <button
               type="button"
               onClick={handleSaveUpdate}
-              className="inline-flex items-center justify-center rounded-xl bg-[#BC934B] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
+              className="inline-flex items-center justify-center rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700"
             >
               Simpan Perubahan
             </button>
