@@ -4,14 +4,22 @@ import { useState } from 'react';
 import Sidebar from '@/components/sidebar';
 import Topbar from '@/components/topbar';
 
+// PERBAIKAN ROUTING: Sesuaikan href dengan struktur folder /produksi/...
 const navItems = [
-  { label: 'Dashboard Overview', href: '/', icon: 'LayoutDashboard' },
-  { label: 'Content Planner', href: '/content', icon: 'CalendarDays' },
-  { label: 'Live Performance', href: '/live-perf', icon: 'TrendingUp' },
-  { label: 'Sales Order', href: '/sales-order', icon: 'Handshake' },
+  { label: 'Dashboard Produksi', href: '/produksi', icon: 'LayoutDashboard' },
+  { label: 'Pesanan (Orders)', href: '/produksi/orders', icon: 'ClipboardList' },
+  {
+    label: 'QC',
+    href: '/produksi/qc',
+    icon: 'ShieldCheck',
+    children: [
+      { label: 'QC Inbound', href: '/produksi/qc/inbound', icon: 'ShieldCheck' },
+      { label: 'QC Outbound', href: '/produksi/qc/outbound', icon: 'CheckSquare' },
+    ],
+  },
 ];
 
-export default function CreativeLayout({
+export default function ProduksiLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -20,6 +28,7 @@ export default function CreativeLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background-light font-display">
+      {/* Overlay Sidebar Mobile */}
       {isMobileSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
@@ -30,11 +39,11 @@ export default function CreativeLayout({
 
       {/* Kiri: Sidebar */}
       <Sidebar
-        title="Creative & Sales"
-        subtitle="Management Portal"
-        logoIcon="Palette"
+        title="Production"
+        subtitle="Manufacturing Portal"
+        logoIcon="Factory" // Diubah dari Palette (Creative) ke Factory (Produksi)
         navItems={navItems}
-        footerAction={{ label: 'New Campaign', icon: 'Plus' }}
+        footerAction={{ label: 'New Order', icon: 'Plus' }} // Diubah dari New Campaign
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
       />
@@ -42,8 +51,8 @@ export default function CreativeLayout({
       {/* Kanan: Area Utama */}
       <main className="flex-1 min-w-0 w-full overflow-x-hidden flex flex-col bg-slate-100/50">
         <Topbar
-          title="Creative & Sales Dashboard"
-          user={{ name: 'Soebardjo Djojokoesoemo', role: 'Developer' }}
+          title="Production Dashboard"
+          user={{ name: 'Ahmad Kasim', role: 'Production Head' }}
           onMenuClick={() => setIsMobileSidebarOpen(true)}
         />
 
