@@ -244,7 +244,7 @@ export default function HrDashboardPage() {
 
 				<div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
 					<div className="mb-3 flex items-center justify-between gap-3">
-						<h2 className="text-base font-bold text-slate-900 md:text-lg">Today's Attendance Overview</h2>
+						<h2 className="text-base font-bold text-slate-900 md:text-lg">Today&apos;s Attendance Overview</h2>
 						<span className="text-xs text-slate-500">{todayDate}</span>
 					</div>
 

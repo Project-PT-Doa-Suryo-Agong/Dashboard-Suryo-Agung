@@ -1,5 +1,5 @@
 export async function fetchApi<T>(endpoint: string, options?: RequestInit) {
-  // Semua request /api/... akan diproxy oleh Next.js dari Frontend ke Backend.
+  // Semua request diarahkan ke API internal di aplikasi Frontend yang sudah digabung.
   const url = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
 
   const res = await fetch(url, {
@@ -8,8 +8,8 @@ export async function fetchApi<T>(endpoint: string, options?: RequestInit) {
       "Content-Type": "application/json",
       ...options?.headers,
     },
-    // Pastikan cookie auth selalu terkirim ke server
-    credentials: "omit", // browser will use same-origin cookies since it is rewrite
+    // Kirim cookie sesi saat memanggil API internal.
+    credentials: "include",
   });
 
   const json = await res.json();
