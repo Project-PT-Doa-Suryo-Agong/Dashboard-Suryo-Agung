@@ -4,96 +4,113 @@ import { useMemo, useState } from "react";
 import { Edit3, Plus, Search } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 
-type ProductionOrderStatus = "pending" | "in_progress" | "completed" | "cancelled";
+type ProductionOrderStatus = "draft" | "ongoing" | "done";
+
+type VendorItem = { id: string; nama_vendor: string };
+type ProductItem = { id: string; nama_produk: string };
 
 type ProductionOrder = {
   id: string;
-  product_name: string;
+  vendor_id: string;
+  product_id: string;
   target_qty: number;
   start_date: string;
   deadline: string;
   status: ProductionOrderStatus;
-  pic: string;
 };
+
+const core_m_vendor_seed: VendorItem[] = [
+  { id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130001", nama_vendor: "Vendor Nusantara" },
+  { id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130002", nama_vendor: "Mitra Sejahtera" },
+  { id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130003", nama_vendor: "Prima Supply" },
+];
+
+const core_m_produk_seed: ProductItem[] = [
+  { id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710001", nama_produk: "Coffee Beans Arabica 250gr" },
+  { id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710002", nama_produk: "Chocolate Blend 500gr" },
+  { id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710003", nama_produk: "Syrup Caramel 1L" },
+  { id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710004", nama_produk: "Matcha Mix 400gr" },
+  { id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710005", nama_produk: "Roasted Robusta 1kg" },
+  { id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710006", nama_produk: "Vanilla Cream Powder 500gr" },
+  { id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710007", nama_produk: "Hazelnut Syrup 750ml" },
+];
 
 const production_t_produksi_order_rows_seed: ProductionOrder[] = [
   {
     id: "PO-20260316-001",
-    product_name: "Coffee Beans Arabica 250gr",
+    product_id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710001",
+    vendor_id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130001",
     target_qty: 500,
     start_date: "2026-03-15",
     deadline: "2026-03-18",
-    status: "in_progress",
-    pic: "Nadia Kurnia",
+    status: "ongoing",
   },
   {
     id: "PO-20260316-002",
-    product_name: "Chocolate Blend 500gr",
+    product_id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710002",
+    vendor_id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130002",
     target_qty: 320,
     start_date: "2026-03-16",
     deadline: "2026-03-20",
-    status: "pending",
-    pic: "Rama Saputra",
+    status: "draft",
   },
   {
     id: "PO-20260316-003",
-    product_name: "Syrup Caramel 1L",
+    product_id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710003",
+    vendor_id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130003",
     target_qty: 220,
     start_date: "2026-03-12",
     deadline: "2026-03-16",
-    status: "completed",
-    pic: "Indah Lestari",
+    status: "done",
   },
   {
     id: "PO-20260316-004",
-    product_name: "Matcha Mix 400gr",
+    product_id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710004",
+    vendor_id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130001",
     target_qty: 280,
     start_date: "2026-03-10",
     deadline: "2026-03-14",
-    status: "cancelled",
-    pic: "Fikri Maulana",
+    status: "draft",
   },
   {
     id: "PO-20260316-005",
-    product_name: "Roasted Robusta 1kg",
+    product_id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710005",
+    vendor_id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130002",
     target_qty: 150,
     start_date: "2026-03-16",
     deadline: "2026-03-19",
-    status: "in_progress",
-    pic: "Nadia Kurnia",
+    status: "ongoing",
   },
   {
     id: "PO-20260316-006",
-    product_name: "Vanilla Cream Powder 500gr",
+    product_id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710006",
+    vendor_id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130003",
     target_qty: 260,
     start_date: "2026-03-17",
     deadline: "2026-03-21",
-    status: "pending",
-    pic: "Ari Wijaya",
+    status: "draft",
   },
   {
     id: "PO-20260316-007",
-    product_name: "Hazelnut Syrup 750ml",
+    product_id: "a9f3f5f5-60e3-4b95-8cc7-7b6f5f710007",
+    vendor_id: "f31d0cdc-2f89-4a2e-b2ef-df7f1a130001",
     target_qty: 180,
     start_date: "2026-03-13",
     deadline: "2026-03-17",
-    status: "completed",
-    pic: "Mila Pratama",
+    status: "done",
   },
 ];
 
 const status_label: Record<ProductionOrderStatus, string> = {
-  pending: "Antrean",
-  in_progress: "Berjalan",
-  completed: "Selesai",
-  cancelled: "Batal",
+  draft: "Draft",
+  ongoing: "Berjalan",
+  done: "Selesai",
 };
 
 const status_badge_class: Record<ProductionOrderStatus, string> = {
-  pending: "bg-amber-100 text-amber-700",
-  in_progress: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-rose-100 text-rose-700",
+  draft: "bg-amber-100 text-amber-700",
+  ongoing: "bg-blue-100 text-blue-700",
+  done: "bg-emerald-100 text-emerald-700",
 };
 
 function formatDate(date: string): string {
@@ -111,6 +128,16 @@ export default function ProductionOrdersPage() {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<ProductionOrder | null>(null);
 
+  const productById = useMemo(
+    () => Object.fromEntries(core_m_produk_seed.map((item) => [item.id, item.nama_produk])) as Record<string, string>,
+    [],
+  );
+
+  const vendorById = useMemo(
+    () => Object.fromEntries(core_m_vendor_seed.map((item) => [item.id, item.nama_vendor])) as Record<string, string>,
+    [],
+  );
+
   const filteredItems = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -119,11 +146,11 @@ export default function ProductionOrdersPage() {
       const matchSearch =
         normalizedSearch.length === 0 ||
         item.id.toLowerCase().includes(normalizedSearch) ||
-        item.product_name.toLowerCase().includes(normalizedSearch);
+        (productById[item.product_id] ?? "").toLowerCase().includes(normalizedSearch);
 
       return matchStatus && matchSearch;
     });
-  }, [items, searchTerm, filterStatus]);
+  }, [items, searchTerm, filterStatus, productById]);
 
   const handleOpenUpdateModal = (order: ProductionOrder) => {
     setSelectedOrder(order);
@@ -140,7 +167,7 @@ export default function ProductionOrdersPage() {
 
     setItems((currentItems) =>
       currentItems.map((item) =>
-        item.id === selectedOrder.id ? { ...item, status: selectedOrder.status } : item,
+        item.id === selectedOrder.id ? selectedOrder : item,
       ),
     );
 
@@ -175,10 +202,9 @@ export default function ProductionOrdersPage() {
             className="w-full sm:w-52 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
           >
             <option value="all">Semua Status</option>
-            <option value="pending">Antrean</option>
-            <option value="in_progress">Berjalan</option>
-            <option value="completed">Selesai</option>
-            <option value="cancelled">Batal</option>
+            <option value="draft">Draft</option>
+            <option value="ongoing">Berjalan</option>
+            <option value="done">Selesai</option>
           </select>
         </div>
 
@@ -210,13 +236,13 @@ export default function ProductionOrdersPage() {
                   Produk
                 </th>
                 <th className="px-4 md:px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                  Vendor
+                </th>
+                <th className="px-4 md:px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
                   Target (Qty)
                 </th>
                 <th className="px-4 md:px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
                   Timeline
-                </th>
-                <th className="px-4 md:px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                  PIC
                 </th>
                 <th className="px-4 md:px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
                   Status
@@ -240,7 +266,10 @@ export default function ProductionOrdersPage() {
                       {item.id}
                     </td>
                     <td className="px-4 md:px-6 py-3 text-sm text-slate-700 min-w-56">
-                      <p className="break-words">{item.product_name}</p>
+                      <p className="break-words">{productById[item.product_id] ?? "Produk tidak ditemukan"}</p>
+                    </td>
+                    <td className="px-4 md:px-6 py-3 text-sm text-slate-700 whitespace-nowrap">
+                      {vendorById[item.vendor_id] ?? "Vendor tidak ditemukan"}
                     </td>
                     <td className="px-4 md:px-6 py-3 text-sm text-slate-700 whitespace-nowrap">
                       {item.target_qty} Unit
@@ -248,7 +277,6 @@ export default function ProductionOrdersPage() {
                     <td className="px-4 md:px-6 py-3 text-sm text-slate-700 whitespace-nowrap">
                       {formatDate(item.start_date)} - {formatDate(item.deadline)}
                     </td>
-                    <td className="px-4 md:px-6 py-3 text-sm text-slate-700 whitespace-nowrap">{item.pic}</td>
                     <td className="px-4 md:px-6 py-3">
                       <span
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${status_badge_class[item.status]}`}
@@ -288,12 +316,44 @@ export default function ProductionOrdersPage() {
             }}
           >
             <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-wide font-semibold text-slate-500">Nama Produk</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900 break-words">{selectedOrder.product_name}</p>
+              <div className="space-y-1.5">
+                <label htmlFor="product-order" className="text-sm font-semibold text-slate-700">
+                  Produk
+                </label>
+                <select
+                  id="product-order"
+                  value={selectedOrder.product_id}
+                  onChange={(event) =>
+                    setSelectedOrder((prevOrder) =>
+                      prevOrder ? { ...prevOrder, product_id: event.target.value } : prevOrder,
+                    )
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                >
+                  {core_m_produk_seed.map((product) => (
+                    <option key={product.id} value={product.id}>{product.nama_produk}</option>
+                  ))}
+                </select>
+              </div>
 
-                <p className="mt-3 text-xs uppercase tracking-wide font-semibold text-slate-500">Target Qty</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">{selectedOrder.target_qty} Unit</p>
+              <div className="space-y-1.5">
+                <label htmlFor="vendor-order" className="text-sm font-semibold text-slate-700">
+                  Vendor
+                </label>
+                <select
+                  id="vendor-order"
+                  value={selectedOrder.vendor_id}
+                  onChange={(event) =>
+                    setSelectedOrder((prevOrder) =>
+                      prevOrder ? { ...prevOrder, vendor_id: event.target.value } : prevOrder,
+                    )
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                >
+                  {core_m_vendor_seed.map((vendor) => (
+                    <option key={vendor.id} value={vendor.id}>{vendor.nama_vendor}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-1.5">
@@ -312,10 +372,9 @@ export default function ProductionOrdersPage() {
                   }
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
                 >
-                  <option value="pending">Antrean</option>
-                  <option value="in_progress">Berjalan</option>
-                  <option value="completed">Selesai</option>
-                  <option value="cancelled">Batal</option>
+                  <option value="draft">Draft</option>
+                  <option value="ongoing">Berjalan</option>
+                  <option value="done">Selesai</option>
                 </select>
               </div>
             </div>

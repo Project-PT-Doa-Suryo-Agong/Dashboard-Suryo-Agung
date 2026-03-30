@@ -15,7 +15,7 @@ export default function LoginPage() {
   // Daftar role yang sesuai dengan subdomain di proxy.ts
   const roles = [
     { id: "developer", name: "Developer" },
-    { id: "management", name: "Management" },
+    { id: "ceo", name: "CEO" },
     { id: "finance", name: "Finance" },
     { id: "hr", name: "Human Resources (HR)" },
     { id: "produksi", name: "Produksi" },

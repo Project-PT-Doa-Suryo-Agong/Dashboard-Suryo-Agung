@@ -9,19 +9,30 @@ type ReimburseStatus = 'pending' | 'approved' | 'rejected';
 
 type ReimburseItem = {
 	id: string;
-	employeeName: string;
-	divisi: string;
+	employee_id: string;
 	amount: number;
 	keterangan: string;
 	createdAt: string;
 	status: ReimburseStatus;
 };
 
+type EmployeeOption = {
+	id: string;
+	nama: string;
+	divisi: string;
+};
+
+const hr_m_karyawan_seed: EmployeeOption[] = [
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50001', nama: 'Rizky Pratama', divisi: 'Creative' },
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50002', nama: 'Nadia Lestari', divisi: 'HR' },
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50003', nama: 'Fajar Maulana', divisi: 'Logistik' },
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50004', nama: 'Putri Anjani', divisi: 'Finance' },
+];
+
 const INITIAL_REIMBURSE_DATA: ReimburseItem[] = [
 	{
 		id: 'RMB-240301',
-		employeeName: 'Rizky Pratama',
-		divisi: 'Creative',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50001',
 		amount: 350000,
 		keterangan: 'Pembelian properti foto campaign Ramadan',
 		createdAt: '2026-03-10T08:20:00Z',
@@ -29,8 +40,7 @@ const INITIAL_REIMBURSE_DATA: ReimburseItem[] = [
 	},
 	{
 		id: 'RMB-240302',
-		employeeName: 'Nadia Lestari',
-		divisi: 'HR',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50002',
 		amount: 185000,
 		keterangan: 'Transport interview kandidat supervisor',
 		createdAt: '2026-03-10T13:45:00Z',
@@ -38,8 +48,7 @@ const INITIAL_REIMBURSE_DATA: ReimburseItem[] = [
 	},
 	{
 		id: 'RMB-240287',
-		employeeName: 'Fajar Maulana',
-		divisi: 'Logistik',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50003',
 		amount: 420000,
 		keterangan: 'Penggantian biaya pengiriman dokumen vendor',
 		createdAt: '2026-03-08T09:15:00Z',
@@ -47,8 +56,7 @@ const INITIAL_REIMBURSE_DATA: ReimburseItem[] = [
 	},
 	{
 		id: 'RMB-240276',
-		employeeName: 'Putri Anjani',
-		divisi: 'Finance',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50004',
 		amount: 120000,
 		keterangan: 'Biaya cetak laporan bulanan',
 		createdAt: '2026-03-06T10:05:00Z',
@@ -79,6 +87,11 @@ export default function FinanceReimbursePage() {
 	const [approveTargetId, setApproveTargetId] = useState<string | null>(null);
 	const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
 	const [rejectReason, setRejectReason] = useState('');
+
+	const employeeById = useMemo(
+		() => Object.fromEntries(hr_m_karyawan_seed.map((employee) => [employee.id, employee])) as Record<string, EmployeeOption>,
+		[],
+	);
 
 	const pendingItems = useMemo(
 		() => items.filter((item) => item.status === 'pending'),
@@ -192,10 +205,13 @@ export default function FinanceReimbursePage() {
 
 						<tbody className="divide-y divide-slate-100">
 							{visibleItems.map((item) => (
+								(() => {
+									const employee = employeeById[item.employee_id];
+									return (
 								<tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
 									<td className="px-4 md:px-6 py-3 text-sm text-slate-600 whitespace-nowrap">{formatDate(item.createdAt)}</td>
-									<td className="px-4 md:px-6 py-3 text-sm font-semibold text-slate-800 whitespace-nowrap">{item.employeeName}</td>
-									<td className="px-4 md:px-6 py-3 text-sm text-slate-600 whitespace-nowrap">{item.divisi}</td>
+									<td className="px-4 md:px-6 py-3 text-sm font-semibold text-slate-800 whitespace-nowrap">{employee?.nama ?? 'Karyawan tidak ditemukan'}</td>
+									<td className="px-4 md:px-6 py-3 text-sm text-slate-600 whitespace-nowrap">{employee?.divisi ?? '-'}</td>
 									<td className="px-4 md:px-6 py-3 text-sm text-slate-700 min-w-65">{item.keterangan}</td>
 									<td className="px-4 md:px-6 py-3 text-sm font-semibold text-slate-900 text-right whitespace-nowrap">{formatRupiah(item.amount)}</td>
 									<td className="px-4 md:px-6 py-3 text-right whitespace-nowrap">
@@ -231,6 +247,8 @@ export default function FinanceReimbursePage() {
 										)}
 									</td>
 								</tr>
+									);
+								})()
 							))}
 
 							{visibleItems.length === 0 && (
@@ -252,7 +270,7 @@ export default function FinanceReimbursePage() {
 				title="Konfirmasi Persetujuan"
 				description={
 					approveTarget
-						? `Setujui pencairan dana sebesar ${formatRupiah(approveTarget.amount)} untuk ${approveTarget.employeeName}?`
+						? `Setujui pencairan dana sebesar ${formatRupiah(approveTarget.amount)} untuk ${employeeById[approveTarget.employee_id]?.nama ?? 'karyawan'}?`
 						: ''
 				}
 				confirmText="Setujui"
@@ -270,7 +288,7 @@ export default function FinanceReimbursePage() {
 					<div>
 						<h3 className="text-lg font-bold text-slate-900">Tolak Pengajuan Reimburse</h3>
 						<p className="mt-1 text-sm text-slate-500">
-							Berikan alasan penolakan untuk {rejectTarget?.employeeName}.
+							Berikan alasan penolakan untuk {rejectTarget ? employeeById[rejectTarget.employee_id]?.nama ?? 'karyawan' : '-'}.
 						</p>
 					</div>
 				}

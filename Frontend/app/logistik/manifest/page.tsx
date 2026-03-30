@@ -7,13 +7,19 @@ import Modal from "@/components/ui/Modal";
 type ManifestStatus = "preparing" | "in_transit" | "delivered";
 type ManifestFilterStatus = "all" | ManifestStatus;
 
+type SalesOrderRef = {
+  id: string;
+  order_code: string;
+  customer_name: string;
+  destination: string;
+};
+
 type ManifestItem = {
   id: string;
   order_id: string;
   resi: string;
   driver_name: string;
   vehicle_number: string;
-  destination: string;
   status: ManifestStatus;
   dispatch_date: string;
   created_at: string;
@@ -24,77 +30,39 @@ type CreateManifestForm = {
   resi: string;
   driver_name: string;
   vehicle_number: string;
-  destination: string;
   status: ManifestStatus;
   dispatch_date: string;
 };
 
+const sales_t_sales_order_seed: SalesOrderRef[] = [
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0001", order_code: "SO-20260314-001", customer_name: "Aulia Pramesti", destination: "Bandung" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0002", order_code: "SO-20260314-002", customer_name: "Rizky Permana", destination: "Semarang" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0003", order_code: "SO-20260314-003", customer_name: "Dina Maharani", destination: "Surabaya" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0004", order_code: "SO-20260314-004", customer_name: "Farhan Aji", destination: "Yogyakarta" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0005", order_code: "SO-20260314-005", customer_name: "Wulan Sari", destination: "Solo" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0006", order_code: "SO-20260314-006", customer_name: "Yogi Prakoso", destination: "Malang" },
+];
+
 const DUMMY_MANIFEST_ITEMS: ManifestItem[] = [
   {
     id: "4e2f0f20-8a3b-4e6a-9a5b-3a11a8d30011",
-    order_id: "ORD-20260314-010",
+    order_id: "4c9a398e-5312-4305-9a48-09b3988a0001",
     resi: "RSI-260314-0010",
     driver_name: "Hendra Wijaya",
     vehicle_number: "B 9123 TKM",
-    destination: "Bandung",
     status: "preparing",
     dispatch_date: "2026-03-14T08:30:00+07:00",
     created_at: "2026-03-14T07:50:00+07:00",
   },
   {
     id: "6b4d8f4a-2a67-4fb9-9f07-1cc113f30022",
-    order_id: "ORD-20260314-011",
+    order_id: "4c9a398e-5312-4305-9a48-09b3988a0002",
     resi: "RSI-260314-0011",
     driver_name: "Rudi Saputra",
     vehicle_number: "D 8451 MLA",
-    destination: "Semarang",
     status: "in_transit",
     dispatch_date: "2026-03-14T07:45:00+07:00",
     created_at: "2026-03-14T07:15:00+07:00",
-  },
-  {
-    id: "7775d7ab-2ebd-4269-9100-90a66d1b0033",
-    order_id: "ORD-20260314-012",
-    resi: "RSI-260314-0012",
-    driver_name: "Maman Suherman",
-    vehicle_number: "L 7720 HB",
-    destination: "Surabaya",
-    status: "delivered",
-    dispatch_date: "2026-03-13T19:10:00+07:00",
-    created_at: "2026-03-13T18:30:00+07:00",
-  },
-  {
-    id: "0ce3a78f-1696-4fc9-89e8-2260f4690044",
-    order_id: "ORD-20260314-013",
-    resi: "RSI-260314-0013",
-    driver_name: "Yoga Pratama",
-    vehicle_number: "H 1309 YU",
-    destination: "Yogyakarta",
-    status: "in_transit",
-    dispatch_date: "2026-03-14T06:55:00+07:00",
-    created_at: "2026-03-14T06:10:00+07:00",
-  },
-  {
-    id: "587c23e2-a877-4f8a-92d1-f8fa31f50055",
-    order_id: "ORD-20260314-014",
-    resi: "RSI-260314-0014",
-    driver_name: "Danu Kurniawan",
-    vehicle_number: "AD 9028 GP",
-    destination: "Solo",
-    status: "preparing",
-    dispatch_date: "2026-03-14T09:40:00+07:00",
-    created_at: "2026-03-14T09:05:00+07:00",
-  },
-  {
-    id: "4f3ec6e9-5ca5-446d-8e13-ab703b7f0066",
-    order_id: "ORD-20260314-015",
-    resi: "RSI-260314-0015",
-    driver_name: "Aldi Ramadhan",
-    vehicle_number: "N 6604 PK",
-    destination: "Malang",
-    status: "delivered",
-    dispatch_date: "2026-03-13T21:20:00+07:00",
-    created_at: "2026-03-13T20:45:00+07:00",
   },
 ];
 
@@ -123,7 +91,6 @@ const INITIAL_CREATE_FORM: CreateManifestForm = {
   resi: "",
   driver_name: "",
   vehicle_number: "",
-  destination: "",
   status: "preparing",
   dispatch_date: "",
 };
@@ -133,22 +100,32 @@ export default function ManifestPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<ManifestFilterStatus>("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
-  const [createForm, setCreateForm] = useState<CreateManifestForm>(INITIAL_CREATE_FORM);
+  const [createForm, setCreateForm] = useState<CreateManifestForm>({
+    ...INITIAL_CREATE_FORM,
+    order_id: sales_t_sales_order_seed[0]?.id ?? "",
+  });
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
   const [selectedManifest, setSelectedManifest] = useState<ManifestItem | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ManifestStatus>("preparing");
+
+  const orderById = useMemo(
+    () => Object.fromEntries(sales_t_sales_order_seed.map((order) => [order.id, order])) as Record<string, SalesOrderRef>,
+    [],
+  );
 
   const filteredItems = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
 
     return items.filter((item) => {
+      const order = orderById[item.order_id];
       const matchSearch =
         item.driver_name.toLowerCase().includes(keyword) ||
-        item.destination.toLowerCase().includes(keyword);
+        (order?.order_code ?? "").toLowerCase().includes(keyword) ||
+        (order?.customer_name ?? "").toLowerCase().includes(keyword);
       const matchStatus = filterStatus === "all" ? true : item.status === filterStatus;
       return matchSearch && matchStatus;
     });
-  }, [items, searchTerm, filterStatus]);
+  }, [items, searchTerm, filterStatus, orderById]);
 
   const handleOpenUpdateModal = (item: ManifestItem) => {
     setSelectedManifest(item);
@@ -162,7 +139,10 @@ export default function ManifestPage() {
 
   const handleCloseCreateModal = () => {
     setIsCreateModalOpen(false);
-    setCreateForm(INITIAL_CREATE_FORM);
+    setCreateForm({
+      ...INITIAL_CREATE_FORM,
+      order_id: sales_t_sales_order_seed[0]?.id ?? "",
+    });
   };
 
   const handleCloseUpdateModal = () => {
@@ -191,11 +171,10 @@ export default function ManifestPage() {
 
     const newManifest: ManifestItem = {
       id: crypto.randomUUID(),
-      order_id: createForm.order_id.trim(),
+      order_id: createForm.order_id,
       resi: createForm.resi.trim(),
       driver_name: createForm.driver_name.trim(),
       vehicle_number: createForm.vehicle_number.trim(),
-      destination: createForm.destination.trim(),
       status: createForm.status,
       dispatch_date: dispatchIsoDate,
       created_at: nowIsoDate,
@@ -225,7 +204,7 @@ export default function ManifestPage() {
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Cari nama kurir / tujuan..."
+              placeholder="Cari order / customer / kurir..."
               className="w-full rounded-xl border border-slate-300 bg-slate-200 py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             />
           </div>
@@ -262,10 +241,10 @@ export default function ManifestPage() {
                 ID Manifest
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Info Armada
+                Order
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Tujuan
+                Info Armada
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
                 Waktu Berangkat
@@ -280,42 +259,49 @@ export default function ManifestPage() {
           </thead>
           <tbody>
             {filteredItems.length > 0 ? (
-              filteredItems.map((item) => (
-                <tr key={item.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">
-                    {item.id.slice(0, 8).toUpperCase()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-semibold text-slate-900">{item.driver_name}</p>
-                      <p className="text-xs text-slate-600">{item.vehicle_number}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-800">{item.destination}</td>
-                  <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">
-                    {dateTimeFormatter.format(new Date(item.dispatch_date))}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeClass(
-                        item.status,
-                      )}`}
-                    >
-                      {statusLabel(item.status)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenUpdateModal(item)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-yellow-400 bg-yellow-400/70 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-yellow-500"
-                    >
-                      <Truck size={15} />
-                      Update Status
-                    </button>
-                  </td>
-                </tr>
-              ))
+              filteredItems.map((item) => {
+                const order = orderById[item.order_id];
+                return (
+                  <tr key={item.id} className="border-t border-slate-100">
+                    <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">
+                      {item.id.slice(0, 8).toUpperCase()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-700 min-w-56">
+                      <p className="font-semibold text-slate-900">{order?.order_code ?? "Order tidak ditemukan"}</p>
+                      <p className="text-xs text-slate-600">{order?.customer_name ?? "-"} - {order?.destination ?? "-"}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-semibold text-slate-900">{item.driver_name}</p>
+                        <p className="text-xs text-slate-600">{item.vehicle_number}</p>
+                        <p className="text-xs text-slate-500">Resi: {item.resi}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">
+                      {dateTimeFormatter.format(new Date(item.dispatch_date))}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeClass(
+                          item.status,
+                        )}`}
+                      >
+                        {statusLabel(item.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenUpdateModal(item)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-yellow-400 bg-yellow-400/70 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-yellow-500"
+                      >
+                        <Truck size={15} />
+                        Update Status
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
@@ -335,18 +321,20 @@ export default function ManifestPage() {
       >
         <form onSubmit={handleCreateManifest} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="block space-y-1.5">
-              <span className="text-sm font-medium text-slate-700">Order ID</span>
-              <input
-                type="text"
+            <label className="block space-y-1.5 sm:col-span-2">
+              <span className="text-sm font-medium text-slate-700">Order</span>
+              <select
                 required
                 value={createForm.order_id}
                 onChange={(event) =>
                   setCreateForm((prev) => ({ ...prev, order_id: event.target.value }))
                 }
-                placeholder="ORD-20260314-016"
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
-              />
+              >
+                {sales_t_sales_order_seed.map((order) => (
+                  <option key={order.id} value={order.id}>{order.order_code} - {order.customer_name}</option>
+                ))}
+              </select>
             </label>
 
             <label className="block space-y-1.5">
@@ -392,20 +380,6 @@ export default function ManifestPage() {
             </label>
 
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium text-slate-700">Tujuan</span>
-              <input
-                type="text"
-                required
-                value={createForm.destination}
-                onChange={(event) =>
-                  setCreateForm((prev) => ({ ...prev, destination: event.target.value }))
-                }
-                placeholder="Kota tujuan"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
-              />
-            </label>
-
-            <label className="block space-y-1.5">
               <span className="text-sm font-medium text-slate-700">Status</span>
               <select
                 value={createForm.status}
@@ -422,20 +396,20 @@ export default function ManifestPage() {
                 <option value="delivered">Terkirim</option>
               </select>
             </label>
-          </div>
 
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">Waktu Berangkat</span>
-            <input
-              type="datetime-local"
-              required
-              value={createForm.dispatch_date}
-              onChange={(event) =>
-                setCreateForm((prev) => ({ ...prev, dispatch_date: event.target.value }))
-              }
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
-            />
-          </label>
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Waktu Berangkat</span>
+              <input
+                type="datetime-local"
+                required
+                value={createForm.dispatch_date}
+                onChange={(event) =>
+                  setCreateForm((prev) => ({ ...prev, dispatch_date: event.target.value }))
+                }
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
+              />
+            </label>
+          </div>
 
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
             <button
@@ -462,28 +436,22 @@ export default function ManifestPage() {
         maxWidth="max-w-md"
       >
         <div className="space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Manifest Terpilih
-            </p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">
-              {selectedManifest?.id.slice(0, 8).toUpperCase() ?? "-"}
-            </p>
-            <p className="mt-1 text-xs text-slate-600">
-              {selectedManifest?.driver_name ?? "-"} | {selectedManifest?.destination ?? "-"}
-            </p>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">ID Manifest</p>
+            <p className="text-sm font-semibold text-slate-900">{selectedManifest?.id.slice(0, 8).toUpperCase() ?? "-"}</p>
+            <p className="text-xs text-slate-600">Order: {selectedManifest ? orderById[selectedManifest.order_id]?.order_code ?? "-" : "-"}</p>
           </div>
 
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">Pilih Status</span>
+            <span className="text-sm font-medium text-slate-700">Ubah Status</span>
             <select
               value={selectedStatus}
               onChange={(event) => setSelectedStatus(event.target.value as ManifestStatus)}
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             >
-              <option value="preparing">preparing</option>
-              <option value="in_transit">in_transit</option>
-              <option value="delivered">delivered</option>
+              <option value="preparing">Persiapan</option>
+              <option value="in_transit">Di Perjalanan</option>
+              <option value="delivered">Terkirim</option>
             </select>
           </label>
 
@@ -498,9 +466,9 @@ export default function ManifestPage() {
             <button
               type="button"
               onClick={handleSaveStatus}
-              className="inline-flex items-center justify-center rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600"
+              className="inline-flex items-center justify-center rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700"
             >
-              Simpan Perubahan
+              Simpan Status
             </button>
           </div>
         </div>

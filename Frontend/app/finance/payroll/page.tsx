@@ -5,51 +5,65 @@ import { Search } from 'lucide-react';
 
 type PayrollItem = {
 	id: string;
-	employeeName: string;
+	employee_id: string;
 	bulan: string;
 	total: number;
 	createdAt: string;
 };
 
+type EmployeeOption = {
+	id: string;
+	nama: string;
+};
+
+const hr_m_karyawan_seed: EmployeeOption[] = [
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50001', nama: 'Andi Saputra' },
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50002', nama: 'Nabila Putri' },
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50003', nama: 'Rizky Maulana' },
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50004', nama: 'Dewi Anggraini' },
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50005', nama: 'Fajar Nugraha' },
+	{ id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50006', nama: 'Siti Rahma' },
+];
+
 const PAYROLL_HISTORY_DATA: PayrollItem[] = [
 	{
 		id: 'PR-260201',
-		employeeName: 'Andi Saputra',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50001',
 		bulan: '2026-02-01',
 		total: 8750000,
 		createdAt: '2026-03-01T08:15:00Z',
 	},
 	{
 		id: 'PR-260202',
-		employeeName: 'Nabila Putri',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50002',
 		bulan: '2026-02-01',
 		total: 9250000,
 		createdAt: '2026-03-01T08:21:00Z',
 	},
 	{
 		id: 'PR-260203',
-		employeeName: 'Rizky Maulana',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50003',
 		bulan: '2026-02-01',
 		total: 8100000,
 		createdAt: '2026-03-01T08:28:00Z',
 	},
 	{
 		id: 'PR-260204',
-		employeeName: 'Dewi Anggraini',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50004',
 		bulan: '2026-02-01',
 		total: 9800000,
 		createdAt: '2026-03-01T08:36:00Z',
 	},
 	{
 		id: 'PR-260205',
-		employeeName: 'Fajar Nugraha',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50005',
 		bulan: '2026-02-01',
 		total: 8600000,
 		createdAt: '2026-03-01T08:44:00Z',
 	},
 	{
 		id: 'PR-260206',
-		employeeName: 'Siti Rahma',
+		employee_id: '95fcf2da-8f8f-4a9b-a8b0-6e6eb1c50006',
 		bulan: '2026-02-01',
 		total: 8950000,
 		createdAt: '2026-03-01T08:53:00Z',
@@ -82,6 +96,11 @@ function formatDate(value: string): string {
 export default function FinancePayrollPage() {
 	const [searchTerm, setSearchTerm] = useState('');
 
+	const employeeById = useMemo(
+		() => Object.fromEntries(hr_m_karyawan_seed.map((employee) => [employee.id, employee.nama])) as Record<string, string>,
+		[],
+	);
+
 	const totalPayroll = useMemo(
 		() => PAYROLL_HISTORY_DATA.reduce((sum, item) => sum + item.total, 0),
 		[],
@@ -92,9 +111,9 @@ export default function FinancePayrollPage() {
 		if (!keyword) return PAYROLL_HISTORY_DATA;
 
 		return PAYROLL_HISTORY_DATA.filter((item) =>
-			item.employeeName.toLowerCase().includes(keyword),
+			(employeeById[item.employee_id] ?? '').toLowerCase().includes(keyword),
 		);
-	}, [searchTerm]);
+	}, [searchTerm, employeeById]);
 
 	return (
 		<div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 max-w-7xl mx-auto w-full">
@@ -134,12 +153,17 @@ export default function FinancePayrollPage() {
 						</thead>
 						<tbody className="divide-y divide-slate-100">
 							{filteredPayroll.map((item) => (
+								(() => {
+									const employeeName = employeeById[item.employee_id] ?? 'Karyawan tidak ditemukan';
+									return (
 								<tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
 									<td className="px-4 md:px-6 py-3 text-sm text-slate-700 whitespace-nowrap">{formatPeriod(item.bulan)}</td>
-									<td className="px-4 md:px-6 py-3 text-sm font-semibold text-slate-900 whitespace-nowrap">{item.employeeName}</td>
+									<td className="px-4 md:px-6 py-3 text-sm font-semibold text-slate-900 whitespace-nowrap">{employeeName}</td>
 									<td className="px-4 md:px-6 py-3 text-sm font-semibold text-right text-slate-900 whitespace-nowrap">{formatRupiah(item.total)}</td>
 									<td className="px-4 md:px-6 py-3 text-sm text-slate-600 whitespace-nowrap">{formatDate(item.createdAt)}</td>
 								</tr>
+									);
+								})()
 							))}
 
 							{filteredPayroll.length === 0 && (

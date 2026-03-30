@@ -7,70 +7,58 @@ import Modal from "@/components/ui/Modal";
 type ReturnStatus = "pending" | "inspected" | "approved" | "rejected";
 type ReturnFilterStatus = "all" | ReturnStatus;
 
+type SalesOrderRef = {
+  id: string;
+  order_code: string;
+  customer_name: string;
+  product_name: string;
+};
+
 type ReturnItem = {
   id: string;
   order_id: string;
-  customer_name: string;
-  product_name: string;
   reason: string;
   status: ReturnStatus;
   created_at: string;
 };
 
+const sales_t_sales_order_seed: SalesOrderRef[] = [
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0001", order_code: "SO-20260314-001", customer_name: "Aulia Pramesti", product_name: "Jaket Windproof" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0002", order_code: "SO-20260314-002", customer_name: "Rizky Permana", product_name: "Sepatu Safety" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0003", order_code: "SO-20260314-003", customer_name: "Dina Maharani", product_name: "Helm Pro Guard" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0004", order_code: "SO-20260314-004", customer_name: "Farhan Aji", product_name: "Tas Utility" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0005", order_code: "SO-20260314-005", customer_name: "Wulan Sari", product_name: "Sarung Tangan Grip" },
+  { id: "4c9a398e-5312-4305-9a48-09b3988a0006", order_code: "SO-20260314-006", customer_name: "Yogi Prakoso", product_name: "Kacamata Safety" },
+];
+
 const DUMMY_RETURN_ITEMS: ReturnItem[] = [
   {
     id: "41d1d9cb-3f89-4c5f-a0f1-8ab31a780011",
-    order_id: "ORD-20260314-101",
-    customer_name: "Aulia Pramesti",
-    product_name: "Jaket Windproof",
+    order_id: "4c9a398e-5312-4305-9a48-09b3988a0001",
     reason: "cacat jahitan di bagian lengan",
     status: "pending",
     created_at: "2026-03-14T08:20:00+07:00",
   },
   {
     id: "e42a1e84-b24e-4f98-a3b1-9dd9f8db0022",
-    order_id: "ORD-20260314-102",
-    customer_name: "Rizky Permana",
-    product_name: "Sepatu Safety",
+    order_id: "4c9a398e-5312-4305-9a48-09b3988a0002",
     reason: "salah kirim ukuran",
     status: "inspected",
     created_at: "2026-03-14T08:55:00+07:00",
   },
   {
     id: "2a3789d2-9fc3-4fc7-9a4f-e96e59fe0033",
-    order_id: "ORD-20260314-103",
-    customer_name: "Dina Maharani",
-    product_name: "Helm Pro Guard",
+    order_id: "4c9a398e-5312-4305-9a48-09b3988a0003",
     reason: "warna tidak sesuai pesanan",
     status: "approved",
     created_at: "2026-03-14T09:10:00+07:00",
   },
   {
     id: "b57de0ab-6ee9-45d6-8db7-f5437a220044",
-    order_id: "ORD-20260314-104",
-    customer_name: "Farhan Aji",
-    product_name: "Tas Utility",
+    order_id: "4c9a398e-5312-4305-9a48-09b3988a0004",
     reason: "barang digunakan dan tidak sesuai kebijakan retur",
     status: "rejected",
     created_at: "2026-03-14T09:45:00+07:00",
-  },
-  {
-    id: "5f4a0568-2ecf-4a6e-a9ab-6fdad6d20055",
-    order_id: "ORD-20260314-105",
-    customer_name: "Wulan Sari",
-    product_name: "Sarung Tangan Grip",
-    reason: "produk rusak saat diterima",
-    status: "pending",
-    created_at: "2026-03-14T10:05:00+07:00",
-  },
-  {
-    id: "18a83e6d-777f-4558-b9f7-34331e7d0066",
-    order_id: "ORD-20260314-106",
-    customer_name: "Yogi Prakoso",
-    product_name: "Kacamata Safety",
-    reason: "lensa tergores",
-    status: "inspected",
-    created_at: "2026-03-14T10:30:00+07:00",
   },
 ];
 
@@ -102,17 +90,24 @@ export default function ReturnsPage() {
   const [selectedReturn, setSelectedReturn] = useState<ReturnItem | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ReturnStatus>("pending");
 
+  const orderById = useMemo(
+    () => Object.fromEntries(sales_t_sales_order_seed.map((order) => [order.id, order])) as Record<string, SalesOrderRef>,
+    [],
+  );
+
   const filteredItems = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
 
     return items.filter((item) => {
+      const order = orderById[item.order_id];
       const matchesSearch =
-        item.customer_name.toLowerCase().includes(keyword) ||
-        item.order_id.toLowerCase().includes(keyword);
+        (order?.customer_name ?? "").toLowerCase().includes(keyword) ||
+        (order?.order_code ?? "").toLowerCase().includes(keyword) ||
+        (order?.product_name ?? "").toLowerCase().includes(keyword);
       const matchesStatus = filterStatus === "all" ? true : item.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [items, searchTerm, filterStatus]);
+  }, [items, searchTerm, filterStatus, orderById]);
 
   const openUpdateModal = (item: ReturnItem) => {
     setSelectedReturn(item);
@@ -157,7 +152,7 @@ export default function ReturnsPage() {
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Cari nama pelanggan / no pesanan..."
+            placeholder="Cari customer / order / produk..."
             className="w-full rounded-xl border border-slate-300 bg-slate-200 py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
           />
         </div>
@@ -201,47 +196,50 @@ export default function ReturnsPage() {
           </thead>
           <tbody>
             {filteredItems.length > 0 ? (
-              filteredItems.map((item) => (
-                <tr key={item.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">
-                    {item.id.slice(0, 8).toUpperCase()}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-800 whitespace-nowrap">
-                    {item.order_id}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="space-y-0.5 min-w-[220px]">
-                      <p className="text-sm font-semibold text-slate-900">{item.product_name}</p>
-                      <p className="text-xs text-slate-600">{item.customer_name}</p>
-                      <p className="text-xs text-slate-500">
-                        Diajukan: {dateFormatter.format(new Date(item.created_at))}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-700 min-w-[220px]">
-                    {item.reason}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeClass(
-                        item.status,
-                      )}`}
-                    >
-                      {statusLabel(item.status)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      type="button"
-                      onClick={() => openUpdateModal(item)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-yellow-400 bg-yellow-400/70 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-yellow-500"
-                    >
-                      <RefreshCcw size={15} />
-                      Proses Retur
-                    </button>
-                  </td>
-                </tr>
-              ))
+              filteredItems.map((item) => {
+                const order = orderById[item.order_id];
+                return (
+                  <tr key={item.id} className="border-t border-slate-100">
+                    <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">
+                      {item.id.slice(0, 8).toUpperCase()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-800 whitespace-nowrap">
+                      {order?.order_code ?? "Order tidak ditemukan"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="space-y-0.5 min-w-[220px]">
+                        <p className="text-sm font-semibold text-slate-900">{order?.product_name ?? "Produk tidak ditemukan"}</p>
+                        <p className="text-xs text-slate-600">{order?.customer_name ?? "-"}</p>
+                        <p className="text-xs text-slate-500">
+                          Diajukan: {dateFormatter.format(new Date(item.created_at))}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-700 min-w-[220px]">
+                      {item.reason}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeClass(
+                          item.status,
+                        )}`}
+                      >
+                        {statusLabel(item.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => openUpdateModal(item)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-yellow-400 bg-yellow-400/70 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-yellow-500"
+                      >
+                        <RefreshCcw size={15} />
+                        Proses Retur
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
@@ -265,13 +263,13 @@ export default function ReturnsPage() {
               Detail Retur
             </p>
             <p className="text-sm font-semibold text-slate-900">
-              {selectedReturn?.product_name ?? "-"}
+              {selectedReturn ? orderById[selectedReturn.order_id]?.product_name ?? "-" : "-"}
             </p>
             <p className="text-xs text-slate-600">
-              Pelanggan: {selectedReturn?.customer_name ?? "-"}
+              Pelanggan: {selectedReturn ? orderById[selectedReturn.order_id]?.customer_name ?? "-" : "-"}
             </p>
             <p className="text-xs text-slate-600">
-              No. Pesanan: {selectedReturn?.order_id ?? "-"}
+              No. Pesanan: {selectedReturn ? orderById[selectedReturn.order_id]?.order_code ?? "-" : "-"}
             </p>
             <p className="text-xs text-slate-600">
               Alasan: {selectedReturn?.reason ?? "-"}

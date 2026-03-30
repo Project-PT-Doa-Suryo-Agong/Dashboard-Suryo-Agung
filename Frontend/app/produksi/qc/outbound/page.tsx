@@ -4,12 +4,17 @@ import { useMemo, useState } from "react";
 import { CheckSquare, Search, ShieldCheck } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 
-type QcOutboundStatus = "pending" | "passed" | "failed" | "rework";
+type QcOutboundStatus = "pass" | "reject";
+
+type ProduksiOrderRef = {
+  id: string;
+  code: string;
+  product_name: string;
+};
 
 type QcOutboundItem = {
   id: string;
-  batch_id: string;
-  product_name: string;
+  produksi_order_id: string;
   qty_produced: number;
   status: QcOutboundStatus;
   inspector_name: string;
@@ -17,89 +22,62 @@ type QcOutboundItem = {
   notes?: string;
 };
 
+const production_t_produksi_order_seed: ProduksiOrderRef[] = [
+  { id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0001", code: "PO-20260316-001", product_name: "Coffee Beans Arabica 250gr" },
+  { id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0002", code: "PO-20260316-002", product_name: "Chocolate Blend 500gr" },
+  { id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0003", code: "PO-20260316-003", product_name: "Syrup Caramel 1L" },
+  { id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0004", code: "PO-20260316-004", product_name: "Matcha Mix 400gr" },
+  { id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0005", code: "PO-20260316-005", product_name: "Roasted Robusta 1kg" },
+  { id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0006", code: "PO-20260316-006", product_name: "Vanilla Cream Powder 500gr" },
+  { id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0007", code: "PO-20260316-007", product_name: "Hazelnut Syrup 750ml" },
+];
+
 const production_t_qc_outbound_rows_seed: QcOutboundItem[] = [
   {
     id: "QCO-20260316-001",
-    batch_id: "BATCH-PROD-240316-A",
-    product_name: "Coffee Beans Arabica 250gr",
+    produksi_order_id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0001",
     qty_produced: 500,
-    status: "pending",
+    status: "pass",
     inspector_name: "Nadia Kurnia",
     date: "2026-03-16",
   },
   {
     id: "QCO-20260316-002",
-    batch_id: "BATCH-PROD-240316-B",
-    product_name: "Chocolate Blend 500gr",
+    produksi_order_id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0002",
     qty_produced: 320,
-    status: "passed",
+    status: "pass",
     inspector_name: "Rama Saputra",
     date: "2026-03-16",
     notes: "Sesuai standar fisik dan berat bersih.",
   },
   {
     id: "QCO-20260316-003",
-    batch_id: "BATCH-PROD-240315-C",
-    product_name: "Syrup Caramel 1L",
+    produksi_order_id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0003",
     qty_produced: 220,
-    status: "rework",
+    status: "reject",
     inspector_name: "Indah Lestari",
     date: "2026-03-15",
     notes: "Seal tutup botol belum konsisten, perlu perbaikan line packing.",
   },
   {
     id: "QCO-20260316-004",
-    batch_id: "BATCH-PROD-240315-D",
-    product_name: "Matcha Mix 400gr",
+    produksi_order_id: "e7f5ec66-2f95-4a66-9ef9-95298e5c0004",
     qty_produced: 280,
-    status: "failed",
+    status: "reject",
     inspector_name: "Fikri Maulana",
     date: "2026-03-15",
     notes: "Kelembapan produk melebihi batas QC.",
   },
-  {
-    id: "QCO-20260316-005",
-    batch_id: "BATCH-PROD-240314-E",
-    product_name: "Roasted Robusta 1kg",
-    qty_produced: 150,
-    status: "pending",
-    inspector_name: "Nadia Kurnia",
-    date: "2026-03-14",
-  },
-  {
-    id: "QCO-20260316-006",
-    batch_id: "BATCH-PROD-240314-F",
-    product_name: "Vanilla Cream Powder 500gr",
-    qty_produced: 260,
-    status: "passed",
-    inspector_name: "Ari Wijaya",
-    date: "2026-03-14",
-    notes: "Produk lolos inspeksi akhir, siap kirim.",
-  },
-  {
-    id: "QCO-20260316-007",
-    batch_id: "BATCH-PROD-240313-G",
-    product_name: "Hazelnut Syrup 750ml",
-    qty_produced: 180,
-    status: "rework",
-    inspector_name: "Mila Pratama",
-    date: "2026-03-13",
-    notes: "Warna batch belum seragam, perlu mixing ulang.",
-  },
 ];
 
 const status_label: Record<QcOutboundStatus, string> = {
-  pending: "Menunggu Inspeksi",
-  passed: "Lolos QC / Siap Kirim",
-  failed: "Gagal Total / Reject",
-  rework: "Butuh Perbaikan",
+  pass: "Lolos QC / Siap Kirim",
+  reject: "Reject",
 };
 
 const status_badge_class: Record<QcOutboundStatus, string> = {
-  pending: "bg-amber-100 text-amber-700",
-  passed: "bg-emerald-100 text-emerald-700",
-  failed: "bg-rose-100 text-rose-700",
-  rework: "bg-indigo-100 text-indigo-700",
+  pass: "bg-emerald-100 text-emerald-700",
+  reject: "bg-rose-100 text-rose-700",
 };
 
 function formatDate(date: string): string {
@@ -117,22 +95,28 @@ export default function QcOutboundPage() {
   const [isInspectModalOpen, setIsInspectModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<QcOutboundItem | null>(null);
 
+  const orderById = useMemo(
+    () => Object.fromEntries(production_t_produksi_order_seed.map((order) => [order.id, order])) as Record<string, ProduksiOrderRef>,
+    [],
+  );
+
   const filteredItems = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return items.filter((item) => {
+      const order = orderById[item.produksi_order_id];
       const matchStatus = filterStatus === "all" || item.status === filterStatus;
       const matchSearch =
         normalizedSearch.length === 0 ||
         item.id.toLowerCase().includes(normalizedSearch) ||
-        item.product_name.toLowerCase().includes(normalizedSearch);
+        (order?.code ?? "").toLowerCase().includes(normalizedSearch) ||
+        (order?.product_name ?? "").toLowerCase().includes(normalizedSearch);
 
       return matchStatus && matchSearch;
     });
-  }, [items, searchTerm, filterStatus]);
+  }, [items, searchTerm, filterStatus, orderById]);
 
   const handleOpenInspectModal = (item: QcOutboundItem) => {
-    if (item.status === "passed" || item.status === "failed") return;
     setSelectedItem(item);
     setIsInspectModalOpen(true);
   };
@@ -147,13 +131,7 @@ export default function QcOutboundPage() {
 
     setItems((currentItems) =>
       currentItems.map((item) =>
-        item.id === selectedItem.id
-          ? {
-              ...item,
-              status: selectedItem.status,
-              notes: selectedItem.notes,
-            }
-          : item,
+        item.id === selectedItem.id ? selectedItem : item,
       ),
     );
 
@@ -177,7 +155,7 @@ export default function QcOutboundPage() {
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Cari ID inspeksi atau nama produk jadi..."
+              placeholder="Cari ID inspeksi atau referensi order..."
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
             />
           </div>
@@ -188,10 +166,8 @@ export default function QcOutboundPage() {
             className="w-full sm:w-56 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
           >
             <option value="all">Semua Status</option>
-            <option value="pending">Menunggu Inspeksi</option>
-            <option value="passed">Lolos QC / Siap Kirim</option>
-            <option value="rework">Butuh Perbaikan</option>
-            <option value="failed">Gagal Total / Reject</option>
+            <option value="pass">Lolos QC / Siap Kirim</option>
+            <option value="reject">Reject</option>
           </select>
         </div>
 
@@ -223,7 +199,7 @@ export default function QcOutboundPage() {
                   Tanggal
                 </th>
                 <th className="px-4 md:px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                  Batch &amp; Produk
+                  Produksi Order
                 </th>
                 <th className="px-4 md:px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
                   Qty Produksi
@@ -248,9 +224,7 @@ export default function QcOutboundPage() {
                 </tr>
               ) : (
                 filteredItems.map((item) => {
-                  const isActionDisabled =
-                    item.status === "passed" || item.status === "failed";
-
+                  const order = orderById[item.produksi_order_id];
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="px-4 md:px-6 py-3 text-sm font-semibold text-slate-800 whitespace-nowrap">
@@ -260,8 +234,8 @@ export default function QcOutboundPage() {
                         {formatDate(item.date)}
                       </td>
                       <td className="px-4 md:px-6 py-3 text-sm text-slate-700 min-w-72">
-                        <p className="font-semibold text-slate-800 whitespace-nowrap">{item.batch_id}</p>
-                        <p className="text-slate-600 break-words">{item.product_name}</p>
+                        <p className="font-semibold text-slate-800 whitespace-nowrap">{order?.code ?? "-"}</p>
+                        <p className="text-slate-600 break-words">{order?.product_name ?? "Order tidak ditemukan"}</p>
                       </td>
                       <td className="px-4 md:px-6 py-3 text-sm text-slate-700 whitespace-nowrap">
                         {item.qty_produced} Unit
@@ -280,8 +254,7 @@ export default function QcOutboundPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenInspectModal(item)}
-                          disabled={isActionDisabled}
-                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#BC934B] transition hover:text-[#a88444] disabled:text-slate-300 disabled:cursor-not-allowed whitespace-nowrap"
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#BC934B] transition hover:text-[#a88444] whitespace-nowrap"
                         >
                           <CheckSquare className="h-4 w-4" />
                           Evaluasi QC
@@ -310,14 +283,24 @@ export default function QcOutboundPage() {
             }}
           >
             <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-wide font-semibold text-slate-500">Nama Produk</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900 break-words">
-                  {selectedItem.product_name}
-                </p>
-
-                <p className="mt-3 text-xs uppercase tracking-wide font-semibold text-slate-500">Qty Produksi</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">{selectedItem.qty_produced} Unit</p>
+              <div className="space-y-1.5">
+                <label htmlFor="produksi-order-outbound" className="text-sm font-semibold text-slate-700">
+                  Produksi Order
+                </label>
+                <select
+                  id="produksi-order-outbound"
+                  value={selectedItem.produksi_order_id}
+                  onChange={(event) =>
+                    setSelectedItem((prevItem) =>
+                      prevItem ? { ...prevItem, produksi_order_id: event.target.value } : prevItem,
+                    )
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                >
+                  {production_t_produksi_order_seed.map((order) => (
+                    <option key={order.id} value={order.id}>{order.code} - {order.product_name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-1.5">
@@ -336,9 +319,8 @@ export default function QcOutboundPage() {
                   }
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
                 >
-                  <option value="passed">Lolos QC / Siap Kirim</option>
-                  <option value="failed">Gagal Total / Reject</option>
-                  <option value="rework">Butuh Perbaikan</option>
+                  <option value="pass">Lolos QC / Siap Kirim</option>
+                  <option value="reject">Reject</option>
                 </select>
               </div>
 
@@ -355,7 +337,7 @@ export default function QcOutboundPage() {
                       prevItem ? { ...prevItem, notes: event.target.value } : prevItem,
                     )
                   }
-                  placeholder="Tulis catatan evaluasi, misalnya alasan failed atau item yang perlu rework..."
+                  placeholder="Tulis catatan evaluasi QC."
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition resize-none focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
                 />
               </div>
