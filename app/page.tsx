@@ -13,15 +13,6 @@ import {
 } from "lucide-react";
 import type { ApiError, ApiSuccess } from "@/types/api";
 
-type DashboardMetrics = {
-  totalKaryawan: number;
-  pendapatanBulanIni: number;
-  pesananAktif: number;
-  updatedAt: string;
-};
-
-type DashboardMetricsPayload = DashboardMetrics;
-
 const departments = [
   {
     title: "Finance",
@@ -70,48 +61,7 @@ async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> 
   return payload;
 }
 
-function formatRupiah(value: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 export default function LandingPage() {
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    totalKaryawan: 0,
-    pendapatanBulanIni: 0,
-    pesananAktif: 0,
-    updatedAt: new Date().toISOString(),
-  });
-  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
-
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      setIsLoadingMetrics(true);
-      try {
-        const response = await fetch("/api/dashboard/metrics", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          cache: "no-store",
-        });
-        const payload = await parseJsonResponse<DashboardMetricsPayload>(response);
-        setMetrics(payload.data);
-      } catch {
-        setMetrics({
-          totalKaryawan: 0,
-          pendapatanBulanIni: 0,
-          pesananAktif: 0,
-          updatedAt: new Date().toISOString(),
-        });
-      } finally {
-        setIsLoadingMetrics(false);
-      }
-    };
-
-    void fetchMetrics();
-  }, []);
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#999999] font-display antialiased">
@@ -172,8 +122,8 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="mt-auto w-full bg-[#1F2937] px-3 py-6 text-slate-300 md:px-4 md:py-8 lg:px-6 lg:py-12">
-        <div className="pt-8 border-t text-center border-[#e5ddd5]">
+      <footer className="mt-auto w-full bg-[#1F2937] px-2 py-4 text-slate-300 md:px-4 md:py-8 lg:px-6 lg:py-12">
+        <div className="text-center">
           <p className="text-xs text-slate-400 md:text-sm lg:text-base">&copy; {new Date().getFullYear()} PT DOA SURYO AGONG. All rights reserved.</p>
         </div>
       </footer>
