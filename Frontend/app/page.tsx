@@ -153,36 +153,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-3 pb-8 md:px-4 md:pb-12 lg:px-6 lg:pb-16">
-          <div className="mb-4 md:mb-5 lg:mb-6 flex items-center justify-between gap-3">
-            <h2 className="text-sm md:text-base lg:text-lg font-bold text-white">Enterprise Snapshot</h2>
-            <span className="text-[11px] md:text-xs text-white/80">
-              {isLoadingMetrics ? "Memuat data..." : `Updated: ${new Date(metrics.updatedAt).toLocaleString("id-ID")}`}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2 md:gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
-            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xl">
-              <p className="text-xs font-medium text-slate-500">Total Karyawan</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {isLoadingMetrics ? "..." : metrics.totalKaryawan.toLocaleString("id-ID")}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xl">
-              <p className="text-xs font-medium text-slate-500">Pendapatan Bulan Ini</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {isLoadingMetrics ? "..." : formatRupiah(metrics.pendapatanBulanIni)}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-xl sm:col-span-2 lg:col-span-1">
-              <p className="text-xs font-medium text-slate-500">Pesanan Aktif</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {isLoadingMetrics ? "..." : metrics.pesananAktif.toLocaleString("id-ID")}
-              </p>
-            </div>
-          </div>
-        </section>
-
         <section className="mx-auto max-w-7xl px-3 pb-12 md:px-4 md:pb-16 lg:px-6 lg:pb-24">
           <div className="grid grid-cols-1 gap-2 md:gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
             {departments.map((dept, index) => (
