@@ -86,7 +86,7 @@ export default function LandingPage() {
       </nav>
 
       <main className="grow">
-        <section className="mx-auto flex max-w-4xl flex-col items-center justify-center px-3 py-12 text-center md:px-4 md:py-20 lg:px-6 lg:py-32">
+        <section className="mx-auto flex max-w-4xl flex-col items-center justify-center px-3 py-7 text-center md:px-4 md:py-20 lg:px-6 lg:py-20">
           <h1 className="mb-4 text-lg font-black leading-tight tracking-tight text-white drop-shadow-sm md:mb-6 md:text-2xl lg:text-3xl">
             Unified Enterprise <span className="text-primary drop-shadow-none">Dashboard</span>
           </h1>
