@@ -1,15 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-<<<<<<< HEAD
-import { createServerClient } from "@supabase/ssr";
 import { env } from "@/lib/env";
-import { getCookieDomain } from "@/lib/cookie-domain";
-import type { Database } from "@/types/supabase";
-
-type AppSubdomain =
-=======
 
 type AppRole =
->>>>>>> 96c62d162db93d3b45c5759c1fbe315b6f095bf8
   | "developer"
   | "management"
   | "finance"
@@ -19,9 +11,6 @@ type AppRole =
   | "creative"
   | "office";
 
-<<<<<<< HEAD
-const SUBDOMAINS: AppSubdomain[] = [
-=======
 type ProtectedRoute = {
   prefix: string;
   allowed: AppRole[];
@@ -31,7 +20,6 @@ const LOGIN_PATH = "/auth/login";
 const DEV_ROOT_HOST = "lvh.me";
 
 const VALID_SUBDOMAINS: AppRole[] = [
->>>>>>> 96c62d162db93d3b45c5759c1fbe315b6f095bf8
   "creative",
   "developer",
   "finance",
@@ -42,129 +30,6 @@ const VALID_SUBDOMAINS: AppRole[] = [
   "office",
 ];
 
-<<<<<<< HEAD
-const ROLE_TO_SUBDOMAIN: Record<string, AppSubdomain> = {
-  developer: "developer",
-  ceo: "management",
-  management: "management",
-  finance: "finance",
-  hr: "hr",
-  "human-resource": "hr",
-  produksi: "produksi",
-  production: "produksi",
-  logistik: "logistik",
-  logistics: "logistik",
-  creative: "creative",
-  sales: "creative",
-  office: "office",
-};
-
-function slugifyRole(value: string | null | undefined) {
-  return (value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-}
-
-function mapRoleToSubdomain(role: string | null | undefined): AppSubdomain | null {
-  const normalized = slugifyRole(role);
-  return ROLE_TO_SUBDOMAIN[normalized] ?? null;
-}
-
-function extractSubdomain(hostWithPort: string): string | null {
-  const host = hostWithPort.split(":")[0]?.toLowerCase() ?? "";
-  if (!host || host === "localhost" || host === "lvh.me") return null;
-
-  if (host.endsWith(".localhost") || host.endsWith(".lvh.me")) {
-    const parts = host.split(".");
-    return parts.length >= 2 ? parts[0] : null;
-  }
-
-  const parts = host.split(".");
-  return parts.length > 2 ? parts[0] : null;
-}
-
-function shouldBypass(pathname: string) {
-  return (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/favicon") ||
-    pathname.startsWith("/icon") ||
-    pathname.startsWith("/logo") ||
-    pathname.startsWith("/assets") ||
-    pathname.includes(".")
-  );
-}
-
-export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (shouldBypass(pathname)) {
-    return NextResponse.next();
-  }
-
-  const subdomain = extractSubdomain(request.headers.get("host") ?? request.nextUrl.host);
-  const isKnownSubdomain = !!subdomain && SUBDOMAINS.includes(subdomain as AppSubdomain);
-
-  const response = NextResponse.next();
-  const cookieDomain = getCookieDomain();
-
-  const supabase = createServerClient<Database>(env.supabaseUrl, env.supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return request.cookies.get(name)?.value;
-      },
-      set(name: string, value: string, options: Record<string, unknown>) {
-        response.cookies.set({ name, value, ...(options as object), domain: cookieDomain, sameSite: "lax" as const });
-      },
-      remove(name: string, options: Record<string, unknown>) {
-        response.cookies.set({ name, value: "", ...(options as object), domain: cookieDomain, sameSite: "lax" as const, maxAge: 0 });
-      },
-    },
-  });
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const user = session?.user ?? null;
-
-  const isAuthRoute = pathname.startsWith("/auth");
-  const isUnauthorizedRoute = pathname.startsWith("/unauthorized");
-
-  if (isKnownSubdomain && !user && !isAuthRoute) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const loginUrl = new URL("/auth/login", baseUrl);
-    loginUrl.searchParams.set("message", "Silakan login terlebih dahulu.");
-    return NextResponse.redirect(loginUrl.toString());
-  }
-
-  if (user && isKnownSubdomain && !isAuthRoute && !isUnauthorizedRoute) {
-    const roleCandidate =
-      (typeof user.user_metadata?.role === "string" ? user.user_metadata.role : null) ??
-      (typeof user.app_metadata?.role === "string" ? user.app_metadata.role : null) ??
-      request.cookies.get("role")?.value ??
-      null;
-
-    const allowedSubdomain = mapRoleToSubdomain(roleCandidate);
-
-    if (!allowedSubdomain || allowedSubdomain !== subdomain) {
-      const unauthorizedUrl = request.nextUrl.clone();
-      unauthorizedUrl.pathname = "/unauthorized";
-      return NextResponse.redirect(unauthorizedUrl);
-    }
-  }
-
-  if (isKnownSubdomain && !isAuthRoute && !isUnauthorizedRoute) {
-    if (!pathname.startsWith(`/${subdomain}`)) {
-      return NextResponse.rewrite(new URL(`/${subdomain}${pathname}`, request.url));
-    }
-  }
-
-  return response;
-}
-
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.png|logo.svg|style.css).*)"],
-};
-=======
 const ACCESS_CONTROL_LIST: ProtectedRoute[] = [
   { prefix: "/finance", allowed: ["finance", "management"] },
   { prefix: "/logistik", allowed: ["logistik", "management"] },
@@ -202,65 +67,68 @@ function normalizeRole(input: string | null | undefined): AppRole | null {
 
   return null;
 }
+import { createServerClient } from "@supabase/ssr";
 
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  const parts = token.split(".");
-  if (parts.length < 2) return null;
+async function readRoleFromSupabaseSession(request: NextRequest, response: NextResponse): Promise<AppRole | null> {
+  const cookieDomain = DEV_ROOT_HOST;
 
-  try {
-    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const json = atob(base64);
-    return JSON.parse(json) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function readRoleFromSupabaseCookies(request: NextRequest): AppRole | null {
-  const authCookie = request.cookies
-    .getAll()
-    .find((cookie) => cookie.name.includes("auth-token"));
-
-  if (!authCookie) return null;
-
-  const parseCandidates = [authCookie.value, decodeURIComponent(authCookie.value)];
-
-  for (const candidate of parseCandidates) {
-    try {
-      const parsed = JSON.parse(candidate) as unknown;
-
-      const accessToken =
-        (Array.isArray(parsed) ? parsed[0] : null) ??
-        (typeof parsed === "object" && parsed !== null && "access_token" in parsed
-          ? (parsed as { access_token?: string }).access_token
-          : null);
-
-      if (typeof accessToken === "string" && accessToken.length > 0) {
-        const payload = decodeJwtPayload(accessToken);
-        if (!payload) continue;
-
-        const appMeta =
-          typeof payload.app_metadata === "object" && payload.app_metadata !== null
-            ? (payload.app_metadata as Record<string, unknown>)
-            : null;
-        const userMeta =
-          typeof payload.user_metadata === "object" && payload.user_metadata !== null
-            ? (payload.user_metadata as Record<string, unknown>)
-            : null;
-
-        const role =
-          normalizeRole(typeof payload.role === "string" ? payload.role : null) ??
-          normalizeRole(typeof appMeta?.role === "string" ? appMeta.role : null) ??
-          normalizeRole(typeof userMeta?.role === "string" ? userMeta.role : null);
-
-        if (role) return role;
-      }
-    } catch {
-      continue;
+  const supabase = createServerClient(
+    env.supabaseUrl, 
+    env.supabaseAnonKey,
+    {
+      cookies: {
+        get(name: string) {
+          const raw = request.cookies.get(name)?.value;
+          if (!raw) return undefined;
+          
+          // Handle base64- prefix set by browser client
+          if (raw.startsWith("base64-")) {
+            try {
+              return atob(raw.slice(7));
+            } catch {
+              return raw;
+            }
+          }
+          return raw;
+        },
+        set(name: string, value: string, options: Record<string, unknown>) {
+          response.cookies.set({ 
+            name, value, 
+            ...(options as object), 
+            domain: `.${cookieDomain}` 
+          });
+        },
+        remove(name: string, options: Record<string, unknown>) {
+          response.cookies.set({ 
+            name, value: "", 
+            ...(options as object), 
+            domain: `.${cookieDomain}`, 
+            maxAge: 0 
+          });
+        },
+      },
     }
+  );
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return null;
+
+  let role =
+    normalizeRole(typeof session.user.user_metadata?.role === "string" ? session.user.user_metadata.role : null) ??
+    normalizeRole(typeof session.user.app_metadata?.role === "string" ? session.user.app_metadata.role : null);
+
+  if (!role && session.user.id) {
+    const { data: profile } = await supabase
+      .schema("core")
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    role = normalizeRole(typeof profile?.role === "string" ? profile.role : null);
   }
 
-  return null;
+  return role;
 }
 
 function readRoleFromSimpleCookies(request: NextRequest): AppRole | null {
@@ -274,8 +142,8 @@ function readRoleFromSimpleCookies(request: NextRequest): AppRole | null {
   return null;
 }
 
-function resolveCurrentRole(request: NextRequest): AppRole | null {
-  return readRoleFromSimpleCookies(request) ?? readRoleFromSupabaseCookies(request);
+async function resolveCurrentRole(request: NextRequest, response: NextResponse): Promise<AppRole | null> {
+  return readRoleFromSimpleCookies(request) ?? (await readRoleFromSupabaseSession(request, response));
 }
 
 function findRouteRule(pathname: string): ProtectedRoute | null {
@@ -310,12 +178,13 @@ function isLocalhostSubdomain(hostHeader: string) {
   return false;
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
   const hostHeader = request.headers.get("host") ?? "";
+  let response = NextResponse.next();
 
   if (url.pathname.includes(".")) {
-    return NextResponse.next();
+    return response;
   }
 
   if (url.pathname.startsWith("/auth")) {
@@ -324,36 +193,69 @@ export function proxy(request: NextRequest) {
       authUrl.hostname = DEV_ROOT_HOST;
       return NextResponse.redirect(authUrl);
     }
-
-    return NextResponse.next();
+    return response;
   }
 
   const effectivePathname = resolveRewrittenPath(url.pathname, hostHeader);
   const routeRule = findRouteRule(effectivePathname);
 
   if (routeRule) {
-    const role = resolveCurrentRole(request);
+    const role = await resolveCurrentRole(request, response);
+
+    const allCookies = request.cookies.getAll();
+    console.log("[PROXY] host:", request.headers.get("host"));
+    console.log("[PROXY] cookies received:", allCookies.map((c) => c.name));
+    console.log("[PROXY] session exists:", !!role);
+
+    const authCookie = allCookies.find(c => c.name.includes('auth-token'));
+    console.log("[PROXY] auth cookie value prefix:", authCookie?.value?.substring(0, 50));
+    console.log("[PROXY] auth cookie starts with base64-:", authCookie?.value?.startsWith('base64-'));
+
+    console.log("[PROXY] supabase url:", env.supabaseUrl);
+
+    const tokenCookie = request.cookies.get('sb-mhfdzprxauqfczmtyizg-auth-token');
+    if (tokenCookie) {
+      const rawValue = tokenCookie.value;
+      const actualValue = rawValue.startsWith('base64-') 
+        ? atob(rawValue.slice(7))
+        : rawValue;
+      try {
+        const parsed = JSON.parse(actualValue);
+        console.log("[PROXY] manual parse - has access_token:", !!parsed.access_token);
+        if (parsed.expires_at) console.log("[PROXY] manual parse - expires_at:", parsed.expires_at);
+      } catch(e) {
+        console.log("[PROXY] manual parse failed:", e);
+      }
+    }
+
     if (!role) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.hostname = DEV_ROOT_HOST;
       loginUrl.pathname = LOGIN_PATH;
       loginUrl.searchParams.set("next", effectivePathname);
-      return NextResponse.redirect(loginUrl);
+      const redirect = NextResponse.redirect(loginUrl);
+      // copy cookies
+      response.cookies.getAll().forEach(c => redirect.cookies.set(c.name, c.value));
+      return redirect;
     }
 
     if (!routeRule.allowed.includes(role)) {
       const deniedUrl = request.nextUrl.clone();
       deniedUrl.pathname = ROLE_DASHBOARD[role] ?? LOGIN_PATH;
       deniedUrl.searchParams.set("denied", "1");
-      return NextResponse.redirect(deniedUrl);
+      const redirect = NextResponse.redirect(deniedUrl);
+      response.cookies.getAll().forEach(c => redirect.cookies.set(c.name, c.value));
+      return redirect;
     }
   }
 
   if (effectivePathname !== url.pathname) {
-    return NextResponse.rewrite(new URL(effectivePathname, request.url));
+    const rewrite = NextResponse.rewrite(new URL(effectivePathname, request.url));
+    response.cookies.getAll().forEach(c => rewrite.cookies.set(c.name, c.value));
+    return rewrite;
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const middleware = proxy;
@@ -361,4 +263,3 @@ export const middleware = proxy;
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico|icon.png|logo.svg|style.css).*)"],
 };
->>>>>>> 96c62d162db93d3b45c5759c1fbe315b6f095bf8

@@ -98,12 +98,12 @@ export async function POST(request: NextRequest) {
   }
 
   const cookieDomain = getCookieDomain();
-
-  // Create response with CORS headers first
-  const jsonResponse = NextResponse.json(
-    { ok: true }, // placeholder, will be replaced
-    { headers: corsHeaders }
-  );
+  
+  // Use a cookies map to collect ALL chunks Supabase sets
+  const cookieMap = new Map<string, { 
+    value: string; 
+    options: Record<string, unknown> 
+  }>();
 
   const supabase = createServerClient<Database>(
     env.supabaseUrl,
@@ -114,24 +114,14 @@ export async function POST(request: NextRequest) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: Record<string, unknown>) {
-          jsonResponse.cookies.set({
-            name,
-            value,
-            ...options,
-            domain: cookieDomain,
-            sameSite: "lax",
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-          });
+          // Collect ALL cookies Supabase wants to set
+          // (including chunks: .0, .1, .2, etc.)
+          cookieMap.set(name, { value, options });
         },
         remove(name: string, options: Record<string, unknown>) {
-          jsonResponse.cookies.set({
-            name,
-            value: "",
-            ...options,
-            domain: cookieDomain,
-            maxAge: 0,
-          });
+          cookieMap.set(name, { value: "", options: { 
+            ...options, maxAge: 0 
+          }});
         },
       },
     }
@@ -151,33 +141,53 @@ export async function POST(request: NextRequest) {
 
   let role =
     (typeof data.user?.user_metadata?.role === "string"
-      ? data.user.user_metadata.role
-      : null) ??
+      ? data.user.user_metadata.role : null) ??
     (typeof data.user?.app_metadata?.role === "string"
-      ? data.user.app_metadata.role
-      : null);
+      ? data.user.app_metadata.role : null);
 
+  let profile = null;
   if (!role && data.user?.id) {
-    const { data: profile } = await supabase
+    const res = await supabase
       .schema("core")
       .from("profiles")
       .select("role")
       .eq("id", data.user.id)
       .maybeSingle();
+    profile = res.data;
     role = typeof profile?.role === "string" ? profile.role : null;
   }
 
   const subdomain = mapRoleToSubdomain(role);
   const redirectUrl = buildTenantRedirectUrl(subdomain);
 
-  // Return the SAME jsonResponse object that has cookies set on it
-  // Override the body by creating new response but keeping the cookies
+  console.log("[ROUTE] user_metadata:", data.user?.user_metadata);
+  console.log("[ROUTE] app_metadata:", data.user?.app_metadata);
+  console.log("[ROUTE] profile from DB:", profile);
+  console.log("[ROUTE] final role:", role);
+  console.log("[ROUTE] redirecting to:", subdomain);
+
+  // Build final response with ALL cookie chunks
   const finalResponse = NextResponse.json(
     { redirectUrl },
-    { headers: jsonResponse.headers }
+    { headers: corsHeaders }
   );
 
-  console.log("[ROUTE] cookies set:", Array.from(jsonResponse.headers.entries()).filter(([k]) => k === 'set-cookie'));
+  // Apply ALL cookies Supabase collected (chunks included)
+  for (const [name, { value, options }] of cookieMap.entries()) {
+    finalResponse.cookies.set({
+      name,
+      value,
+      ...(options as object),
+      domain: cookieDomain,
+      sameSite: "lax",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+
+  // Debug: log all cookies being set
+  console.log("[ROUTE] setting cookies:", 
+    Array.from(cookieMap.keys()));
 
   return finalResponse;
 }

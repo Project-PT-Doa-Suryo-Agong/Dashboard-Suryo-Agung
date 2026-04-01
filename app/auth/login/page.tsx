@@ -1,10 +1,9 @@
-export { default } from "../page";
-
 "use client";
 
 import { useState } from "react";
 import Image from "next/image";
 import { ShieldCheck, Loader2 } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function LoginPage() {
 	const [error, setError] = useState<string | null>(null);
@@ -16,29 +15,70 @@ export default function LoginPage() {
 		setLoading(true);
 
 		const formData = new FormData(e.currentTarget);
+		const email = String(formData.get("email") ?? "").trim();
+		const password = String(formData.get("password") ?? "");
 
-		const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+		const supabase = createSupabaseBrowserClient();
+    
+		const { data, error: authError } = await supabase.auth
+		  .signInWithPassword({ email, password });
 
-		const res = await fetch(`${baseUrl}/api/auth/login`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			credentials: "include",
-			body: JSON.stringify({
-				email: formData.get("email"),
-				password: formData.get("password"),
-			}),
-		});
-
-		const result = await res.json();
-
-		if (result.error) {
-			setError(result.error);
-			setLoading(false);
-			return;
+		if (authError) {
+		  setError(authError.message);
+		  setLoading(false);
+		  return;
 		}
 
-		// Hard navigation — browser processes Set-Cookie headers first
-		window.location.href = result.redirectUrl;
+		// Get role from profile
+		let role =
+		  (typeof data.user?.user_metadata?.role === "string"
+			? data.user.user_metadata.role : null) ??
+		  (typeof data.user?.app_metadata?.role === "string"
+			? data.user.app_metadata.role : null);
+
+		if (!role && data.user?.id) {
+		  const { data: profile } = await supabase
+			.schema("core")
+			.from("profiles")
+			.select("role")
+			.eq("id", data.user.id)
+			.maybeSingle();
+		  role = typeof profile?.role === "string" 
+			? profile.role : null;
+		}
+
+		// Map role to subdomain
+		const roleMap: Record<string, string> = {
+		  developer: "developer",
+		  ceo: "management",
+		  management: "management",
+		  finance: "finance",
+		  hr: "hr",
+		  "human-resource": "hr",
+		  produksi: "produksi",
+		  production: "produksi",
+		  logistik: "logistik",
+		  logistics: "logistik",
+		  creative: "creative",
+		  sales: "creative",
+		  office: "office",
+		};
+
+		const normalized = (role ?? "")
+		  .trim().toLowerCase()
+		  .replace(/[^a-z0-9]+/g, "-")
+		  .replace(/^-+|-+$/g, "");
+		
+		const subdomain = roleMap[normalized] ?? "management";
+		const siteUrl = process.env.NEXT_PUBLIC_SITE_URL 
+		  || "http://lvh.me:3000";
+		const base = new URL(siteUrl);
+		const redirectUrl = 
+		  `${base.protocol}//${subdomain}.${base.hostname}` +
+		  (base.port ? `:${base.port}` : "");
+
+		// Hard navigation to subdomain
+		window.location.href = redirectUrl;
 	}
 
 	return (
