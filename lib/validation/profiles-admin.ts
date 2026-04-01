@@ -5,18 +5,50 @@ import type {
 import type { CoreUserRole } from "@/types/supabase";
 
 const USER_ROLES: CoreUserRole[] = [
-  'Developer',
-  'Management & Strategy',
-  'Finance & Administration',
-  'HR & Operation Manager',
-  'Produksi & Quality Control',
-  'Logistics & Packing',
-  'Creative & Sales',
-  'Office Support'
+  "Developer",
+  "CEO",
+  "Finance",
+  "HR",
+  "Produksi",
+  "Logistik",
+  "Creative",
+  "Office",
 ];
+
+const ROLE_ALIASES: Record<string, CoreUserRole> = {
+  developer: "Developer",
+  ceo: "CEO",
+  management: "CEO",
+  "management & strategy": "CEO",
+  finance: "Finance",
+  "finance & administration": "Finance",
+  hr: "HR",
+  "human resource": "HR",
+  "hr & operation manager": "HR",
+  produksi: "Produksi",
+  production: "Produksi",
+  "produksi & quality control": "Produksi",
+  logistik: "Logistik",
+  logistics: "Logistik",
+  "logistics & packing": "Logistik",
+  creative: "Creative",
+  sales: "Creative",
+  "creative & sales": "Creative",
+  office: "Office",
+  "office support": "Office",
+};
 
 function isCoreUserRole(value: string): value is CoreUserRole {
   return USER_ROLES.includes(value as CoreUserRole);
+}
+
+function normalizeCoreUserRole(value: string): CoreUserRole | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (isCoreUserRole(trimmed)) return trimmed;
+
+  const byAlias = ROLE_ALIASES[trimmed.toLowerCase()];
+  return byAlias ?? null;
 }
 
 function validateOptionalString(
@@ -67,8 +99,8 @@ export function parseCreateProfileInput(payload: unknown):
     return { ok: false, message: "role wajib diisi." };
   }
 
-  const role = body.role.trim();
-  if (!isCoreUserRole(role)) {
+  const role = normalizeCoreUserRole(body.role);
+  if (!role) {
     return { ok: false, message: "role tidak valid." };
   }
 
@@ -104,10 +136,11 @@ export function parseUpdateProfileByIdInput(payload: unknown):
   const role = validateOptionalString("role", body.role, 80, false);
   if (!role.ok) return role;
   if (role.value !== undefined && role.value !== null) {
-    if (!isCoreUserRole(role.value)) {
+    const normalizedRole = normalizeCoreUserRole(role.value);
+    if (!normalizedRole) {
       return { ok: false, message: "role tidak valid." };
     }
-    parsed.role = role.value;
+    parsed.role = normalizedRole;
   }
 
   const phone = validateOptionalString("phone", body.phone, 50);

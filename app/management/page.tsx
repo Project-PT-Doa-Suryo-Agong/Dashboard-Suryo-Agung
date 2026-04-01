@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Landmark, Target, Users } from "lucide-react";
+import ManagementPerformanceChart from '@/components/charts/ManagementPerformanceChart';
 
 type BudgetStatus = "pending" | "approved" | "rejected";
 type EmployeeStatus = "aktif" | "nonaktif";
@@ -193,6 +194,8 @@ export default function ManagementDashboardPage() {
           </div>
         </Link>
       </section>
+
+      <ManagementPerformanceChart />
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <article className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">

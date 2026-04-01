@@ -126,9 +126,40 @@ export default function Sidebar(props: SidebarProps) {
 
   const pathname = usePathname();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const mobileIsOpen = isOpen ?? isMobileOpen;
   const handleClose = onClose ?? onCloseMobile;
+
+  const resolveRootHost = () => {
+    const { hostname } = window.location;
+    if (hostname.endsWith(".localhost")) return "localhost";
+    if (hostname.endsWith(".lvh.me")) return "lvh.me";
+    return hostname;
+  };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // Tetap lanjutkan cleanup lokal agar user tidak terjebak di halaman saat ini.
+    } finally {
+      document.cookie = "role=; Path=/; Max-Age=0; SameSite=Lax";
+      document.cookie = "role=; Path=/; Domain=.localhost; Max-Age=0; SameSite=Lax";
+      document.cookie = "role=; Path=/; Domain=.lvh.me; Max-Age=0; SameSite=Lax";
+
+      const rootHost = resolveRootHost();
+      const { protocol, port } = window.location;
+      const portPart = port ? `:${port}` : "";
+      window.location.href = `${protocol}//${rootHost}${portPart}/auth`;
+    }
+  };
 
   const isPathActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
@@ -293,6 +324,7 @@ export default function Sidebar(props: SidebarProps) {
             <div className="flex gap-2 md:gap-3 w-full">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
+                disabled={isLoggingOut}
                 className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
               >
                 Batal
@@ -300,11 +332,12 @@ export default function Sidebar(props: SidebarProps) {
               <button
                 onClick={() => {
                   setShowLogoutConfirm(false);
-                  // TODO: tambahkan logika logout di sini
+                  void handleLogout();
                 }}
+                disabled={isLoggingOut}
                 className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors"
               >
-                Logout
+                {isLoggingOut ? "Logging out..." : "Logout"}
               </button>
             </div>
           </div>

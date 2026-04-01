@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
+import FinanceCashFlowChart from '@/components/charts/FinanceCashFlowChart';
 
 type TransactionType = 'In' | 'Out';
 
@@ -144,6 +145,8 @@ export default function FinanceDashboardPage() {
           </div>
         </Link>
       </section>
+
+      <FinanceCashFlowChart />
 
       <section className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-slate-100">
