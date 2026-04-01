@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: [
+    "localhost",
+    "localhost:3000",
+    "*.localhost",
+    "*.localhost:3000",
+    "lvh.me",
+    "lvh.me:3000", 
+    "*.lvh.me",
+    "*.lvh.me:3000",
+  ],
   async headers() {
     return [
       {
@@ -21,3 +31,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
