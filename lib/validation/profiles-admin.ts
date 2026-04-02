@@ -26,22 +26,19 @@ const USER_ROLES: SystemRoleKey[] = [
 ];
 
 const SYSTEM_ROLE_TO_CORE_ROLE: Record<SystemRoleKey, CoreUserRole> = {
-  management: "CEO",
-  finance: "Finance",
-  hr: "HR",
-  produksi: "Produksi",
-  logistik: "Logistik",
-  creative: "Creative",
-  office: "Office",
+  management: "Management & Strategy",
+  finance: "Finance & Administration",
+  hr: "HR & Operation Manager",
+  produksi: "Produksi & Quality Control",
+  logistik: "Logistics & Packing",
+  creative: "Creative & Sales",
+  office: "Office Support",
   developer: "Developer",
 };
 
 function isSystemRoleKey(value: string): value is SystemRoleKey {
   return USER_ROLES.includes(value as SystemRoleKey);
 }
-
-
-
 function validateOptionalString(
   key: string,
   value: unknown,
