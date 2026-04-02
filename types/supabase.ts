@@ -19,7 +19,14 @@ export type CoreUserRole =
   | "Produksi & Quality Control"
   | "Logistics & Packing"
   | "Creative & Sales"
-  | "Office Support";
+  | "Office Support"
+  | "CEO"
+  | "Finance"
+  | "HR"
+  | "Produksi"
+  | "Logistik"
+  | "Creative"
+  | "Office";
 
 export type HrEmployeeStatus = "aktif" | "nonaktif";
 export type HrAttendanceStatus = "hadir" | "izin" | "sakit" | "alpha";

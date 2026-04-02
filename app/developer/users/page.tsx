@@ -34,6 +34,13 @@ const ROLE_BADGE_MAP: Record<UserRole, string> = {
 	'Logistics & Packing': 'bg-orange-100 text-orange-700 border-orange-200',
 	'Creative & Sales': 'bg-pink-100 text-pink-700 border-pink-200',
 	'Office Support': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+	CEO: 'bg-slate-800 text-white border-slate-800',
+	Finance: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+	HR: 'bg-sky-50 text-sky-600 border-sky-100',
+	Produksi: 'bg-amber-50 text-amber-600 border-amber-100',
+	Logistik: 'bg-orange-50 text-orange-600 border-orange-100',
+	Creative: 'bg-pink-50 text-pink-600 border-pink-100',
+	Office: 'bg-indigo-50 text-indigo-600 border-indigo-100',
 };
 
 const DUMMY_USERS: SystemUser[] = [
