@@ -6,6 +6,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { MAfiliator, MVarian, TSalesOrder } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type SalesOrderListPayload = {
   orders: TSalesOrder[];
@@ -117,17 +118,17 @@ export default function SalesOrderPage() {
 
   const fetchDependencies = useCallback(async () => {
     const [ordersResponse, variantsResponse, affiliatorsResponse] = await Promise.all([
-      fetch("/api/sales/orders?page=1&limit=500", {
+      apiFetch("/api/sales/orders?page=1&limit=500", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
       }),
-      fetch("/api/core/variants", {
+      apiFetch("/api/core/variants", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
       }),
-      fetch("/api/sales/affiliates?page=1&limit=500", {
+      apiFetch("/api/sales/affiliates?page=1&limit=500", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -192,7 +193,7 @@ export default function SalesOrderPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/sales/orders", {
+      const response = await apiFetch("/api/sales/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -230,7 +231,7 @@ export default function SalesOrderPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/sales/orders/${editData.id}`, {
+      const response = await apiFetch(`/api/sales/orders/${editData.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -266,7 +267,7 @@ export default function SalesOrderPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/sales/orders/${deleteId}`, {
+      const response = await apiFetch(`/api/sales/orders/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

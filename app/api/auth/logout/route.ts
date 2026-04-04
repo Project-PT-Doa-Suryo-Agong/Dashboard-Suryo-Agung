@@ -12,7 +12,28 @@ export async function POST() {
       return fail("AUTH_ERROR", "Gagal logout.", 500, error.message);
     }
 
-    return ok(null, "Logout berhasil.");
+    const response = ok(null, "Logout berhasil.");
+
+    response.cookies.set("sb-mhfdzprxauqfczmtyizg-auth-token", "", {
+      expires: new Date(0),
+      path: "/",
+      domain: ".lvh.me",
+    });
+    response.cookies.set("sb-mhfdzprxauqfczmtyizg-auth-token", "", {
+      expires: new Date(0),
+      path: "/",
+    });
+    response.cookies.set("role", "", {
+      expires: new Date(0),
+      path: "/",
+      domain: ".lvh.me",
+    });
+    response.cookies.set("role", "", {
+      expires: new Date(0),
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal Server Error";
     const status =

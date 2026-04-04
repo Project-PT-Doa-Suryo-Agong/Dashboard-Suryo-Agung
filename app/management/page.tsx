@@ -6,6 +6,7 @@ import { ArrowRight, Landmark, Target, Users } from "lucide-react";
 import { PerformanceBarChart, type PerformancePoint } from "@/components/ui/DashboardCharts";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { TBudgetRequest, TKPIWeekly } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type BudgetStatus = "pending" | "approved" | "rejected" | null;
 
@@ -78,12 +79,12 @@ export default function ManagementDashboardPage() {
       setErrorMessage(null);
       try {
         const [budgetResponse, kpiResponse] = await Promise.all([
-          fetch("/api/management/budget?page=1&limit=500", {
+          apiFetch("/api/management/budget?page=1&limit=500", {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
           }),
-          fetch("/api/management/kpi?page=1&limit=500", {
+          apiFetch("/api/management/kpi?page=1&limit=500", {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",

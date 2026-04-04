@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { HrEmployeeStatus, MKaryawan, Profile } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 import {
   useKaryawan,
   useInsertKaryawan,
@@ -98,7 +99,7 @@ export default function KaryawanPage() {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await fetch("/api/profiles?page=1&limit=500", {
+        const response = await apiFetch("/api/profiles?page=1&limit=500", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           cache: "no-store",

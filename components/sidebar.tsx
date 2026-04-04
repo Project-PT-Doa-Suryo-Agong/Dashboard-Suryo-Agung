@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -132,19 +133,8 @@ export default function Sidebar(props: SidebarProps) {
   const handleClose = onClose ?? onCloseMobile;
 
   const resolveLoginUrl = () => {
-    if (typeof window === "undefined") return "/auth/login";
-    const host = window.location.hostname.toLowerCase();
-    const port = window.location.port || "3000";
-
-    if (host.endsWith(".lvh.me") || host === "lvh.me") {
-      return `http://lvh.me:${port}/auth/login`;
-    }
-
-    if (host.endsWith(".localhost") || host === "localhost") {
-      return `http://localhost:${port}/auth/login`;
-    }
-
-    return "/auth/login";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://lvh.me:3000";
+    return `${siteUrl.replace(/\/$/, "")}/auth/login`;
   };
 
   const clearRoleCookies = () => {
@@ -155,11 +145,21 @@ export default function Sidebar(props: SidebarProps) {
     document.cookie = "role=; Path=/; domain=.lvh.me; Max-Age=0; SameSite=Lax";
   };
 
+  const clearSupabaseAuthCookie = () => {
+    document.cookie =
+      "sb-mhfdzprxauqfczmtyizg-auth-token=; " +
+      "expires=Thu, 01 Jan 1970 00:00:00 GMT; " +
+      "path=/; domain=.lvh.me";
+  };
+
   const handleLogout = async () => {
     if (isLoggingOut) return;
 
     setIsLoggingOut(true);
     try {
+      const supabase = createSupabaseBrowserClient();
+      await supabase.auth.signOut();
+
       await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
@@ -168,6 +168,7 @@ export default function Sidebar(props: SidebarProps) {
       // Redirect tetap dipaksa agar sesi lokal dibersihkan meski request gagal.
     } finally {
       clearRoleCookies();
+      clearSupabaseAuthCookie();
       window.location.href = resolveLoginUrl();
     }
   };

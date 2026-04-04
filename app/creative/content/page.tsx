@@ -13,6 +13,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Modal from '@/components/ui/Modal';
 import type { ApiError, ApiSuccess } from '@/types/api';
 import type { TContentPlanner } from '@/types/supabase';
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type Platform = 'TikTok' | 'Instagram' | 'YouTube Shorts' | 'LinkedIn' | 'Twitter / X';
 
@@ -160,7 +161,7 @@ export default function ContentPlannerPage() {
   const fetchContent = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/sales/content?page=1&limit=500', {
+      const response = await apiFetch('/api/sales/content?page=1&limit=500', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
@@ -190,7 +191,7 @@ export default function ContentPlannerPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/sales/content', {
+      const response = await apiFetch('/api/sales/content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -224,7 +225,7 @@ export default function ContentPlannerPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/sales/content/${editData.id}`, {
+      const response = await apiFetch(`/api/sales/content/${editData.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,7 +255,7 @@ export default function ContentPlannerPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/sales/content/${deleteId}`, {
+      const response = await apiFetch(`/api/sales/content/${deleteId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });

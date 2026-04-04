@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { ApiError, ApiSuccess } from '@/types/api';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type ProfilesListPayload = {
   profiles: Array<{ id: string }>;
@@ -73,7 +74,7 @@ export default function DeveloperDashboard() {
       try {
         const supabase = createSupabaseBrowserClient();
         const [profilesResponse, produkCountResult, varianCountResult, vendorCountResult] = await Promise.all([
-          fetch('/api/profiles?page=1&limit=1', {
+          apiFetch('/api/profiles?page=1&limit=1', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             cache: 'no-store',

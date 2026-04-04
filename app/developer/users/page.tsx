@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Pencil, Trash2, UserPlus, Users2 } from 'lucide-react';
 import type { ApiError, ApiSuccess } from '@/types/api';
 import type { CoreUserRole, Profile } from '@/types/supabase';
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type UserRole = CoreUserRole;
 
@@ -87,7 +88,7 @@ export default function DeveloperUsersPage() {
 		setIsLoading(true);
 		setErrorMessage(null);
 		try {
-			const response = await fetch('/api/profiles?page=1&limit=500', {
+			const response = await apiFetch('/api/profiles?page=1&limit=500', {
 				method: 'GET',
 				headers: { 'Content-Type': 'application/json' },
 				cache: 'no-store',
@@ -137,7 +138,7 @@ export default function DeveloperUsersPage() {
 
 		try {
 			if (editingId) {
-				const response = await fetch(`/api/profiles/${editingId}`, {
+				const response = await apiFetch(`/api/profiles/${editingId}`, {
 					method: 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -148,7 +149,7 @@ export default function DeveloperUsersPage() {
 				});
 				await parseJsonResponse<ProfilePayload>(response);
 			} else {
-				const response = await fetch('/api/profiles', {
+				const response = await apiFetch('/api/profiles', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -183,7 +184,7 @@ export default function DeveloperUsersPage() {
 		if (!window.confirm('Yakin ingin menghapus user ini?')) return;
 		setErrorMessage(null);
 		try {
-			const response = await fetch(`/api/profiles/${id}`, {
+			const response = await apiFetch(`/api/profiles/${id}`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 			});

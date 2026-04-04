@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { ProductionQcResult, TProduksiOrder, TQCOutbound } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type QcOutboundListPayload = {
   qc_outbound: TQCOutbound[];
@@ -89,7 +90,7 @@ export default function QcOutboundPage() {
 
   const fetchQcOutbound = async () => {
     try {
-      const response = await fetch("/api/production/qc-outbound?page=1&limit=200", {
+      const response = await apiFetch("/api/production/qc-outbound?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -104,7 +105,7 @@ export default function QcOutboundPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/production/orders?page=1&limit=200", {
+      const response = await apiFetch("/api/production/orders?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -209,14 +210,14 @@ export default function QcOutboundPage() {
       };
 
       if (editData) {
-        const response = await fetch(`/api/production/qc-outbound/${editData.id}`, {
+        const response = await apiFetch(`/api/production/qc-outbound/${editData.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         await parseJsonResponse<QcOutboundPayload>(response);
       } else {
-        const response = await fetch("/api/production/qc-outbound", {
+        const response = await apiFetch("/api/production/qc-outbound", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -239,7 +240,7 @@ export default function QcOutboundPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/production/qc-outbound/${deleteId}`, {
+      const response = await apiFetch(`/api/production/qc-outbound/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
