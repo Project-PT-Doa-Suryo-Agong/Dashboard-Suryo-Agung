@@ -27,7 +27,7 @@ export default function VendorPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ── Supabase Direct ──
-  const { data: vendorList, loading: isLoading, refresh } = useVendors();
+  const { data: vendorList, loading: isLoading, error: readError, refresh } = useVendors();
   const { insert } = useInsertVendor();
   const { update } = useUpdateVendor();
   const { remove } = useDeleteVendor();
@@ -179,6 +179,9 @@ export default function VendorPage() {
 
       {/* Table Card */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {readError ? (
+          <p className="px-5 pt-5 text-sm text-rose-600">Gagal memuat data vendor: {readError}</p>
+        ) : null}
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Truck size={18} className="text-slate-400" />

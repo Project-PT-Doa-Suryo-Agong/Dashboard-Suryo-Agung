@@ -34,6 +34,17 @@ const initialFormState: FormState = {
   status: "pending",
 };
 
+const divisionOptions = [
+  "Management & Strategy",
+  "Finance & Administration",
+  "HR & Operation Manager",
+  "Produksi & Quality Control",
+  "Logistics & Packing",
+  "Creative & Sales",
+  "Office Support",
+  "Developer",
+] as const;
+
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
   month: "short",
@@ -373,15 +384,25 @@ export default function ManagementBudgetPage() {
 
       <Modal isOpen={isFormModalOpen} onClose={closeFormModal} title={editData ? "Edit Pengajuan Anggaran" : "Tambah Pengajuan Anggaran"} maxWidth="max-w-lg">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <select
             required
-            type="text"
             value={formData.divisi}
             onChange={(event) => setFormData((prev) => ({ ...prev, divisi: event.target.value }))}
             className="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-700"
-            placeholder="Divisi"
             disabled={isSubmitting}
-          />
+          >
+            <option value="" disabled>
+              Pilih Divisi
+            </option>
+            {formData.divisi && !divisionOptions.includes(formData.divisi as (typeof divisionOptions)[number]) ? (
+              <option value={formData.divisi}>{formData.divisi}</option>
+            ) : null}
+            {divisionOptions.map((division) => (
+              <option key={division} value={division}>
+                {division}
+              </option>
+            ))}
+          </select>
           <input
             required
             type="number"

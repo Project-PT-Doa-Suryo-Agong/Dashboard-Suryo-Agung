@@ -38,8 +38,8 @@ export default function VarianPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ── Supabase Direct ──
-  const { data: varianList, loading: isLoading, refresh: refreshVariants } = useVariants();
-  const { data: produkList } = useProducts();
+  const { data: varianList, loading: isLoading, error: variantReadError, refresh: refreshVariants } = useVariants();
+  const { data: produkList, error: productReadError } = useProducts();
   const { insert } = useInsertVariant();
   const { update } = useUpdateVariant();
   const { remove } = useDeleteVariant();
@@ -264,6 +264,11 @@ export default function VarianPage() {
 
       {/* ── TABLE CARD ── */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {variantReadError || productReadError ? (
+          <p className="px-5 pt-5 text-sm text-rose-600">
+            Gagal memuat data varian: {variantReadError ?? productReadError}
+          </p>
+        ) : null}
 
         {/* Table Header Bar */}
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
