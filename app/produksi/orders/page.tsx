@@ -5,6 +5,7 @@ import { Edit3, Plus, Search, Trash2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
+import { apiFetch } from "@/lib/utils/api-fetch";
 import type {
   MProduk,
   MVendor,
@@ -110,7 +111,7 @@ export default function ProductionOrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/production/orders?page=1&limit=200", {
+      const response = await apiFetch("/api/production/orders?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -125,7 +126,7 @@ export default function ProductionOrdersPage() {
 
   const fetchProduk = async () => {
     try {
-      const response = await fetch("/api/core/products?page=1&limit=200", {
+      const response = await apiFetch("/api/core/products?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -144,7 +145,7 @@ export default function ProductionOrdersPage() {
 
   const fetchVendor = async () => {
     try {
-      const response = await fetch("/api/core/vendors?page=1&limit=200", {
+      const response = await apiFetch("/api/core/vendors?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -264,14 +265,14 @@ export default function ProductionOrdersPage() {
       };
 
       if (editData) {
-        const response = await fetch(`/api/production/orders/${editData.id}`, {
+        const response = await apiFetch(`/api/production/orders/${editData.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         await parseJsonResponse<OrderPayload>(response);
       } else {
-        const response = await fetch("/api/production/orders", {
+        const response = await apiFetch("/api/production/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -294,7 +295,7 @@ export default function ProductionOrdersPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/production/orders/${deleteId}`, {
+      const response = await apiFetch(`/api/production/orders/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

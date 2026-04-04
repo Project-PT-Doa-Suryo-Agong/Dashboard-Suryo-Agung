@@ -6,6 +6,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Modal from '@/components/ui/Modal';
 import type { ApiError, ApiSuccess } from '@/types/api';
 import type { TLivePerformance } from '@/types/supabase';
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type LiveListPayload = {
   live: TLivePerformance[];
@@ -68,7 +69,7 @@ export default function LivePerformancePage() {
   const fetchLivePerformance = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/sales/live?page=1&limit=500', {
+      const response = await apiFetch('/api/sales/live?page=1&limit=500', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
@@ -105,7 +106,7 @@ export default function LivePerformancePage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/sales/live', {
+      const response = await apiFetch('/api/sales/live', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -148,7 +149,7 @@ export default function LivePerformancePage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/sales/live/${editData.id}`, {
+      const response = await apiFetch(`/api/sales/live/${editData.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -182,7 +183,7 @@ export default function LivePerformancePage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/sales/live/${deleteId}`, {
+      const response = await apiFetch(`/api/sales/live/${deleteId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });

@@ -6,6 +6,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { ManagementBudgetStatus, TBudgetRequest } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type BudgetRequestFilterStatus = "all" | ManagementBudgetStatus;
 
@@ -100,7 +101,7 @@ export default function ManagementBudgetPage() {
   const fetchBudgetRequests = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/management/budget?page=1&limit=500", {
+      const response = await apiFetch("/api/management/budget?page=1&limit=500", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -177,14 +178,14 @@ export default function ManagementBudgetPage() {
       };
 
       if (editData) {
-        const response = await fetch(`/api/management/budget/${editData.id}`, {
+        const response = await apiFetch(`/api/management/budget/${editData.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         await parseJsonResponse<BudgetPayload>(response);
       } else {
-        const response = await fetch("/api/management/budget", {
+        const response = await apiFetch("/api/management/budget", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -217,7 +218,7 @@ export default function ManagementBudgetPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/management/budget/${selectedRequest.id}`, {
+      const response = await apiFetch(`/api/management/budget/${selectedRequest.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -248,7 +249,7 @@ export default function ManagementBudgetPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/management/budget/${deleteId}`, {
+      const response = await apiFetch(`/api/management/budget/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

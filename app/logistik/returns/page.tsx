@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { MProduk, TProduksiOrder, TReturnOrder } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type ReturnsListPayload = {
   returns: TReturnOrder[];
@@ -69,7 +70,7 @@ export default function ReturnsPage() {
 
   const fetchReturns = async () => {
     try {
-      const response = await fetch("/api/logistics/returns?page=1&limit=200", {
+      const response = await apiFetch("/api/logistics/returns?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -84,7 +85,7 @@ export default function ReturnsPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/production/orders?page=1&limit=200", {
+      const response = await apiFetch("/api/production/orders?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -101,7 +102,7 @@ export default function ReturnsPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("/api/core/products?page=1&limit=200", {
+      const response = await apiFetch("/api/core/products?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -184,14 +185,14 @@ export default function ReturnsPage() {
       const payload = { order_id: formData.order_id, alasan: formData.alasan.trim() || null };
 
       if (editData) {
-        const response = await fetch(`/api/logistics/returns/${editData.id}`, {
+        const response = await apiFetch(`/api/logistics/returns/${editData.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         await parseJsonResponse<ReturnPayload>(response);
       } else {
-        const response = await fetch("/api/logistics/returns", {
+        const response = await apiFetch("/api/logistics/returns", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -224,7 +225,7 @@ export default function ReturnsPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/logistics/returns/${deleteId}`, {
+      const response = await apiFetch(`/api/logistics/returns/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

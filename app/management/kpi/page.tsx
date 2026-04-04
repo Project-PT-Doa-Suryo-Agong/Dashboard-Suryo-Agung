@@ -6,6 +6,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { TKPIWeekly } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type KpiListPayload = {
   kpi: TKPIWeekly[];
@@ -87,7 +88,7 @@ export default function ManagementKpiPage() {
   const fetchKpi = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/management/kpi?page=1&limit=500", {
+      const response = await apiFetch("/api/management/kpi?page=1&limit=500", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -180,14 +181,14 @@ export default function ManagementKpiPage() {
       };
 
       if (editData) {
-        const response = await fetch(`/api/management/kpi/${editData.id}`, {
+        const response = await apiFetch(`/api/management/kpi/${editData.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         await parseJsonResponse<KpiPayload>(response);
       } else {
-        const response = await fetch("/api/management/kpi", {
+        const response = await apiFetch("/api/management/kpi", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -220,7 +221,7 @@ export default function ManagementKpiPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/management/kpi/${deleteId}`, {
+      const response = await apiFetch(`/api/management/kpi/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

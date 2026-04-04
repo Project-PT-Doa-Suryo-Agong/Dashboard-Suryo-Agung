@@ -7,6 +7,7 @@ import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { MProduk, TLogistikManifest, TProduksiOrder } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type ManifestListPayload = {
   manifest: TLogistikManifest[];
@@ -72,7 +73,7 @@ export default function ManifestPage() {
 
   const fetchManifest = async () => {
     try {
-      const response = await fetch("/api/logistics/manifest?page=1&limit=200", {
+      const response = await apiFetch("/api/logistics/manifest?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -87,7 +88,7 @@ export default function ManifestPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/production/orders?page=1&limit=200", {
+      const response = await apiFetch("/api/production/orders?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -104,7 +105,7 @@ export default function ManifestPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("/api/core/products?page=1&limit=200", {
+      const response = await apiFetch("/api/core/products?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -191,14 +192,14 @@ export default function ManifestPage() {
       const payload = { order_id: formData.order_id, resi: formData.resi.trim() };
 
       if (editData) {
-        const response = await fetch(`/api/logistics/manifest/${editData.id}`, {
+        const response = await apiFetch(`/api/logistics/manifest/${editData.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         await parseJsonResponse<ManifestPayload>(response);
       } else {
-        const response = await fetch("/api/logistics/manifest", {
+        const response = await apiFetch("/api/logistics/manifest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -231,7 +232,7 @@ export default function ManifestPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/logistics/manifest/${deleteId}`, {
+      const response = await apiFetch(`/api/logistics/manifest/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

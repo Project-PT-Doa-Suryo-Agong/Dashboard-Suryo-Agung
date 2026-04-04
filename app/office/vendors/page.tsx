@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { MVendor } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type VendorsListPayload = {
   vendor: MVendor[];
@@ -60,7 +61,7 @@ export default function OfficeVendorsPage() {
   const fetchVendors = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/core/vendors?page=1&limit=500", {
+      const response = await apiFetch("/api/core/vendors?page=1&limit=500", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -129,14 +130,14 @@ export default function OfficeVendorsPage() {
       };
 
       if (selectedVendor) {
-        const response = await fetch(`/api/core/vendors/${selectedVendor.id}`, {
+        const response = await apiFetch(`/api/core/vendors/${selectedVendor.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         await parseJsonResponse<VendorPayload>(response);
       } else {
-        const response = await fetch("/api/core/vendors", {
+        const response = await apiFetch("/api/core/vendors", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -169,7 +170,7 @@ export default function OfficeVendorsPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/core/vendors/${selectedVendor.id}`, {
+      const response = await apiFetch(`/api/core/vendors/${selectedVendor.id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

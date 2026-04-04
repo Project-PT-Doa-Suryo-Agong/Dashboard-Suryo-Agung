@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { LogisticsPackingStatus, MProduk, TPacking, TProduksiOrder } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type FilterStatus = "all" | LogisticsPackingStatus;
 
@@ -78,7 +79,7 @@ export default function PackingPage() {
 
   const fetchPacking = async () => {
     try {
-      const response = await fetch("/api/logistics/packing?page=1&limit=500", {
+      const response = await apiFetch("/api/logistics/packing?page=1&limit=500", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -93,7 +94,7 @@ export default function PackingPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/production/orders?page=1&limit=200", {
+      const response = await apiFetch("/api/production/orders?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -110,7 +111,7 @@ export default function PackingPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("/api/core/products?page=1&limit=200", {
+      const response = await apiFetch("/api/core/products?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -191,14 +192,14 @@ export default function PackingPage() {
     setIsSubmitting(true);
     try {
       if (editData) {
-        const response = await fetch(`/api/logistics/packing/${editData.id}`, {
+        const response = await apiFetch(`/api/logistics/packing/${editData.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
         await parseJsonResponse<PackingPayload>(response);
       } else {
-        const response = await fetch("/api/logistics/packing", {
+        const response = await apiFetch("/api/logistics/packing", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
@@ -231,7 +232,7 @@ export default function PackingPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/logistics/packing/${deleteId}`, {
+      const response = await apiFetch(`/api/logistics/packing/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

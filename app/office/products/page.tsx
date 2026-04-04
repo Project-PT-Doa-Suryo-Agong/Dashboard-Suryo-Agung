@@ -5,6 +5,7 @@ import { Plus, Search } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { MProduk, MVarian } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type ProductsListPayload = {
   produk: MProduk[];
@@ -73,12 +74,12 @@ export default function OfficeProductsPage() {
     setIsLoading(true);
     try {
       const [productsRes, variantsRes] = await Promise.all([
-        fetch("/api/core/products?page=1&limit=500", {
+        apiFetch("/api/core/products?page=1&limit=500", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           cache: "no-store",
         }),
-        fetch("/api/core/variants", {
+        apiFetch("/api/core/variants", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           cache: "no-store",
@@ -161,7 +162,7 @@ export default function OfficeProductsPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/core/products", {
+      const response = await apiFetch("/api/core/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -208,7 +209,7 @@ export default function OfficeProductsPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/core/variants", {
+      const response = await apiFetch("/api/core/variants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

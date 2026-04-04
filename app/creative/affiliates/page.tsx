@@ -6,6 +6,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { MAfiliator } from "@/types/supabase";
+import { apiFetch } from "@/lib/utils/api-fetch";
 
 type AffiliatorListPayload = {
   afiliator: MAfiliator[];
@@ -69,7 +70,7 @@ export default function AffiliatesPage() {
   const fetchAffiliators = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/sales/affiliates?page=1&limit=500", {
+      const response = await apiFetch("/api/sales/affiliates?page=1&limit=500", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -99,7 +100,7 @@ export default function AffiliatesPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/sales/affiliates", {
+      const response = await apiFetch("/api/sales/affiliates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -138,7 +139,7 @@ export default function AffiliatesPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/sales/affiliates/${editData.id}`, {
+      const response = await apiFetch(`/api/sales/affiliates/${editData.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -172,7 +173,7 @@ export default function AffiliatesPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/sales/affiliates/${deleteId}`, {
+      const response = await apiFetch(`/api/sales/affiliates/${deleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
