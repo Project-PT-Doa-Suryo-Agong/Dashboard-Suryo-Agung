@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Pencil, PlusCircle, Search, Trash2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import type { HrEmployeeStatus, MKaryawan } from "@/types/supabase";
+import type { ApiError, ApiSuccess } from "@/types/api";
+import type { HrEmployeeStatus, MKaryawan, Profile } from "@/types/supabase";
 import {
   useKaryawan,
   useInsertKaryawan,
@@ -14,11 +15,21 @@ import {
 
 type KaryawanItem = {
   id: string;
+  profile_id: string | null;
   nama: string;
   posisi: string;
   divisi: string;
   status: HrEmployeeStatus;
   gaji_pokok: number;
+};
+
+type ProfilesListPayload = {
+  profiles: Profile[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+  };
 };
 
 const divisiOptions = [
@@ -51,8 +62,18 @@ function Badge({ status }: { status: HrEmployeeStatus }) {
   );
 }
 
+async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> {
+  const payload = (await response.json()) as ApiSuccess<T> | ApiError;
+  if (!response.ok || !payload.success) {
+    const message = payload.success ? "Terjadi kesalahan." : payload.error.message;
+    throw new Error(message);
+  }
+  return payload;
+}
+
 export default function KaryawanPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [profileOptions, setProfileOptions] = useState<Profile[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isFormModalOpen, setIsFormModalOpen] = useState<boolean>(false);
   const [editData, setEditData] = useState<KaryawanItem | null>(null);
@@ -60,6 +81,7 @@ export default function KaryawanPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<Omit<KaryawanItem, "id">>({
+    profile_id: null,
     nama: "",
     posisi: "",
     divisi: divisiOptions[0],
@@ -73,11 +95,31 @@ export default function KaryawanPage() {
   const { update } = useUpdateKaryawan();
   const { remove } = useDeleteKaryawan();
 
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const response = await fetch("/api/profiles?page=1&limit=500", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        });
+        const payload = await parseJsonResponse<ProfilesListPayload>(response);
+        setProfileOptions(payload.data.profiles ?? []);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Gagal memuat daftar profile.";
+        alert(message);
+      }
+    };
+
+    void fetchProfiles();
+  }, []);
+
   // ── Normalize karyawan data ──
   const items: KaryawanItem[] = useMemo(
     () =>
       rawKaryawan.map((item: MKaryawan) => ({
         id: item.id,
+        profile_id: item.profile_id,
         nama: item.nama,
         posisi: item.posisi ?? "",
         divisi: item.divisi ?? divisiOptions[0],
@@ -95,6 +137,7 @@ export default function KaryawanPage() {
 
   const resetForm = () => {
     setFormData({
+      profile_id: null,
       nama: "",
       posisi: "",
       divisi: divisiOptions[0],
@@ -112,6 +155,7 @@ export default function KaryawanPage() {
   const openEditModal = (item: KaryawanItem) => {
     setEditData(item);
     setFormData({
+      profile_id: item.profile_id ?? null,
       nama: item.nama ?? "",
       posisi: item.posisi ?? "",
       divisi: item.divisi ?? divisiOptions[0],
@@ -305,6 +349,27 @@ export default function KaryawanPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="space-y-1.5 md:col-span-2">
+              <span className="text-sm font-medium text-slate-700">Profile (Opsional)</span>
+              <select
+                value={formData.profile_id ?? ""}
+                onChange={(event) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    profile_id: event.target.value || null,
+                  }))
+                }
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+              >
+                <option value="">Tanpa profile login</option>
+                {profileOptions.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.nama} ({profile.role})
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <label className="space-y-1.5 md:col-span-2">
               <span className="text-sm font-medium text-slate-700">Nama</span>
               <input
