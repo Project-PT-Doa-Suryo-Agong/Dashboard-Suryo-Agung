@@ -37,7 +37,7 @@ export default function ProdukPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ── Supabase Direct: read products ──
-  const { data: produkList, loading: isLoading, refresh } = useProducts();
+  const { data: produkList, loading: isLoading, error: readError, refresh } = useProducts();
 
   // ── Supabase Direct: mutations ──
   const { insert } = useInsertProduct();
@@ -217,6 +217,9 @@ export default function ProdukPage() {
       </section>
 
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {readError ? (
+          <p className="px-5 pt-5 text-sm text-rose-600">Gagal memuat data produk: {readError}</p>
+        ) : null}
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Package size={18} className="text-slate-400" />

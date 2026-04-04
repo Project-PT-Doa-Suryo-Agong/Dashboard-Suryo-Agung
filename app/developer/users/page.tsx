@@ -1,29 +1,47 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Pencil, Trash2, UserPlus, Users2 } from 'lucide-react';
-import type { CoreUserRole } from '@/types/supabase';
+import type { ApiError, ApiSuccess } from '@/types/api';
+import type { CoreUserRole, Profile } from '@/types/supabase';
 
 type UserRole = CoreUserRole;
 
-type SystemUser = {
-	id: string;
-	nama: string;
-	role: UserRole;
-	phone: string;
-	created_at: string;
+type SystemRoleKey =
+	| 'management'
+	| 'finance'
+	| 'hr'
+	| 'produksi'
+	| 'logistik'
+	| 'creative'
+	| 'office'
+	| 'developer';
+
+type ProfilesListPayload = {
+	profiles: Profile[];
+	meta: {
+		page: number;
+		limit: number;
+		total: number;
+	};
 };
 
-const ROLE_OPTIONS: UserRole[] = [
-	'Developer',
-	'Management & Strategy',
-	'Finance & Administration',
-	'HR & Operation Manager',
-	'Produksi & Quality Control',
-	'Logistics & Packing',
-	'Creative & Sales',
-	'Office Support',
+type ProfilePayload = {
+	profile: Profile | null;
+};
+
+const ROLE_OPTIONS: Array<{ key: SystemRoleKey; label: UserRole }> = [
+	{ key: 'developer', label: 'Developer' },
+	{ key: 'management', label: 'Management & Strategy' },
+	{ key: 'finance', label: 'Finance & Administration' },
+	{ key: 'hr', label: 'HR & Operation Manager' },
+	{ key: 'produksi', label: 'Produksi & Quality Control' },
+	{ key: 'logistik', label: 'Logistics & Packing' },
+	{ key: 'creative', label: 'Creative & Sales' },
+	{ key: 'office', label: 'Office Support' },
 ];
+
+const LABEL_TO_ROLE_KEY = new Map<UserRole, SystemRoleKey>(ROLE_OPTIONS.map((item) => [item.label, item.key]));
 
 const ROLE_BADGE_MAP: Record<UserRole, string> = {
 	Developer: 'bg-purple-100 text-purple-700 border-purple-200',
@@ -43,101 +61,139 @@ const ROLE_BADGE_MAP: Record<UserRole, string> = {
 	Office: 'bg-indigo-50 text-indigo-600 border-indigo-100',
 };
 
-const DUMMY_USERS: SystemUser[] = [
-	{
-		id: 'DEVS-001',
-		nama: 'Rama Pratama',
-		role: 'Developer',
-		phone: '0812-3456-7890',
-		created_at: '2026-01-04T08:14:00Z',
-	},
-	{
-		id: 'CEO-001',
-		nama: 'Nadia Kusuma',
-		role: 'Management & Strategy',
-		phone: '0813-2244-9988',
-		created_at: '2026-01-12T09:30:00Z',
-	},
-	{
-		id: 'FINA-001',
-		nama: 'Dimas Saputra',
-		role: 'Finance & Administration',
-		phone: '0821-7700-5544',
-		created_at: '2026-02-09T13:00:00Z',
-	},
-	{
-		id: 'CREA-001',
-		nama: 'Putri Amalia',
-		role: 'Creative & Sales',
-		phone: '0857-6001-2211',
-		created_at: '2026-02-17T07:42:00Z',
-	},
-];
+async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> {
+  const payload = (await response.json()) as ApiSuccess<T> | ApiError;
+  if (!response.ok || !payload.success) {
+    const message = payload.success ? 'Terjadi kesalahan.' : payload.error.message;
+    throw new Error(message);
+  }
+  return payload;
+}
 
 export default function DeveloperUsersPage() {
-	const [users, setUsers] = useState<SystemUser[]>(DUMMY_USERS);
+	const [users, setUsers] = useState<Profile[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [editingId, setEditingId] = useState<string | null>(null);
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
 	const [nama, setNama] = useState('');
 	const [phone, setPhone] = useState('');
-	const [role, setRole] = useState<UserRole>('Developer');
+	const [role, setRole] = useState<SystemRoleKey>('developer');
 
 	const submitLabel = editingId ? 'Update User' : 'Tambah User';
 
+	const fetchUsers = async () => {
+		setIsLoading(true);
+		setErrorMessage(null);
+		try {
+			const response = await fetch('/api/profiles?page=1&limit=500', {
+				method: 'GET',
+				headers: { 'Content-Type': 'application/json' },
+				cache: 'no-store',
+			});
+			const payload = await parseJsonResponse<ProfilesListPayload>(response);
+			setUsers(payload.data.profiles ?? []);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Gagal memuat data user.';
+			setErrorMessage(message);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		void fetchUsers();
+	}, []);
+
 	const sortedUsers = useMemo(
-		() => [...users].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+		() => [...users].sort((a, b) => {
+			const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+			const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+			return bTime - aTime;
+		}),
 		[users],
 	);
 
 	const resetForm = () => {
 		setEditingId(null);
+		setEmail('');
+		setPassword('');
 		setNama('');
 		setPhone('');
-		setRole('Developer');
+		setRole('developer');
 	};
 
-	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		if (!nama.trim() || !phone.trim()) return;
+		if (!nama.trim()) return;
 
-		if (editingId) {
-			setUsers((prev) =>
-				prev.map((user) =>
-					user.id === editingId
-						? {
-								...user,
-								nama: nama.trim(),
-								phone: phone.trim(),
-								role,
-							}
-						: user,
-				),
-			);
-			resetForm();
+		if (!editingId && (!email.trim() || password.length < 6)) {
+			setErrorMessage('Email wajib diisi dan password minimal 6 karakter.');
 			return;
 		}
 
-		const newUser: SystemUser = {
-			id: crypto.randomUUID(),
-			nama: nama.trim(),
-			phone: phone.trim(),
-			role,
-			created_at: new Date().toISOString(),
-		};
+		setErrorMessage(null);
 
-		setUsers((prev) => [newUser, ...prev]);
-		resetForm();
+		try {
+			if (editingId) {
+				const response = await fetch(`/api/profiles/${editingId}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						nama: nama.trim(),
+						phone: phone.trim() || null,
+						role,
+					}),
+				});
+				await parseJsonResponse<ProfilePayload>(response);
+			} else {
+				const response = await fetch('/api/profiles', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						email: email.trim(),
+						password,
+						nama: nama.trim(),
+						phone: phone.trim() || null,
+						role,
+					}),
+				});
+				await parseJsonResponse<ProfilePayload>(response);
+			}
+
+			await fetchUsers();
+			resetForm();
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Gagal menyimpan user.';
+			setErrorMessage(message);
+		}
 	};
 
-	const handleEdit = (user: SystemUser) => {
+	const handleEdit = (user: Profile) => {
 		setEditingId(user.id);
 		setNama(user.nama);
-		setPhone(user.phone);
-		setRole(user.role);
+		setPhone(user.phone ?? '');
+		setRole(LABEL_TO_ROLE_KEY.get(user.role) ?? 'developer');
+		setPassword('');
+		setEmail('');
 	};
 
-	const handleDelete = (id: string) => {
-		setUsers((prev) => prev.filter((user) => user.id !== id));
-		if (editingId === id) resetForm();
+	const handleDelete = async (id: string) => {
+		if (!window.confirm('Yakin ingin menghapus user ini?')) return;
+		setErrorMessage(null);
+		try {
+			const response = await fetch(`/api/profiles/${id}`, {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+			});
+			await parseJsonResponse<null>(response);
+			await fetchUsers();
+			if (editingId === id) resetForm();
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Gagal menghapus user.';
+			setErrorMessage(message);
+		}
 	};
 
 	return (
@@ -160,6 +216,38 @@ export default function DeveloperUsersPage() {
 				</div>
 
 				<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+					<div className="space-y-1 md:space-y-2">
+						<label htmlFor="email" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+							Email
+						</label>
+						<input
+							id="email"
+							type="email"
+							value={email}
+							onChange={(event) => setEmail(event.target.value)}
+							placeholder="nama@domain.com"
+							disabled={!!editingId}
+							required={!editingId}
+							className="w-full h-10 md:h-11 text-xs md:text-sm text-slate-500 bg-slate-200 rounded-lg border border-slate-300 px-2 md:px-3 outline-none focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20 disabled:opacity-60"
+						/>
+					</div>
+
+					<div className="space-y-1 md:space-y-2">
+						<label htmlFor="password" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+							Password
+						</label>
+						<input
+							id="password"
+							type="password"
+							value={password}
+							onChange={(event) => setPassword(event.target.value)}
+							placeholder={editingId ? 'Password tidak diubah di mode edit' : 'Minimal 6 karakter'}
+							disabled={!!editingId}
+							required={!editingId}
+							className="w-full h-10 md:h-11 text-xs md:text-sm text-slate-500 bg-slate-200 rounded-lg border border-slate-300 px-2 md:px-3 outline-none focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20 disabled:opacity-60"
+						/>
+					</div>
+
 					<div className="space-y-1 md:space-y-2">
 						<label htmlFor="nama" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
 							Nama
@@ -197,12 +285,12 @@ export default function DeveloperUsersPage() {
 						<select
 							id="role"
 							value={role}
-							onChange={(event) => setRole(event.target.value as UserRole)}
+							onChange={(event) => setRole(event.target.value as SystemRoleKey)}
 							className="w-full h-10 md:h-11 rounded-lg border text-xs md:text-sm text-slate-500 bg-slate-200 border-slate-300 px-2 md:px-3 outline-none focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
 						>
 							{ROLE_OPTIONS.map((item) => (
-								<option key={item} value={item}>
-									{item}
+								<option key={item.key} value={item.key}>
+									{item.label}
 								</option>
 							))}
 						</select>
@@ -228,6 +316,7 @@ export default function DeveloperUsersPage() {
 						)}
 					</div>
 				</form>
+				{errorMessage ? <p className="text-sm text-rose-600">{errorMessage}</p> : null}
 			</section>
 
 			<section className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 md:p-4 lg:p-6 space-y-3 md:space-y-4">
@@ -254,21 +343,29 @@ export default function DeveloperUsersPage() {
 							</tr>
 						</thead>
 						<tbody>
-							{sortedUsers.map((user) => (
+							{isLoading ? (
+								<tr>
+									<td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Memuat data user...</td>
+								</tr>
+							) : sortedUsers.length === 0 ? (
+								<tr>
+									<td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Belum ada data user.</td>
+								</tr>
+							) : (
+								sortedUsers.map((user) => (
 								<tr key={user.id} className="transition-colors hover:bg-slate-50/70">
-									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-[10px] md:text-xs text-slate-600 font-mono sticky left-0 z-10 bg-white hover:bg-slate-50/70\">{user.id.slice(0, 8)}</td>
-									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm font-semibold text-slate-800 whitespace-nowrap\">{user.nama}</td>
+									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-[10px] md:text-xs text-slate-600 font-mono sticky left-0 z-10 bg-white hover:bg-slate-50/70">{user.id.slice(0, 8)}</td>
 									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm text-slate-700">
-										<span className={`inline-flex items-center rounded-md border px-2 md:px-2.5 py-0.5 md:py-1 text-[10px] md:text-xs font-semibold ${ROLE_BADGE_MAP[user.role]} whitespace-nowrap`}>
+										<span className={`inline-flex items-center rounded-md border px-2 md:px-2.5 py-0.5 md:py-1 text-[10px] md:text-xs font-semibold ${ROLE_BADGE_MAP[user.role] ?? 'bg-slate-100 text-slate-700 border-slate-200'} whitespace-nowrap`}>
 											{user.role}
 										</span>
 									</td>
-									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-slate-700 text-xs md:text-sm text-slate-700\">{user.phone}</td>
+									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm text-slate-700">{user.phone ?? '-'}</td>
 									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm text-slate-700">
-										<span className="whitespace-nowrap">{new Intl.DateTimeFormat('id-ID', {
+										<span className="whitespace-nowrap">{user.created_at ? new Intl.DateTimeFormat('id-ID', {
 											dateStyle: 'short',
 											timeStyle: 'short',
-										}).format(new Date(user.created_at))}</span>
+										}).format(new Date(user.created_at)) : '-'}</span>
 									</td>
 									<td className="sticky right-0 z-10 border-b border-slate-100 bg-white px-3 py-2 text-xs hover:bg-slate-50/70 md:px-4 md:py-3">
 										<div className="flex items-center gap-1 md:gap-2">
@@ -282,7 +379,7 @@ export default function DeveloperUsersPage() {
 											</button>
 											<button
 												type="button"
-												onClick={() => handleDelete(user.id)}
+												onClick={() => void handleDelete(user.id)}
 												className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-700 transition-colors hover:bg-rose-100 whitespace-nowrap md:px-2.5 md:py-1.5 md:text-xs"
 											>
 												<Trash2 size={12} />
@@ -291,7 +388,8 @@ export default function DeveloperUsersPage() {
 										</div>
 									</td>
 								</tr>
-							))}
+							))
+							)}
 						</tbody>
 					</table>
 				</div>

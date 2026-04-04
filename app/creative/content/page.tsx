@@ -32,7 +32,14 @@ type ContentPayload = {
 const PLATFORM_OPTIONS: Platform[] = ['TikTok', 'Instagram', 'YouTube Shorts', 'LinkedIn', 'Twitter / X'];
 
 async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> {
-  const payload = (await response.json()) as ApiSuccess<T> | ApiError;
+  const raw = await response.text();
+  let payload: ApiSuccess<T> | ApiError;
+  try {
+    payload = JSON.parse(raw) as ApiSuccess<T> | ApiError;
+  } catch {
+    const fallback = response.ok ? 'Respons server tidak valid (bukan JSON).' : raw.slice(0, 200);
+    throw new Error(fallback || 'Respons server tidak valid.');
+  }
   if (!response.ok || !payload.success) {
     const message = payload.success ? 'Terjadi kesalahan.' : payload.error.message;
     throw new Error(message);
@@ -348,7 +355,7 @@ export default function ContentPlannerPage() {
                         type="button"
                         onClick={() => handleOpenEdit(item)}
                         disabled={isSubmitting}
-                        className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-[#BC934B] transition-all hover:-translate-y-0.5 hover:bg-amber-100"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
                         title="Edit Content"
                       >
                         <Pencil size={14} />
@@ -358,7 +365,7 @@ export default function ContentPlannerPage() {
                         type="button"
                         onClick={() => handleOpenDelete(item.id)}
                         disabled={isSubmitting}
-                        className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition-all hover:-translate-y-0.5 hover:bg-red-100"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
                         title="Delete Content"
                       >
                         <Trash2 size={14} />
