@@ -119,25 +119,21 @@ export default function DeveloperDashboard() {
     {
       title: 'Total System Users',
       value: String(stats.totalUsers),
-      detail: 'Data dari core.profiles',
       icon: Users,
     },
     {
       title: 'Total Produk',
       value: String(stats.totalProduk),
-      detail: 'Data dari core.m_produk',
       icon: Package,
     },
     {
       title: 'Total Varian',
       value: String(stats.totalVarian),
-      detail: 'Data dari core.m_varian',
       icon: Tags,
     },
     {
       title: 'Total Vendor',
       value: String(stats.totalVendor),
-      detail: 'Data dari core.m_vendor',
       icon: Truck,
     },
   ];
@@ -160,7 +156,6 @@ export default function DeveloperDashboard() {
                 <div className="min-w-0 space-y-1 md:space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 md:text-sm lg:text-base">{item.title}</p>
                   <p className="text-lg font-bold text-slate-900 md:text-2xl lg:text-3xl">{isLoading ? '...' : item.value}</p>
-                  <p className="text-xs text-slate-500 md:text-sm lg:text-base">{item.detail}</p>
                 </div>
                 <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#BC934B]/15 text-[#BC934B] md:h-10 md:w-10 lg:h-12 lg:w-12">
                   <Icon className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" />

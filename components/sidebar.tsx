@@ -137,40 +137,66 @@ export default function Sidebar(props: SidebarProps) {
     return `${siteUrl.replace(/\/$/, "")}/auth/login`;
   };
 
+  const resolveSupabaseProjectRef = () => {
+    const fromEnv = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF?.trim();
+    if (fromEnv) return fromEnv;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) return null;
+
+    try {
+      const hostname = new URL(supabaseUrl).hostname;
+      const subdomain = hostname.split(".")[0];
+      return subdomain || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const expireCookie = (name: string, domain?: string) => {
+    const domainPart = domain ? `domain=${domain}; ` : "";
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; ${domainPart}SameSite=Lax`;
+  };
+
   const clearRoleCookies = () => {
-    document.cookie = "role=; Path=/; Max-Age=0; SameSite=Lax";
-    document.cookie = "role=; Path=/; domain=localhost; Max-Age=0; SameSite=Lax";
-    document.cookie = "role=; Path=/; domain=.localhost; Max-Age=0; SameSite=Lax";
-    document.cookie = "role=; Path=/; domain=lvh.me; Max-Age=0; SameSite=Lax";
-    document.cookie = "role=; Path=/; domain=.lvh.me; Max-Age=0; SameSite=Lax";
+    expireCookie("role");
+    expireCookie("role", "localhost");
+    expireCookie("role", ".localhost");
+    expireCookie("role", "lvh.me");
+    expireCookie("role", ".lvh.me");
   };
 
   const clearSupabaseAuthCookie = () => {
-    document.cookie =
-      "sb-mhfdzprxauqfczmtyizg-auth-token=; " +
-      "expires=Thu, 01 Jan 1970 00:00:00 GMT; " +
-      "path=/; domain=.lvh.me";
+    const projectRef = resolveSupabaseProjectRef();
+    if (!projectRef) return;
+
+    const cookieName = `sb-${projectRef}-auth-token`;
+    expireCookie(cookieName);
+    expireCookie(cookieName, "localhost");
+    expireCookie(cookieName, ".localhost");
+    expireCookie(cookieName, "lvh.me");
+    expireCookie(cookieName, ".lvh.me");
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     if (isLoggingOut) return;
 
     setIsLoggingOut(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      await supabase.auth.signOut();
+    setShowLogoutConfirm(false);
 
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch {
-      // Redirect tetap dipaksa agar sesi lokal dibersihkan meski request gagal.
-    } finally {
-      clearRoleCookies();
-      clearSupabaseAuthCookie();
-      window.location.href = resolveLoginUrl();
-    }
+    // Optimistic logout: clear local cookies first, then redirect immediately.
+    clearRoleCookies();
+    clearSupabaseAuthCookie();
+
+    const supabase = createSupabaseBrowserClient();
+    void supabase.auth.signOut().catch(() => undefined);
+    void fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+      keepalive: true,
+    }).catch(() => undefined);
+
+    window.location.replace(resolveLoginUrl());
   };
 
   const isPathActive = (href: string) =>

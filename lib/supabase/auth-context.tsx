@@ -135,12 +135,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (
-        (event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") &&
+        event === "SIGNED_OUT" &&
         !newSession &&
         typeof window !== "undefined" &&
         !window.location.pathname.startsWith("/auth/login")
       ) {
-        window.location.href = resolveLoginUrl();
+        window.location.replace(resolveLoginUrl());
         return;
       }
 

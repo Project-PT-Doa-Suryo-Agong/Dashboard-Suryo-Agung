@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@/lib/supabase/auth-context";
+import { useAuth } from "@/lib/supabase/auth-context";
 
 /**
  * Returns the current user's profile data sourced from AuthContext.
@@ -9,7 +9,7 @@ import { useUser } from "@/lib/supabase/auth-context";
  * Note: core.profiles uses 'nama' for the full name column.
  */
 export function useProfile() {
-  const user = useUser();
+  const { user, loading } = useAuth();
 
   return {
     /** Full name from core.profiles.nama */
@@ -17,6 +17,6 @@ export function useProfile() {
     /** Role from core.profiles.role */
     role: user?.profile?.role ?? null,
     /** True while AuthProvider is resolving the initial session */
-    loading: user === undefined,
+    loading,
   };
 }

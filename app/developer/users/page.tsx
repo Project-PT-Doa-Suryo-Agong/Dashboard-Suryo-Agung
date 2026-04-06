@@ -327,7 +327,6 @@ export default function DeveloperUsersPage() {
 					</span>
 					<div className="min-w-0">
 						<h2 className="text-sm md:text-base lg:text-lg font-bold text-slate-900">Daftar User</h2>
-						<p className="text-xs text-slate-500">Sumber data: core.profiles</p>
 					</div>
 				</div>
 
@@ -356,12 +355,13 @@ export default function DeveloperUsersPage() {
 								sortedUsers.map((user) => (
 								<tr key={user.id} className="transition-colors hover:bg-slate-50/70">
 									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-[10px] md:text-xs text-slate-600 font-mono sticky left-0 z-10 bg-white hover:bg-slate-50/70">{user.id.slice(0, 8)}</td>
+									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm text-slate-700">{user.nama?.trim() || '-'}</td>
 									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm text-slate-700">
 										<span className={`inline-flex items-center rounded-md border px-2 md:px-2.5 py-0.5 md:py-1 text-[10px] md:text-xs font-semibold ${ROLE_BADGE_MAP[user.role] ?? 'bg-slate-100 text-slate-700 border-slate-200'} whitespace-nowrap`}>
 											{user.role}
 										</span>
 									</td>
-									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm text-slate-700">{user.phone ?? '-'}</td>
+									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm text-slate-700">{user.phone?.trim() || '-'}</td>
 									<td className="px-3 md:px-4 py-2 md:py-3 border-b border-slate-100 text-xs md:text-sm text-slate-700">
 										<span className="whitespace-nowrap">{user.created_at ? new Intl.DateTimeFormat('id-ID', {
 											dateStyle: 'short',

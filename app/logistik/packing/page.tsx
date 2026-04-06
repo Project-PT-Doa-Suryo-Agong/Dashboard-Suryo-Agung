@@ -27,6 +27,33 @@ type ProductsListPayload = {
   meta: { page: number; limit: number; total: number };
 };
 
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function pickPacking(data: unknown): TPacking[] {
+  if (!data || typeof data !== "object") return [];
+  const source = data as Record<string, unknown>;
+  return asArray<TPacking>(source.packing ?? source.packings ?? source.data);
+}
+
+function pickOrders(data: unknown): TProduksiOrder[] {
+  if (!data || typeof data !== "object") return [];
+  const source = data as Record<string, unknown>;
+  return asArray<TProduksiOrder>(source.orders ?? source.order ?? source.data);
+}
+
+function pickProducts(data: unknown): MProduk[] {
+  if (!data || typeof data !== "object") return [];
+  const source = data as Record<string, unknown>;
+  return asArray<MProduk>(source.produk ?? source.products ?? source.data);
+}
+
+function shortId(id: string | null | undefined) {
+  if (!id) return "-";
+  return id.slice(0, 8).toUpperCase();
+}
+
 async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> {
   const raw = await response.text();
   let payload: ApiSuccess<T> | ApiError;
@@ -85,7 +112,7 @@ export default function PackingPage() {
         cache: "no-store",
       });
       const payload = await parseJsonResponse<PackingListPayload>(response);
-      setItems(payload.data.packing ?? []);
+      setItems(pickPacking(payload.data));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Gagal memuat data packing.";
       alert(message);
@@ -100,7 +127,7 @@ export default function PackingPage() {
         cache: "no-store",
       });
       const payload = await parseJsonResponse<OrdersListPayload>(response);
-      const list = payload.data.orders ?? [];
+      const list = pickOrders(payload.data);
       setOrders(list);
       setFormData((prev) => ({ ...prev, order_id: prev.order_id || list[0]?.id || "" }));
     } catch (error) {
@@ -117,7 +144,7 @@ export default function PackingPage() {
         cache: "no-store",
       });
       const payload = await parseJsonResponse<ProductsListPayload>(response);
-      setProducts(payload.data.produk ?? []);
+      setProducts(pickProducts(payload.data));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Gagal memuat daftar produk.";
       alert(message);
@@ -138,7 +165,7 @@ export default function PackingPage() {
   }, []);
 
   const orderById = useMemo(
-    () => Object.fromEntries(orders.map((order) => [order.id, order])) as Record<string, TProduksiOrder>,
+    () => Object.fromEntries(orders.filter((order) => !!order.id).map((order) => [order.id, order])) as Record<string, TProduksiOrder>,
     [orders],
   );
 
@@ -314,8 +341,8 @@ export default function PackingPage() {
                 const productName = productById[order?.product_id ?? ""] ?? "Produk tidak ditemukan";
                 return (
                   <tr key={item.id} className="border-t border-slate-100">
-                    <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{item.id.slice(0, 8).toUpperCase()}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{order?.id ?? "Order tidak ditemukan"}</td>
+                    <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{shortId(item.id)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{order?.id ?? item.order_id ?? "Order tidak ditemukan"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700">{productName}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-sm">
@@ -364,6 +391,9 @@ export default function PackingPage() {
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             >
               <option value="" disabled>Pilih order</option>
+              {formData.order_id && !orders.some((order) => order.id === formData.order_id) ? (
+                <option value={formData.order_id}>{formData.order_id} - Order tersimpan</option>
+              ) : null}
               {orders.map((order) => {
                 const productName = productById[order.product_id ?? ""] ?? "Produk";
                 return (
