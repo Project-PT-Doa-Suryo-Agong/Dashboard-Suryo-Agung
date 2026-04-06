@@ -151,23 +151,31 @@ async function readRoleFromSupabaseSession(request: NextRequest, response: NextR
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
-  console.log("[PROXY] session user:", session?.user?.email ?? "(no session)");
-  if (!session?.user) return null;
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  const metaRole = typeof session.user.user_metadata?.role === "string" ? session.user.user_metadata.role : null;
-  const appRole  = typeof session.user.app_metadata?.role  === "string" ? session.user.app_metadata.role  : null;
+  if (userError) {
+    console.log("[PROXY] getUser error:", userError.message);
+  }
+
+  console.log("[PROXY] session user:", user?.email ?? "(no session)");
+  if (!user) return null;
+
+  const metaRole = typeof user.user_metadata?.role === "string" ? user.user_metadata.role : null;
+  const appRole  = typeof user.app_metadata?.role  === "string" ? user.app_metadata.role  : null;
   console.log("[PROXY] role from user_metadata:", metaRole);
   console.log("[PROXY] role from app_metadata:",  appRole);
 
   let role = normalizeRole(metaRole) ?? normalizeRole(appRole);
 
-  if (!role && session.user.id) {
+  if (!role && user.id) {
     const { data: profile, error: profileError } = await supabase
       .schema("core")
       .from("profiles")
       .select("role")
-      .eq("id", session.user.id)
+      .eq("id", user.id)
       .maybeSingle();
 
     console.log("[PROXY] role from DB profile:", profile?.role ?? "(none)", profileError ? `| error: ${profileError.message}` : "");
