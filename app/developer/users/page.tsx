@@ -327,7 +327,6 @@ export default function DeveloperUsersPage() {
 					</span>
 					<div className="min-w-0">
 						<h2 className="text-sm md:text-base lg:text-lg font-bold text-slate-900">Daftar User</h2>
-						<p className="text-xs text-slate-500">Sumber data: core.profiles</p>
 					</div>
 				</div>
 
