@@ -104,12 +104,20 @@ export default function LoginPage() {
 		};
 
 		const subdomain = slugMapToSubdomain(role);
-		const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-			|| "http://lvh.me:3000";
-		const base = new URL(siteUrl);
-		const redirectUrl =
-			`${base.protocol}//${subdomain}.${base.hostname}` +
-			(base.port ? `:${base.port}` : "");
+		const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+		const base = new URL(siteUrl || window.location.origin);
+		const hostname = base.hostname.replace(/^www\./, "");
+		const dashboardPath = `/${subdomain}`;
+
+		const isLocalHost =
+			hostname === "localhost" ||
+			hostname.endsWith(".localhost") ||
+			hostname === "lvh.me" ||
+			hostname.endsWith(".lvh.me");
+
+		const redirectUrl = isLocalHost
+			? `${base.protocol}//${subdomain}.${hostname}${base.port ? `:${base.port}` : ""}${dashboardPath}`
+			: `${base.protocol}//${hostname}${base.port ? `:${base.port}` : ""}${dashboardPath}`;
 
 		// Hard navigation to subdomain
 		window.location.href = redirectUrl;

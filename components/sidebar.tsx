@@ -133,8 +133,14 @@ export default function Sidebar(props: SidebarProps) {
   const handleClose = onClose ?? onCloseMobile;
 
   const resolveLoginUrl = () => {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://lvh.me:3000";
-    return `${siteUrl.replace(/\/$/, "")}/auth/login`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (siteUrl) {
+      return `${siteUrl.replace(/\/$/, "")}/auth/login`;
+    }
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/auth/login`;
+    }
+    return "/auth/login";
   };
 
   const resolveSupabaseProjectRef = () => {

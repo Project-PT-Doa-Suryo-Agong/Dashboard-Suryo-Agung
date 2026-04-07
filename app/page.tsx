@@ -77,7 +77,7 @@ export default function LandingPage() {
             />
           </div>
           <a
-            href={`${process.env.NEXT_PUBLIC_SITE_URL || "http://lvh.me:3000"}/auth/login`}
+            href="/auth/login"
             className="flex h-10 w-full items-center justify-center rounded-lg bg-[#BC934B] px-4 text-xs font-bold text-white shadow-md transition-all hover:bg-opacity-90 sm:w-auto md:px-6 md:text-sm lg:text-base"
           >
             Sign In
@@ -95,7 +95,7 @@ export default function LandingPage() {
           </p>
           <div className="flex w-full flex-col justify-center gap-2 md:gap-3 sm:w-auto sm:flex-row lg:gap-4">
             <a
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || "http://lvh.me:3000"}/auth/login`}
+              href="/auth/login"
               className="flex h-11 items-center justify-center rounded-xl bg-[#BC934B] px-5 text-sm font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 md:h-12 md:px-6 md:text-base lg:h-14 lg:px-8 lg:text-lg"
             >
               Access System
