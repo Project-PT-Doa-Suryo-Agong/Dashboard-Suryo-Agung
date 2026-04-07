@@ -21,11 +21,33 @@ const ALLOWED_ORIGINS = [
   "http://office.lvh.me:3000",
 ];
 
-function getCorsHeaders(origin: string | null) {
-  const allowedOrigin =
-    origin && ALLOWED_ORIGINS.includes(origin)
-      ? origin
-      : "http://localhost:3000";
+function isAllowedOrigin(origin: string | null): origin is string {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+
+  try {
+    const parsed = new URL(origin);
+    if (!["http:", "https:"].includes(parsed.protocol)) return false;
+
+    // Allow Vercel preview/prod domains.
+    if (parsed.hostname.endsWith(".vercel.app")) return true;
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (siteUrl) {
+      const base = new URL(siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`);
+      const baseHost = base.hostname.replace(/^www\./, "");
+      const reqHost = parsed.hostname.replace(/^www\./, "");
+      if (reqHost === baseHost || reqHost.endsWith(`.${baseHost}`)) return true;
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
+function getCorsHeaders(origin: string | null, fallbackOrigin: string) {
+  const allowedOrigin = isAllowedOrigin(origin) ? origin : fallbackOrigin;
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
@@ -96,25 +118,41 @@ function mapRoleToSubdomain(role: string | null | undefined): string {
   return "management";
 }
 
-function buildTenantRedirectUrl(subdomain: string): string {
+function buildTenantRedirectUrl(subdomain: string, requestOrigin: string): string {
   const dashboardPath = `/${subdomain}`;
+
+  const fallbackBase = new URL(requestOrigin);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  let baseUrl = fallbackBase;
   if (siteUrl) {
     const base = siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`;
-    const baseUrl = new URL(base);
-    const hostname = baseUrl.hostname.replace(/^www\./, "");
+    baseUrl = new URL(base);
+  }
+
+  const hostname = baseUrl.hostname.replace(/^www\./, "");
+  const isLocalHost =
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname === "lvh.me" ||
+    hostname.endsWith(".lvh.me");
+
+  if (isLocalHost) {
     return `${baseUrl.protocol}//${subdomain}.${hostname}${baseUrl.port ? `:${baseUrl.port}` : ""}${dashboardPath}`;
   }
-  return `http://${subdomain}.localhost:3000${dashboardPath}`;
+
+  // In hosted environments without wildcard subdomain setup, keep same host and route by path.
+  return `${baseUrl.protocol}//${hostname}${baseUrl.port ? `:${baseUrl.port}` : ""}${dashboardPath}`;
 }
 
 // --------------- CORS preflight ---------------
 
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get("origin");
+  const fallbackOrigin = request.nextUrl.origin;
   return new NextResponse(null, {
     status: 200,
-    headers: getCorsHeaders(origin),
+    headers: getCorsHeaders(origin, fallbackOrigin),
   });
 }
 
@@ -122,7 +160,8 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  const corsHeaders = getCorsHeaders(origin);
+  const fallbackOrigin = request.nextUrl.origin;
+  const corsHeaders = getCorsHeaders(origin, fallbackOrigin);
 
   try {
     let body: { email?: string; password?: string };
@@ -204,7 +243,7 @@ export async function POST(request: NextRequest) {
     }
 
     const subdomain = mapRoleToSubdomain(role);
-    const redirectUrl = buildTenantRedirectUrl(subdomain);
+    const redirectUrl = buildTenantRedirectUrl(subdomain, fallbackOrigin);
 
     const finalResponse = ok({ redirectUrl }, "Login berhasil.");
     Object.entries(corsHeaders).forEach(([key, value]) => finalResponse.headers.set(key, value));

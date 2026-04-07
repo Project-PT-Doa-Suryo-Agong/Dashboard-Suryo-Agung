@@ -1,5 +1,6 @@
 import { ok } from "@/lib/http/response";
 import type { NextResponse } from "next/server";
+import { getCookieDomain } from "@/lib/cookie-domain";
 
 function expireCookie(response: NextResponse, name: string, domain?: string) {
   response.cookies.set(name, "", {
@@ -11,6 +12,7 @@ function expireCookie(response: NextResponse, name: string, domain?: string) {
 
 export async function POST(request: Request) {
   const response = ok(null, "Logout berhasil.") as NextResponse;
+  const cookieDomain = getCookieDomain();
 
   const projectRef = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF;
   const authCookieBase = projectRef
@@ -31,11 +33,11 @@ export async function POST(request: Request) {
 
   for (const cookieName of authCookieNames) {
     expireCookie(response, cookieName);
-    expireCookie(response, cookieName, ".lvh.me");
+    if (cookieDomain) expireCookie(response, cookieName, cookieDomain);
   }
 
   expireCookie(response, "role");
-  expireCookie(response, "role", ".lvh.me");
+  if (cookieDomain) expireCookie(response, "role", cookieDomain);
 
   return response;
 }

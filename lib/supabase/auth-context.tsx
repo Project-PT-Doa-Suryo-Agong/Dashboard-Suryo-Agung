@@ -54,8 +54,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const resolveLoginUrl = useCallback(() => {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://lvh.me:3000";
-    return `${siteUrl.replace(/\/$/, "")}/auth/login`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (siteUrl) {
+      return `${siteUrl.replace(/\/$/, "")}/auth/login`;
+    }
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/auth/login`;
+    }
+    return "/auth/login";
   }, []);
 
   // ── fetch profile from core.profiles ──

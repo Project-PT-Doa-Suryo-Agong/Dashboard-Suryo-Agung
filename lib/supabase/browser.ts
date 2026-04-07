@@ -9,12 +9,22 @@ export function createSupabaseBrowserClient() {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or ANON_KEY in browser")
   }
 
+  const resolveCookieDomain = () => {
+    if (process.env.NEXT_PUBLIC_COOKIE_DOMAIN) return process.env.NEXT_PUBLIC_COOKIE_DOMAIN;
+    if (typeof window === "undefined") return undefined;
+
+    const host = window.location.hostname.toLowerCase();
+    if (host === "localhost" || host.endsWith(".localhost")) return ".localhost";
+    if (host === "lvh.me" || host.endsWith(".lvh.me")) return ".lvh.me";
+    return undefined;
+  };
+
   return createBrowserClient<Database>(
     supabaseUrl, 
     supabaseAnonKey,
     {
       cookieOptions: {
-        domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || ".lvh.me",
+        domain: resolveCookieDomain(),
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
       }
