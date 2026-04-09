@@ -33,14 +33,22 @@ type ProfilesListPayload = {
   };
 };
 
-const divisiOptions = [
-  "HR",
+const FALLBACK_DIVISI_OPTIONS = [
+  "Management & Strategy",
+  "Finance & Administration",
+  "HR & Operation Manager",
+  "Produksi & Quality Control",
+  "Logistics & Packing",
+  "Creative & Sales",
+  "Office Support",
+  "Developer",
+  "CEO",
   "Finance",
+  "HR",
   "Produksi",
   "Logistik",
   "Creative",
   "Office",
-  "Management",
 ];
 
 const rupiahFormatter = new Intl.NumberFormat("id-ID", {
@@ -80,12 +88,18 @@ export default function KaryawanPage() {
   const [editData, setEditData] = useState<KaryawanItem | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [gajiPokokInput, setGajiPokokInput] = useState<string>("");
+
+  const divisiOptions = useMemo(() => {
+    const roleOptions = Array.from(new Set(profileOptions.map((profile) => profile.role)));
+    return roleOptions.length > 0 ? roleOptions : FALLBACK_DIVISI_OPTIONS;
+  }, [profileOptions]);
 
   const [formData, setFormData] = useState<Omit<KaryawanItem, "id">>({
     profile_id: null,
     nama: "",
     posisi: "",
-    divisi: divisiOptions[0],
+    divisi: "",
     status: "aktif",
     gaji_pokok: 0,
   });
@@ -136,15 +150,24 @@ export default function KaryawanPage() {
     return items.filter((item) => (item.nama ?? "").toLowerCase().includes(keyword));
   }, [items, searchTerm]);
 
+  useEffect(() => {
+    if (divisiOptions.length === 0) return;
+    setFormData((prev) => {
+      if (prev.divisi && divisiOptions.includes(prev.divisi)) return prev;
+      return { ...prev, divisi: divisiOptions[0] };
+    });
+  }, [divisiOptions]);
+
   const resetForm = () => {
     setFormData({
       profile_id: null,
       nama: "",
       posisi: "",
-      divisi: divisiOptions[0],
+      divisi: divisiOptions[0] ?? "",
       status: "aktif",
       gaji_pokok: 0,
     });
+    setGajiPokokInput("");
     setEditData(null);
   };
 
@@ -159,10 +182,11 @@ export default function KaryawanPage() {
       profile_id: item.profile_id ?? null,
       nama: item.nama ?? "",
       posisi: item.posisi ?? "",
-      divisi: item.divisi ?? divisiOptions[0],
+      divisi: item.divisi ?? divisiOptions[0] ?? "",
       status: item.status ?? "aktif",
       gaji_pokok: item.gaji_pokok ?? 0,
     });
+    setGajiPokokInput(item.gaji_pokok != null ? String(item.gaji_pokok) : "");
     setIsFormModalOpen(true);
   };
 
@@ -174,14 +198,26 @@ export default function KaryawanPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting) return;
+
+    const parsedGajiPokok = Number(gajiPokokInput);
+    if (!gajiPokokInput.trim() || Number.isNaN(parsedGajiPokok) || parsedGajiPokok < 0) {
+      alert("Gaji pokok wajib berupa angka valid (>= 0).");
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      gaji_pokok: parsedGajiPokok,
+    };
+
     setIsSubmitting(true);
 
     try {
       if (editData) {
-        const result = await update(editData.id, formData);
+        const result = await update(editData.id, payload);
         if (!result) throw new Error("Gagal update karyawan.");
       } else {
-        const result = await insert(formData);
+        const result = await insert(payload);
         if (!result) throw new Error("Gagal menambah karyawan.");
       }
 
@@ -437,13 +473,8 @@ export default function KaryawanPage() {
                 type="number"
                 min={0}
                 required
-                value={formData.gaji_pokok}
-                onChange={(event) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    gaji_pokok: Number(event.target.value),
-                  }))
-                }
+                value={gajiPokokInput}
+                onChange={(event) => setGajiPokokInput(event.target.value)}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
               />
             </label>
