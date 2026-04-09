@@ -36,6 +36,28 @@ export const SYSTEM_ROLE_TO_CORE_ROLE: Record<SystemRoleKey, CoreUserRole> = {
   developer: "Developer",
 };
 
+const VALID_CORE_ROLES: CoreUserRole[] = [
+  "Developer",
+  "Management & Strategy",
+  "Finance & Administration",
+  "HR & Operation Manager",
+  "Produksi & Quality Control",
+  "Logistics & Packing",
+  "Creative & Sales",
+  "Office Support",
+  "CEO",
+  "Finance",
+  "HR",
+  "Produksi",
+  "Logistik",
+  "Creative",
+  "Office",
+];
+
+export function isValidCoreRole(value: string): value is CoreUserRole {
+  return VALID_CORE_ROLES.includes(value as CoreUserRole);
+}
+
 export function isSystemRoleKey(value: string): value is SystemRoleKey {
   return USER_ROLES.includes(value as SystemRoleKey);
 }
@@ -88,9 +110,19 @@ export function parseCreateProfileInput(payload: unknown):
     return { ok: false, message: "role wajib diisi." };
   }
 
-  const role = body.role.trim().toLowerCase();
-  if (!isSystemRoleKey(role)) {
-    return { ok: false, message: "role tidak valid." };
+  const role = body.role.trim();
+  let finalRole: CoreUserRole;
+  
+  if (isValidCoreRole(role)) {
+    // Apabila frontend melempar real DB role ("Produksi & Quality Control") maka terima lgsg
+    finalRole = role; 
+  } else {
+    // Kalau dia menggunakan alias ("produksi")
+    const lowerRole = role.toLowerCase();
+    if (!isSystemRoleKey(lowerRole)) {
+      return { ok: false, message: "role tidak valid." };
+    }
+    finalRole = SYSTEM_ROLE_TO_CORE_ROLE[lowerRole];
   }
 
   const phone = validateOptionalString("phone", body.phone, 50);
@@ -102,7 +134,7 @@ export function parseCreateProfileInput(payload: unknown):
       email: body.email.trim(),
       password: body.password,
       nama: body.nama.trim(),
-      role: SYSTEM_ROLE_TO_CORE_ROLE[role],
+      role: finalRole,
       phone: phone.value ?? null,
     },
   };
@@ -125,11 +157,16 @@ export function parseUpdateProfileByIdInput(payload: unknown):
   const role = validateOptionalString("role", body.role, 80, false);
   if (!role.ok) return role;
   if (role.value !== undefined && role.value !== null) {
-    const systemRole = role.value.toLowerCase();
-    if (!isSystemRoleKey(systemRole)) {
-      return { ok: false, message: "role tidak valid." };
+    const rawRole = role.value;
+    if (isValidCoreRole(rawRole)) {
+      parsed.role = rawRole;
+    } else {
+      const systemRole = rawRole.toLowerCase();
+      if (!isSystemRoleKey(systemRole)) {
+        return { ok: false, message: "role tidak valid." };
+      }
+      parsed.role = SYSTEM_ROLE_TO_CORE_ROLE[systemRole];
     }
-    parsed.role = SYSTEM_ROLE_TO_CORE_ROLE[systemRole];
   }
 
   const phone = validateOptionalString("phone", body.phone, 50);
