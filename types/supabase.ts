@@ -309,7 +309,6 @@ export interface Database {
           employee_id: string | null;
           amount: number | null;
           bukti: string | null;
-          keterangan: string | null;
           status: FinanceReimburseStatus | null;
           created_at: string | null;
         };
@@ -318,7 +317,6 @@ export interface Database {
           employee_id?: string | null;
           amount?: number | null;
           bukti?: string | null;
-          keterangan?: string | null;
           status?: FinanceReimburseStatus | null;
           created_at?: string | null;
         };
@@ -327,7 +325,6 @@ export interface Database {
           employee_id?: string | null;
           amount?: number | null;
           bukti?: string | null;
-          keterangan?: string | null;
           status?: FinanceReimburseStatus | null;
         };
         Relationships: [];

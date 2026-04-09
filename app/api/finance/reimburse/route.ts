@@ -38,8 +38,6 @@ export async function POST(request: Request) {
   
   const bukti = requireString(input, "bukti", { optional: true });
   if (!bukti.ok) return fail(ErrorCode.VALIDATION_ERROR, bukti.message, 400);
-  const keterangan = requireString(input, "keterangan", { optional: true });
-  if (!keterangan.ok) return fail(ErrorCode.VALIDATION_ERROR, keterangan.message, 400);
 
   const status = requireString(input, "status", { optional: true });
   if (!status.ok) return fail(ErrorCode.VALIDATION_ERROR, status.message, 400);
@@ -51,7 +49,6 @@ export async function POST(request: Request) {
     employee_id: employeeId.data,
     amount: amount.data,
     bukti: bukti.data ?? null,
-    keterangan: keterangan.data ?? null,
     status: (status.data ?? "pending") as TReimbursementInsert["status"],
   };
 
