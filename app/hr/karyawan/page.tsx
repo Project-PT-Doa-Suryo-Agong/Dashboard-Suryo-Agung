@@ -89,6 +89,7 @@ export default function KaryawanPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [gajiPokokInput, setGajiPokokInput] = useState<string>("");
+  const [isDivisiManuallyEdited, setIsDivisiManuallyEdited] = useState<boolean>(false);
 
   const divisiOptions = useMemo(() => {
     const roleOptions = Array.from(new Set(profileOptions.map((profile) => profile.role)));
@@ -168,6 +169,7 @@ export default function KaryawanPage() {
       gaji_pokok: 0,
     });
     setGajiPokokInput("");
+    setIsDivisiManuallyEdited(false);
     setEditData(null);
   };
 
@@ -187,6 +189,7 @@ export default function KaryawanPage() {
       gaji_pokok: item.gaji_pokok ?? 0,
     });
     setGajiPokokInput(item.gaji_pokok != null ? String(item.gaji_pokok) : "");
+    setIsDivisiManuallyEdited(false);
     setIsFormModalOpen(true);
   };
 
@@ -390,12 +393,19 @@ export default function KaryawanPage() {
               <span className="text-sm font-medium text-slate-700">Profile (Opsional)</span>
               <select
                 value={formData.profile_id ?? ""}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const profileId = event.target.value || null;
+                  const selectedProfile = profileOptions.find((profile) => profile.id === profileId);
+
                   setFormData((prev) => ({
                     ...prev,
-                    profile_id: event.target.value || null,
-                  }))
-                }
+                    profile_id: profileId,
+                    divisi:
+                      !isDivisiManuallyEdited && selectedProfile
+                        ? selectedProfile.role
+                        : prev.divisi,
+                  }));
+                }}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
               >
                 <option value="">Tanpa profile login</option>
@@ -437,9 +447,10 @@ export default function KaryawanPage() {
               <span className="text-sm font-medium text-slate-700">Divisi</span>
               <select
                 value={formData.divisi}
-                onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, divisi: event.target.value }))
-                }
+                onChange={(event) => {
+                  setIsDivisiManuallyEdited(true);
+                  setFormData((prev) => ({ ...prev, divisi: event.target.value }));
+                }}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
               >
                 {divisiOptions.map((divisi) => (
