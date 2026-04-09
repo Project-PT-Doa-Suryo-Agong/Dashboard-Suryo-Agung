@@ -1,4 +1,4 @@
-import { SYSTEM_ROLE_TO_CORE_ROLE, isSystemRoleKey } from "./profiles-admin";
+import { SYSTEM_ROLE_TO_CORE_ROLE, isSystemRoleKey, isValidCoreRole } from "./profiles-admin";
 import type { CoreUserRole, HrEmployeeStatus } from "@/types/supabase";
 
 function validateOptionalString(
@@ -47,9 +47,19 @@ export function parseCreateEmployeeInput(payload: unknown):
     return { ok: false, message: "role wajib diisi." };
   }
 
-  const roleKey = body.role.trim().toLowerCase();
-  if (!isSystemRoleKey(roleKey)) {
-    return { ok: false, message: "role tidak valid." };
+  const roleString = body.role.trim();
+  let finalRole: CoreUserRole;
+  
+  // Coba cek apa role yang dikirim persis sama dengan struktur database (mis. "Produksi & Quality Control")
+  if (isValidCoreRole(roleString)) {
+    finalRole = roleString as CoreUserRole;
+  } else {
+    // Kalau dikirim dalam bentuk singkatan (mis. "produksi" atau "hr")
+    const roleKey = roleString.toLowerCase();
+    if (!isSystemRoleKey(roleKey)) {
+      return { ok: false, message: "role tidak valid." };
+    }
+    finalRole = SYSTEM_ROLE_TO_CORE_ROLE[roleKey];
   }
 
   const phone = validateOptionalString("phone", body.phone, 50);
@@ -81,7 +91,7 @@ export function parseCreateEmployeeInput(payload: unknown):
       email: body.email.trim(),
       password: body.password,
       nama: body.nama.trim(),
-      role: SYSTEM_ROLE_TO_CORE_ROLE[roleKey],
+      role: finalRole,
       phone: phone.value,
       posisi: posisi.value,
       divisi: divisi.value,
