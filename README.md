@@ -190,7 +190,15 @@ Saat ini, migrasi arsitektur *Hybrid* (Fase 1 hingga Fase 4) di sisi server/back
 4. **RLS Issue Add/Delete Order (Produksi)**: Sistem sekarang dapat memproses CRUD dan *Add Sales Order* dari role 'Produksi' dan 'Produksi & Quality Control'. *Security Guards* di API level Next.js (`requireLevel`) juga diekstensikan mencakup role kelas `operational` yang sebelumnya dilupakan untuk Produksi.
 5. **Reimbursement Bukti Upload**: File SQL `supabase/add_kolom_reimburse.sql` telah dibuat. **Penting:** Jalankan script ini di menu SQL Editor Supabase Anda untuk menyuntikkan kolom `bukti` dan `keterangan` ke tabel `t_reimbursement`. Untuk alur Frontend: upload bukti ke `supabase.storage`, lalu ambil URL/Path nya. Lempar path tersebut via Fetch `POST /api/finance/reimburse` (field JSON: `"bukti": "url..."`) menuju Backend, *bukan di-insert secara direct dari browser*.
 
-*(Silakan hapus poin catatan 6 & 7 ini jika penyesuaian UX/UI frontend & testing sudah diselesaikan).*
+### 8. Catatan Pembaruan Backend (Logistik, Office & Auth)
+**Konteks Pembaruan**: Kesalahan relasi dan duplikasi identitas struktur Logistik (Manifest, Packing, Return) telah diperbaiki dengan menjadikan `order_id` sebagai *Primary Key*. Blocker hak akses dashboard Office dan server *timeout* login/logout juga telah diatasi.
+**Tindakan Frontend**:
+1. **Eksekusi SQL Skema Logistik**: Eksekusi file query `supabase/fix-logistik-schema.sql` di *SQL Editor* Supabase secara manual untuk me-replace PK `id` ke `order_id`.
+2. **Penyesuaian Property FE Logistik**: Data JSON response API sekarang dipetakan langsung dengan **`order_id`**, menggantikan **`id`**. Jika komponen React Anda masih mem-binding kunci `key={row.id}`, ubah semuanya menjadi `key={row.order_id}`. Objek Relasi yang dikembalikan API Logistik kini dilampirkan (via relasi `t_sales_order`), tampilkan detail Produk & Order di UI dari nested object ini secara terstruktur.
+3. **Penyembuhan Reload API Office**: Dasbor `Office` tidak lagi ter-blocker untuk *read* Produk dan Vendor. Anda tidak perlu mencari error otentikasi UI.
+4. **Penyembuhan State Terkunci (Login & Logout)**: Masalah *loading* / terkunci saat memanggil *Endpoint Logout* dan rotasi Cookies Supabase Auth *Login* telah beres di level Server. Pemanggilan Login & Logout bisa dijalankan dengan transisi mulus tanpa paksaan *hard-refresh*.
+
+*(Silakan hapus poin catatan 6, 7 & 8 ini jika penyesuaian UX/UI frontend & testing sudah diselesaikan).*
 
 ## Getting Started
 
