@@ -35,6 +35,10 @@ export async function POST(request: Request) {
   if (!employeeId.ok) return fail(ErrorCode.VALIDATION_ERROR, employeeId.message, 400);
   const amount = requireNumber(input, "amount", { min: 0 });
   if (!amount.ok) return fail(ErrorCode.VALIDATION_ERROR, amount.message, 400);
+  
+  const bukti = requireString(input, "bukti", { optional: true });
+  if (!bukti.ok) return fail(ErrorCode.VALIDATION_ERROR, bukti.message, 400);
+
   const status = requireString(input, "status", { optional: true });
   if (!status.ok) return fail(ErrorCode.VALIDATION_ERROR, status.message, 400);
   if (status.data && !["pending", "approved", "rejected"].includes(status.data as string)) {
@@ -44,6 +48,7 @@ export async function POST(request: Request) {
   const payload: TReimbursementInsert = {
     employee_id: employeeId.data,
     amount: amount.data,
+    bukti: bukti.data ?? null,
     status: (status.data ?? "pending") as TReimbursementInsert["status"],
   };
 

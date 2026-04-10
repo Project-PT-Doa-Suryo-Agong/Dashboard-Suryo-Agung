@@ -78,6 +78,7 @@ export interface Database {
           id: string;
           nama_produk: string;
           kategori: string | null;
+          foto_url: string | null;
           created_at: string | null;
           updated_at: string | null;
         };
@@ -85,6 +86,7 @@ export interface Database {
           id?: string;
           nama_produk: string;
           kategori?: string | null;
+          foto_url?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -92,6 +94,7 @@ export interface Database {
           id?: string;
           nama_produk?: string;
           kategori?: string | null;
+          foto_url?: string | null;
           updated_at?: string | null;
         };
         Relationships: [];
@@ -308,6 +311,7 @@ export interface Database {
           id: string;
           employee_id: string | null;
           amount: number | null;
+          bukti: string | null;
           status: FinanceReimburseStatus | null;
           created_at: string | null;
         };
@@ -315,6 +319,7 @@ export interface Database {
           id?: string;
           employee_id?: string | null;
           amount?: number | null;
+          bukti?: string | null;
           status?: FinanceReimburseStatus | null;
           created_at?: string | null;
         };
@@ -322,6 +327,7 @@ export interface Database {
           id?: string;
           employee_id?: string | null;
           amount?: number | null;
+          bukti?: string | null;
           status?: FinanceReimburseStatus | null;
         };
         Relationships: [];
