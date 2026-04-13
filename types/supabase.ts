@@ -469,18 +469,21 @@ export interface Database {
           id: string;
           order_id: string | null;
           alasan: string | null;
+          bukti: string | null;
           created_at: string | null;
         };
         Insert: {
           id?: string;
           order_id?: string | null;
           alasan?: string | null;
+          bukti?: string | null;
           created_at?: string | null;
         };
         Update: {
           id?: string;
           order_id?: string | null;
           alasan?: string | null;
+          bukti?: string | null;
         };
         Relationships: [];
       };

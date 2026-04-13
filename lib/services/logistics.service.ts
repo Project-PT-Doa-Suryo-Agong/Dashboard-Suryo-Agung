@@ -54,15 +54,23 @@ export async function updatePacking(client: DbClient, id: string, input: Record<
   const { data, error } = await db(client)
     .from("t_packing")
     .update(input)
-    .eq("id", id)
-    .select("*")
-    .maybeSingle();
-  return { data: data as TPacking | null, error };
+    .eq("order_id", id)
+    .select("*");
+  const firstRow = Array.isArray(data) ? data[0] : null;
+  return { data: (firstRow ?? null) as TPacking | null, error };
+}
+
+export async function updatePackingByOrderId(client: DbClient, orderId: string, input: Record<string, unknown>) {
+  return updatePacking(client, orderId, input);
 }
 
 export async function deletePacking(client: DbClient, id: string) {
-  const { error, count } = await db(client).from("t_packing").delete({ count: "exact" }).eq("id", id);
+  const { error, count } = await db(client).from("t_packing").delete({ count: "exact" }).eq("order_id", id);
   return { error, deleted: (count ?? 0) > 0 };
+}
+
+export async function deletePackingByOrderId(client: DbClient, orderId: string) {
+  return deletePacking(client, orderId);
 }
 
 export async function listReturnOrder(client: DbClient, page = 1, limit = 50) {
