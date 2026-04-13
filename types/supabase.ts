@@ -468,22 +468,28 @@ export interface Database {
         Row: {
           id: string;
           order_id: string | null;
-          alasan: string | null;
-          bukti: string | null;
+          alasan: string;
+          status: string | null;
+          foto_bukti_url: string | null;
           created_at: string | null;
+          updated_at: string | null;
         };
         Insert: {
           id?: string;
           order_id?: string | null;
-          alasan?: string | null;
-          bukti?: string | null;
+          alasan: string;
+          status?: string | null;
+          foto_bukti_url?: string | null;
           created_at?: string | null;
+          updated_at?: string | null;
         };
         Update: {
           id?: string;
           order_id?: string | null;
-          alasan?: string | null;
-          bukti?: string | null;
+          alasan?: string;
+          status?: string | null;
+          foto_bukti_url?: string | null;
+          updated_at?: string | null;
         };
         Relationships: [];
       };

@@ -30,22 +30,17 @@ export async function POST(request: Request) {
   }
 
   const input = body as Record<string, unknown>;
-  const orderId = requireUUID(input, "order_id", { optional: true });
+  const orderId = requireUUID(input, "order_id");
   if (!orderId.ok) return fail(ErrorCode.VALIDATION_ERROR, orderId.message, 400);
-  const alasan = requireString(input, "alasan", { maxLen: 255, optional: true });
+  const alasan = requireString(input, "alasan", { maxLen: 255 });
   if (!alasan.ok) return fail(ErrorCode.VALIDATION_ERROR, alasan.message, 400);
-  const bukti = requireString(input, "bukti", { maxLen: 500, optional: true });
-  if (!bukti.ok) return fail(ErrorCode.VALIDATION_ERROR, bukti.message, 400);
-
-  if (!("order_id" in input) && !("alasan" in input) && !("bukti" in input)) {
-    return fail(ErrorCode.VALIDATION_ERROR, "Minimal satu field retur harus diisi.", 400);
-  }
+  const fotoBuktiUrl = requireString(input, "foto_bukti_url", { maxLen: 500, optional: true });
+  if (!fotoBuktiUrl.ok) return fail(ErrorCode.VALIDATION_ERROR, fotoBuktiUrl.message, 400);
 
   const payload: TReturnOrderInsert = {
-    ...input,
     order_id: orderId.data,
-    alasan: alasan.data,
-    bukti: bukti.data,
+    alasan: alasan.data!,
+    foto_bukti_url: fotoBuktiUrl.data,
   };
 
   const { data, error } = await createReturnOrder(auth.ctx.supabase, payload);
