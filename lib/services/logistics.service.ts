@@ -9,7 +9,7 @@ export async function listManifest(client: DbClient, page = 1, limit = 50) {
   const from = (page - 1) * limit;
   const { data, error, count } = await db(client)
     .from("t_logistik_manifest")
-    .select("*, t_sales_order(*, m_varian(*, m_produk(*)))", { count: "exact" })
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, from + limit - 1);
   return { data: (data ?? []) as any[], error, meta: { page, limit, total: count ?? 0 } };
@@ -39,7 +39,7 @@ export async function listPacking(client: DbClient, page = 1, limit = 100) {
   const from = (page - 1) * limit;
   const { data, error, count } = await db(client)
     .from("t_packing")
-    .select("*, t_sales_order(*, m_varian(*, m_produk(*)))", { count: "exact" })
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, from + limit - 1);
   return { data: (data ?? []) as any[], error, meta: { page, limit, total: count ?? 0 } };
@@ -69,7 +69,7 @@ export async function listReturnOrder(client: DbClient, page = 1, limit = 50) {
   const from = (page - 1) * limit;
   const { data, error, count } = await db(client)
     .from("t_return_order")
-    .select("*, t_sales_order(*, m_varian(*, m_produk(*)))", { count: "exact" })
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, from + limit - 1);
   return { data: (data ?? []) as any[], error, meta: { page, limit, total: count ?? 0 } };
