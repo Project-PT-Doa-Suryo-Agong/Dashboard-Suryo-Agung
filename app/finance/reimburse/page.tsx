@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import { apiFetch } from "@/lib/utils/api-fetch";
+import { getStorageFileName, uploadReimburseBukti } from "@/lib/utils/upload-reimburse-bukti";
 import type {
   FinanceReimburseStatus,
   MKaryawan,
@@ -66,6 +67,9 @@ function formatDate(dateValue: string): string {
 }
 
 export default function FinanceReimbursePage() {
+  const MAX_BUKTI_SIZE = 5 * 1024 * 1024;
+  const ACCEPTED_BUKTI_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+
   const [items, setItems] = useState<TReimbursement[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
 
@@ -82,11 +86,14 @@ export default function FinanceReimbursePage() {
     employee_id: string;
     amount: string;
     status: FinanceReimburseStatus;
+    bukti: string | null;
   }>({
     employee_id: "",
     amount: "",
     status: "pending",
+    bukti: null,
   });
+  const [selectedBuktiFile, setSelectedBuktiFile] = useState<File | null>(null);
 
   const fetchReimburse = async () => {
     try {
@@ -162,7 +169,9 @@ export default function FinanceReimbursePage() {
       employee_id: employees[0]?.id ?? "",
       amount: "",
       status: "pending",
+      bukti: null,
     });
+    setSelectedBuktiFile(null);
     setEditData(null);
   };
 
@@ -177,7 +186,9 @@ export default function FinanceReimbursePage() {
       employee_id: item.employee_id ?? "",
       amount: String(item.amount ?? ""),
       status: item.status ?? "pending",
+      bukti: item.bukti ?? null,
     });
+    setSelectedBuktiFile(null);
     setIsFormModalOpen(true);
   };
 
@@ -212,10 +223,16 @@ export default function FinanceReimbursePage() {
 
     setIsSubmitting(true);
     try {
+      let buktiPath = formData.bukti;
+      if (selectedBuktiFile) {
+        buktiPath = await uploadReimburseBukti(selectedBuktiFile, editData?.bukti);
+      }
+
       const payload = {
         employee_id: formData.employee_id,
         amount: parsedAmount,
         status: formData.status,
+        bukti: buktiPath,
       };
 
       if (editData) {
@@ -489,6 +506,45 @@ export default function FinanceReimbursePage() {
               <option value="approved">approved</option>
               <option value="rejected">rejected</option>
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Upload Bukti (JPG/PNG/WEBP/PDF, maks. 5MB)</label>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                if (!file) {
+                  setSelectedBuktiFile(null);
+                  return;
+                }
+
+                if (!ACCEPTED_BUKTI_TYPES.includes(file.type)) {
+                  alert("Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau PDF.");
+                  event.target.value = "";
+                  setSelectedBuktiFile(null);
+                  return;
+                }
+
+                if (file.size > MAX_BUKTI_SIZE) {
+                  alert("Ukuran file maksimal 5MB.");
+                  event.target.value = "";
+                  setSelectedBuktiFile(null);
+                  return;
+                }
+
+                setSelectedBuktiFile(file);
+              }}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-3 file:py-1.5 file:text-slate-700"
+            />
+            <p className="text-xs text-slate-500">
+              {selectedBuktiFile
+                ? `File dipilih: ${selectedBuktiFile.name}`
+                : formData.bukti
+                  ? `File saat ini: ${getStorageFileName(formData.bukti)}`
+                  : "Belum ada file bukti."}
+            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
