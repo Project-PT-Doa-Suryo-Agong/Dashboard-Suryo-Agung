@@ -9,8 +9,18 @@ import type { ApiError, ApiSuccess } from "@/types/api";
 import type { TLogistikManifest, TSalesOrder } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
 
+type ManifestItem = TLogistikManifest & {
+  order?: {
+    id?: string | null;
+    varian_id?: string | null;
+  } | null;
+  variant?: {
+    nama_varian?: string | null;
+  } | null;
+};
+
 type ManifestListPayload = {
-  manifest: TLogistikManifest[];
+  manifest: ManifestItem[];
   meta: { page: number; limit: number; total: number };
 };
 
@@ -19,6 +29,15 @@ type ManifestPayload = { manifest: TLogistikManifest | null };
 type OrdersListPayload = {
   orders: TSalesOrder[];
   meta: { page: number; limit: number; total: number };
+};
+
+type VariantItem = {
+  id: string;
+  nama_varian: string | null;
+};
+
+type VariantsListPayload = {
+  varian: VariantItem[];
 };
 
 function asArray<T>(value: unknown): T[] {
@@ -38,6 +57,32 @@ function shortId(id: string | null | undefined) {
 
 function getOrderPrimaryKey(value: { order_id?: string | null; id?: string | null } | null | undefined): string {
   return value?.order_id ?? value?.id ?? "";
+}
+
+function toTimestamp(value: string | null | undefined): number {
+  if (!value) return 0;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function dedupeManifestRows(items: ManifestItem[]): ManifestItem[] {
+  const byOrderId = new Map<string, ManifestItem>();
+  const rowsWithoutOrderId: ManifestItem[] = [];
+
+  for (const item of items) {
+    const key = item.order_id ?? "";
+    if (!key) {
+      rowsWithoutOrderId.push(item);
+      continue;
+    }
+
+    const existing = byOrderId.get(key);
+    if (!existing || toTimestamp(item.created_at) >= toTimestamp(existing.created_at)) {
+      byOrderId.set(key, item);
+    }
+  }
+
+  return [...byOrderId.values(), ...rowsWithoutOrderId];
 }
 
 async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> {
@@ -65,8 +110,9 @@ const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 export default function ManifestPage() {
-  const [items, setItems] = useState<TLogistikManifest[]>([]);
+  const [items, setItems] = useState<ManifestItem[]>([]);
   const [orders, setOrders] = useState<TSalesOrder[]>([]);
+  const [variants, setVariants] = useState<VariantItem[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -92,7 +138,7 @@ export default function ManifestPage() {
         cache: "no-store",
       });
       const payload = await parseJsonResponse<ManifestListPayload>(response);
-      setItems(payload.data.manifest ?? []);
+      setItems(dedupeManifestRows(payload.data.manifest ?? []));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Gagal memuat data manifest.";
       alert(message);
@@ -116,11 +162,26 @@ export default function ManifestPage() {
     }
   };
 
+  const fetchVariants = async () => {
+    try {
+      const response = await apiFetch("/api/core/variants", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      });
+      const payload = await parseJsonResponse<VariantsListPayload>(response);
+      setVariants(payload.data.varian ?? []);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal memuat data varian.";
+      alert(message);
+    }
+  };
+
   useEffect(() => {
     const loadInitialData = async () => {
       setIsLoading(true);
       try {
-        await Promise.all([fetchManifest(), fetchOrders()]);
+        await Promise.all([fetchManifest(), fetchOrders(), fetchVariants()]);
       } finally {
         setIsLoading(false);
       }
@@ -139,18 +200,38 @@ export default function ManifestPage() {
     [orders],
   );
 
+  const variantNameById = useMemo(
+    () =>
+      Object.fromEntries(
+        variants
+          .map((variant) => [variant.id, variant.nama_varian ?? ""] as const)
+          .filter(([variantId]) => !!variantId),
+      ) as Record<string, string>,
+    [variants],
+  );
+
+  const resolveVariantName = (item: ManifestItem) => {
+    if (item.variant?.nama_varian) return item.variant.nama_varian;
+    const order = orderById[item.order_id ?? ""];
+    const varianId = order?.varian_id ?? null;
+    if (!varianId) return "-";
+    return variantNameById[varianId] || "-";
+  };
+
   const filteredItems = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
 
     return items.filter((item) => {
       const order = orderById[item.order_id ?? ""];
+      const variantName = resolveVariantName(item).toLowerCase();
       return (
         (item.resi ?? "").toLowerCase().includes(keyword) ||
         getOrderPrimaryKey(order).toLowerCase().includes(keyword) ||
-        (item.order_id ?? "").toLowerCase().includes(keyword)
+        (item.order_id ?? "").toLowerCase().includes(keyword) ||
+        variantName.includes(keyword)
       );
     });
-  }, [items, searchTerm, orderById]);
+  }, [items, searchTerm, orderById, variantNameById]);
 
   const resetForm = () => {
     setFormData({ order_id: getOrderPrimaryKey(orders[0]) || "", resi: "" });
@@ -251,7 +332,7 @@ export default function ManifestPage() {
       return {
         manifest_id: getOrderPrimaryKey(item) || "-",
         order_id: getOrderPrimaryKey(order) || "Order tidak ditemukan",
-        produk: "-",
+        varian: resolveVariantName(item),
         resi: item.resi ?? "-",
         dibuat_pada: item.created_at ? dateTimeFormatter.format(new Date(item.created_at)) : "-",
       };
@@ -277,7 +358,7 @@ export default function ManifestPage() {
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Cari order / produk / resi..."
+            placeholder="Cari order / varian / resi..."
             className="w-full rounded-xl border border-slate-300 bg-slate-200 py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
           />
         </div>
@@ -307,7 +388,7 @@ export default function ManifestPage() {
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">ID Manifest</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Order</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Produk</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Varian</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Resi</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Dibuat</th>
               <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">Aksi</th>
@@ -319,13 +400,14 @@ export default function ManifestPage() {
             ) : filteredItems.length === 0 ? (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Data manifest tidak ditemukan.</td></tr>
             ) : (
-              filteredItems.map((item) => {
+              filteredItems.map((item, index) => {
                 const order = orderById[item.order_id ?? ""];
+                const rowKey = `${getOrderPrimaryKey(item)}-${item.created_at ?? ""}-${item.resi ?? ""}-${index}`;
                 return (
-                  <tr key={getOrderPrimaryKey(item)} className="border-t border-slate-100">
+                  <tr key={rowKey} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{shortId(getOrderPrimaryKey(item))}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{getOrderPrimaryKey(order) || item.order_id || "Order tidak ditemukan"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700">-</td>
+                    <td className="px-4 py-3 text-sm text-slate-700">{resolveVariantName(item)}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-slate-800 whitespace-nowrap">{item.resi ?? "-"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateTimeFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-center">

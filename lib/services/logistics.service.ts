@@ -1,10 +1,10 @@
 import type { TLogistikManifest, TPacking, TReturnOrder } from "@/types/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 type DbClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 type SchemaClient = DbClient & { schema: (schema: string) => DbClient };
 const db = (client: DbClient) => (client as unknown as SchemaClient).schema("logistics");
-const schema = (client: DbClient, name: string) => (client as unknown as SchemaClient).schema(name);
 
 type SalesOrderLite = {
   id: string;
@@ -23,13 +23,6 @@ type VariantLite = {
   harga: number | null;
 };
 
-type ProductLite = {
-  id: string;
-  nama_produk: string;
-  kategori: string | null;
-  foto_url: string | null;
-};
-
 type LogisticsRowWithOrder = {
   order_id: string | null;
   [key: string]: unknown;
@@ -44,13 +37,23 @@ async function enrichLogisticsRows<T extends LogisticsRowWithOrder>(client: DbCl
     return { data: rows, error: null };
   }
 
-  const { data: orders, error: orderError } = await schema(client, "sales")
+  const toBaseRows = (sourceRows: T[]) =>
+    sourceRows.map((row) => ({
+      ...row,
+      order: null,
+      variant: null,
+    }));
+
+  const { data: orders, error: orderError } = await supabaseAdmin
+    .schema("sales")
     .from("t_sales_order")
     .select("id, varian_id, affiliator_id, quantity, total_price, created_at")
     .in("id", orderIds);
 
   if (orderError) {
-    return { data: rows, error: orderError };
+    // Some operational roles can access logistics data but not cross-schema sales data.
+    // Do not fail the endpoint; return base logistics rows without enrichment.
+    return { data: toBaseRows(rows), error: null };
   }
 
   const orderList = (orders ?? []) as SalesOrderLite[];
@@ -62,50 +65,27 @@ async function enrichLogisticsRows<T extends LogisticsRowWithOrder>(client: DbCl
 
   let variantById = new Map<string, VariantLite>();
   if (variantIds.length > 0) {
-    const { data: variants, error: variantError } = await schema(client, "core")
+    const { data: variants, error: variantError } = await supabaseAdmin
+      .schema("core")
       .from("m_varian")
       .select("id, product_id, nama_varian, sku, harga")
       .in("id", variantIds);
 
     if (variantError) {
-      return { data: rows, error: variantError };
+      return { data: toBaseRows(rows), error: null };
     }
 
     variantById = new Map(((variants ?? []) as VariantLite[]).map((variant) => [variant.id, variant]));
   }
 
-  const productIds = Array.from(
-    new Set(
-      Array.from(variantById.values())
-        .map((variant) => variant.product_id)
-        .filter((value): value is string => typeof value === "string" && value.length > 0),
-    ),
-  );
-
-  let productById = new Map<string, ProductLite>();
-  if (productIds.length > 0) {
-    const { data: products, error: productError } = await schema(client, "core")
-      .from("m_produk")
-      .select("id, nama_produk, kategori, foto_url")
-      .in("id", productIds);
-
-    if (productError) {
-      return { data: rows, error: productError };
-    }
-
-    productById = new Map(((products ?? []) as ProductLite[]).map((product) => [product.id, product]));
-  }
-
   const enriched = rows.map((row) => {
     const order = row.order_id ? orderById.get(row.order_id) ?? null : null;
     const variant = order?.varian_id ? variantById.get(order.varian_id) ?? null : null;
-    const product = variant?.product_id ? productById.get(variant.product_id) ?? null : null;
 
     return {
       ...row,
       order,
       variant,
-      product,
     };
   });
 
@@ -126,6 +106,30 @@ export async function listManifest(client: DbClient, page = 1, limit = 50) {
 }
 
 export async function createManifest(client: DbClient, input: Record<string, unknown>) {
+  const orderId = typeof input.order_id === "string" ? input.order_id : null;
+
+  if (orderId) {
+    const { data: existing, error: existingError } = await db(client)
+      .from("t_logistik_manifest")
+      .select("order_id")
+      .eq("order_id", orderId)
+      .limit(1);
+
+    if (existingError) {
+      return { data: null, error: existingError };
+    }
+
+    if ((existing ?? []).length > 0) {
+      const { data, error } = await db(client)
+        .from("t_logistik_manifest")
+        .update(input as any)
+        .eq("order_id", orderId)
+        .select("*");
+
+      return { data: ((data ?? [])[0] as TLogistikManifest | undefined) ?? null, error };
+    }
+  }
+
   const { data, error } = await db(client).from("t_logistik_manifest").insert(input as any).select("*").single();
   return { data: data as TLogistikManifest | null, error };
 }
