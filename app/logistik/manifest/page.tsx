@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
-import type { MProduk, TLogistikManifest, TProduksiOrder } from "@/types/supabase";
+import type { TLogistikManifest, TSalesOrder } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
 
 type ManifestListPayload = {
@@ -17,12 +17,7 @@ type ManifestListPayload = {
 type ManifestPayload = { manifest: TLogistikManifest | null };
 
 type OrdersListPayload = {
-  orders: TProduksiOrder[];
-  meta: { page: number; limit: number; total: number };
-};
-
-type ProductsListPayload = {
-  produk: MProduk[];
+  orders: TSalesOrder[];
   meta: { page: number; limit: number; total: number };
 };
 
@@ -30,16 +25,10 @@ function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-function pickOrders(data: unknown): TProduksiOrder[] {
+function pickOrders(data: unknown): TSalesOrder[] {
   if (!data || typeof data !== "object") return [];
   const source = data as Record<string, unknown>;
-  return asArray<TProduksiOrder>(source.orders ?? source.order ?? source.data);
-}
-
-function pickProducts(data: unknown): MProduk[] {
-  if (!data || typeof data !== "object") return [];
-  const source = data as Record<string, unknown>;
-  return asArray<MProduk>(source.produk ?? source.products ?? source.data);
+  return asArray<TSalesOrder>(source.orders ?? source.order ?? source.data);
 }
 
 function shortId(id: string | null | undefined) {
@@ -77,8 +66,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
 
 export default function ManifestPage() {
   const [items, setItems] = useState<TLogistikManifest[]>([]);
-  const [orders, setOrders] = useState<TProduksiOrder[]>([]);
-  const [products, setProducts] = useState<MProduk[]>([]);
+  const [orders, setOrders] = useState<TSalesOrder[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -113,7 +101,7 @@ export default function ManifestPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await apiFetch("/api/production/orders?page=1&limit=200", {
+      const response = await apiFetch("/api/sales/orders?page=1&limit=200", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -128,26 +116,11 @@ export default function ManifestPage() {
     }
   };
 
-  const fetchProducts = async () => {
-    try {
-      const response = await apiFetch("/api/core/products?page=1&limit=200", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-      });
-      const payload = await parseJsonResponse<ProductsListPayload>(response);
-      setProducts(pickProducts(payload.data));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Gagal memuat daftar produk.";
-      alert(message);
-    }
-  };
-
   useEffect(() => {
     const loadInitialData = async () => {
       setIsLoading(true);
       try {
-        await Promise.all([fetchManifest(), fetchOrders(), fetchProducts()]);
+        await Promise.all([fetchManifest(), fetchOrders()]);
       } finally {
         setIsLoading(false);
       }
@@ -162,13 +135,8 @@ export default function ManifestPage() {
         orders
           .map((order) => [getOrderPrimaryKey(order), order] as const)
           .filter(([orderId]) => !!orderId),
-      ) as Record<string, TProduksiOrder>,
+      ) as Record<string, TSalesOrder>,
     [orders],
-  );
-
-  const productById = useMemo(
-    () => Object.fromEntries(products.map((product) => [product.id, product.nama_produk])) as Record<string, string>,
-    [products],
   );
 
   const filteredItems = useMemo(() => {
@@ -176,14 +144,13 @@ export default function ManifestPage() {
 
     return items.filter((item) => {
       const order = orderById[item.order_id ?? ""];
-      const productName = productById[order?.product_id ?? ""] ?? "";
       return (
         (item.resi ?? "").toLowerCase().includes(keyword) ||
         getOrderPrimaryKey(order).toLowerCase().includes(keyword) ||
-        productName.toLowerCase().includes(keyword)
+        (item.order_id ?? "").toLowerCase().includes(keyword)
       );
     });
-  }, [items, searchTerm, orderById, productById]);
+  }, [items, searchTerm, orderById]);
 
   const resetForm = () => {
     setFormData({ order_id: getOrderPrimaryKey(orders[0]) || "", resi: "" });
@@ -280,12 +247,11 @@ export default function ManifestPage() {
   const handleExportExcel = () => {
     const exportRows = filteredItems.map((item) => {
       const order = orderById[item.order_id ?? ""];
-      const productName = productById[order?.product_id ?? ""] ?? "Produk tidak ditemukan";
 
       return {
         manifest_id: getOrderPrimaryKey(item) || "-",
         order_id: getOrderPrimaryKey(order) || "Order tidak ditemukan",
-        produk: productName,
+        produk: "-",
         resi: item.resi ?? "-",
         dibuat_pada: item.created_at ? dateTimeFormatter.format(new Date(item.created_at)) : "-",
       };
@@ -355,12 +321,11 @@ export default function ManifestPage() {
             ) : (
               filteredItems.map((item) => {
                 const order = orderById[item.order_id ?? ""];
-                const productName = productById[order?.product_id ?? ""] ?? "Produk tidak ditemukan";
                 return (
                   <tr key={getOrderPrimaryKey(item)} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{shortId(getOrderPrimaryKey(item))}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{getOrderPrimaryKey(order) || item.order_id || "Order tidak ditemukan"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700">{productName}</td>
+                    <td className="px-4 py-3 text-sm text-slate-700">-</td>
                     <td className="px-4 py-3 text-sm font-semibold text-slate-800 whitespace-nowrap">{item.resi ?? "-"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateTimeFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-center">
@@ -408,9 +373,8 @@ export default function ManifestPage() {
                 <option value={formData.order_id}>{formData.order_id} - Order tersimpan</option>
               ) : null}
               {orders.map((order) => {
-                const productName = productById[order.product_id ?? ""] ?? "Produk";
                 const orderId = getOrderPrimaryKey(order);
-                return <option key={orderId} value={orderId}>{orderId} - {productName}</option>;
+                return <option key={orderId} value={orderId}>{orderId}</option>;
               })}
             </select>
           </label>
