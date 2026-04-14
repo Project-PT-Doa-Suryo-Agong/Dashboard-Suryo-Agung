@@ -5,7 +5,7 @@ import { Pencil, PlusCircle, Search, Trash2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
-import type { HrEmployeeStatus, MKaryawan, Profile } from "@/types/supabase";
+import type { CoreUserRole, HrEmployeeStatus, MKaryawan } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
 import {
   useKaryawan,
@@ -16,7 +16,6 @@ import {
 
 type KaryawanItem = {
   id: string;
-  profile_id: string | null;
   nama: string;
   posisi: string;
   divisi: string;
@@ -24,13 +23,11 @@ type KaryawanItem = {
   gaji_pokok: number;
 };
 
-type ProfilesListPayload = {
-  profiles: Profile[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-  };
+type RolesPayload = {
+  roles_in_profiles: CoreUserRole[];
+  recommended_roles: CoreUserRole[];
+  all_supported_roles: CoreUserRole[];
+  system_role_keys: string[];
 };
 
 const FALLBACK_DIVISI_OPTIONS = [
@@ -82,7 +79,7 @@ async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> 
 
 export default function KaryawanPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [profileOptions, setProfileOptions] = useState<Profile[]>([]);
+  const [roleOptions, setRoleOptions] = useState<CoreUserRole[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isFormModalOpen, setIsFormModalOpen] = useState<boolean>(false);
   const [editData, setEditData] = useState<KaryawanItem | null>(null);
@@ -92,17 +89,25 @@ export default function KaryawanPage() {
   const [isDivisiManuallyEdited, setIsDivisiManuallyEdited] = useState<boolean>(false);
 
   const divisiOptions = useMemo(() => {
-    const roleOptions = Array.from(new Set(profileOptions.map((profile) => profile.role)));
     return roleOptions.length > 0 ? roleOptions : FALLBACK_DIVISI_OPTIONS;
-  }, [profileOptions]);
+  }, [roleOptions]);
 
-  const [formData, setFormData] = useState<Omit<KaryawanItem, "id">>({
-    profile_id: null,
+  const [formData, setFormData] = useState<{
+    email: string;
+    password: string;
+    role: CoreUserRole | "";
+    nama: string;
+    posisi: string;
+    divisi: string;
+    status: HrEmployeeStatus;
+  }>({
+    email: "",
+    password: "",
+    role: "",
     nama: "",
     posisi: "",
     divisi: "",
     status: "aktif",
-    gaji_pokok: 0,
   });
 
   // ── Supabase Direct ──
@@ -112,22 +117,25 @@ export default function KaryawanPage() {
   const { remove } = useDeleteKaryawan();
 
   useEffect(() => {
-    const fetchProfiles = async () => {
+    const fetchRoles = async () => {
       try {
-        const response = await apiFetch("/api/profiles?page=1&limit=500", {
+        const response = await apiFetch("/api/hr/roles", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           cache: "no-store",
         });
-        const payload = await parseJsonResponse<ProfilesListPayload>(response);
-        setProfileOptions(payload.data.profiles ?? []);
+        const payload = await parseJsonResponse<RolesPayload>(response);
+        const fromProfiles = payload.data.roles_in_profiles ?? [];
+        const allSupported = payload.data.all_supported_roles ?? [];
+        const options = fromProfiles.length > 0 ? fromProfiles : allSupported;
+        setRoleOptions(Array.from(new Set(options)));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Gagal memuat daftar profile.";
+        const message = error instanceof Error ? error.message : "Gagal memuat daftar role.";
         alert(message);
       }
     };
 
-    void fetchProfiles();
+    void fetchRoles();
   }, []);
 
   // ── Normalize karyawan data ──
@@ -135,7 +143,6 @@ export default function KaryawanPage() {
     () =>
       rawKaryawan.map((item: MKaryawan) => ({
         id: item.id,
-        profile_id: item.profile_id,
         nama: item.nama,
         posisi: item.posisi ?? "",
         divisi: item.divisi ?? divisiOptions[0],
@@ -161,12 +168,13 @@ export default function KaryawanPage() {
 
   const resetForm = () => {
     setFormData({
-      profile_id: null,
+      email: "",
+      password: "",
+      role: (divisiOptions[0] as CoreUserRole) ?? "",
       nama: "",
       posisi: "",
       divisi: divisiOptions[0] ?? "",
       status: "aktif",
-      gaji_pokok: 0,
     });
     setGajiPokokInput("");
     setIsDivisiManuallyEdited(false);
@@ -181,12 +189,13 @@ export default function KaryawanPage() {
   const openEditModal = (item: KaryawanItem) => {
     setEditData(item);
     setFormData({
-      profile_id: item.profile_id ?? null,
+      email: "",
+      password: "",
+      role: (item.divisi as CoreUserRole) ?? "",
       nama: item.nama ?? "",
       posisi: item.posisi ?? "",
       divisi: item.divisi ?? divisiOptions[0] ?? "",
       status: item.status ?? "aktif",
-      gaji_pokok: item.gaji_pokok ?? 0,
     });
     setGajiPokokInput(item.gaji_pokok != null ? String(item.gaji_pokok) : "");
     setIsDivisiManuallyEdited(false);
@@ -208,18 +217,40 @@ export default function KaryawanPage() {
       return;
     }
 
-    const payload = {
-      ...formData,
-      gaji_pokok: parsedGajiPokok,
-    };
-
     setIsSubmitting(true);
 
     try {
       if (editData) {
+        const payload = {
+          nama: formData.nama,
+          posisi: formData.posisi,
+          divisi: formData.divisi,
+          status: formData.status,
+          gaji_pokok: parsedGajiPokok,
+        };
         const result = await update(editData.id, payload);
         if (!result) throw new Error("Gagal update karyawan.");
       } else {
+        if (!formData.email.trim()) {
+          throw new Error("Email wajib diisi.");
+        }
+        if (!formData.password || formData.password.length < 6) {
+          throw new Error("Password minimal 6 karakter.");
+        }
+        if (!formData.role) {
+          throw new Error("Role wajib dipilih.");
+        }
+
+        const payload = {
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+          role: formData.role,
+          nama: formData.nama,
+          posisi: formData.posisi,
+          divisi: formData.divisi,
+          status: formData.status,
+          gaji_pokok: parsedGajiPokok,
+        };
         const result = await insert(payload);
         if (!result) throw new Error("Gagal menambah karyawan.");
       }
@@ -389,33 +420,60 @@ export default function KaryawanPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="space-y-1.5 md:col-span-2">
-              <span className="text-sm font-medium text-slate-700">Profile (Opsional)</span>
-              <select
-                value={formData.profile_id ?? ""}
-                onChange={(event) => {
-                  const profileId = event.target.value || null;
-                  const selectedProfile = profileOptions.find((profile) => profile.id === profileId);
+            {!editData ? (
+              <>
+                <label className="space-y-1.5">
+                  <span className="text-sm font-medium text-slate-700">Email</span>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, email: event.target.value }))
+                    }
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                  />
+                </label>
 
-                  setFormData((prev) => ({
-                    ...prev,
-                    profile_id: profileId,
-                    divisi:
-                      !isDivisiManuallyEdited && selectedProfile
-                        ? selectedProfile.role
-                        : prev.divisi,
-                  }));
-                }}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
-              >
-                <option value="">Tanpa profile login</option>
-                {profileOptions.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.nama} ({profile.role})
-                  </option>
-                ))}
-              </select>
-            </label>
+                <label className="space-y-1.5">
+                  <span className="text-sm font-medium text-slate-700">Password</span>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                  />
+                </label>
+
+                <label className="space-y-1.5 md:col-span-2">
+                  <span className="text-sm font-medium text-slate-700">Role</span>
+                  <select
+                    required
+                    value={formData.role}
+                    onChange={(event) => {
+                      const selectedRole = event.target.value as CoreUserRole;
+                      setFormData((prev) => ({
+                        ...prev,
+                        role: selectedRole,
+                        divisi: !isDivisiManuallyEdited ? selectedRole : prev.divisi,
+                      }));
+                    }}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                  >
+                    <option value="" disabled>Pilih role</option>
+                    {divisiOptions.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            ) : null}
 
             <label className="space-y-1.5 md:col-span-2">
               <span className="text-sm font-medium text-slate-700">Nama</span>
@@ -481,11 +539,11 @@ export default function KaryawanPage() {
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-slate-700">Gaji Pokok</span>
               <input
-                type="number"
-                min={0}
+                type="text"
+                inputMode="numeric"
                 required
                 value={gajiPokokInput}
-                onChange={(event) => setGajiPokokInput(event.target.value)}
+                onChange={(event) => setGajiPokokInput(event.target.value.replace(/[^0-9]/g, ""))}
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
               />
             </label>
