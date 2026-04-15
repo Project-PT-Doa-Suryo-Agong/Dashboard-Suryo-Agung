@@ -9,17 +9,41 @@ import type { ApiError, ApiSuccess } from "@/types/api";
 import type { TLogistikManifest, TSalesOrder } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
 
+type ProductLite = {
+  id: string;
+  nama_produk: string | null;
+  kategori: string | null;
+  foto_url: string | null;
+};
+
+type VariantLite = {
+  id: string;
+  product_id: string | null;
+  nama_varian: string | null;
+  sku: string | null;
+  harga: number | null;
+};
+
+type ManifestItem = TLogistikManifest & {
+  order?: TSalesOrder | null;
+  variant?: VariantLite | null;
+  product?: ProductLite | null;
+};
+
 type ManifestListPayload = {
-  manifest: TLogistikManifest[];
+  manifest: ManifestItem[];
   meta: { page: number; limit: number; total: number };
 };
 
-type ManifestPayload = { manifest: TLogistikManifest | null };
+type ManifestPayload = { manifest: ManifestItem | null };
 
 type OrdersListPayload = {
   orders: TSalesOrder[];
   meta: { page: number; limit: number; total: number };
 };
+
+const ORDER_FETCH_LIMIT = 200;
+const ORDER_FETCH_MAX_PAGES = 50;
 
 function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
@@ -29,11 +53,6 @@ function pickOrders(data: unknown): TSalesOrder[] {
   if (!data || typeof data !== "object") return [];
   const source = data as Record<string, unknown>;
   return asArray<TSalesOrder>(source.orders ?? source.order ?? source.data);
-}
-
-function shortId(id: string | null | undefined) {
-  if (!id) return "-";
-  return id.slice(0, 8).toUpperCase();
 }
 
 function getOrderPrimaryKey(value: { order_id?: string | null; id?: string | null } | null | undefined): string {
@@ -65,7 +84,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 export default function ManifestPage() {
-  const [items, setItems] = useState<TLogistikManifest[]>([]);
+  const [items, setItems] = useState<ManifestItem[]>([]);
   const [orders, setOrders] = useState<TSalesOrder[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -101,15 +120,34 @@ export default function ManifestPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await apiFetch("/api/sales/orders?page=1&limit=200", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-      });
-      const payload = await parseJsonResponse<OrdersListPayload>(response);
-      const list = pickOrders(payload.data);
-      setOrders(list);
-      setFormData((prev) => ({ ...prev, order_id: prev.order_id || getOrderPrimaryKey(list[0]) || "" }));
+      const allOrders: TSalesOrder[] = [];
+
+      for (let page = 1; page <= ORDER_FETCH_MAX_PAGES; page += 1) {
+        const response = await apiFetch(`/api/sales/orders?page=${page}&limit=${ORDER_FETCH_LIMIT}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        });
+        const payload = await parseJsonResponse<OrdersListPayload>(response);
+        const pageOrders = pickOrders(payload.data);
+        allOrders.push(...pageOrders);
+
+        const total = payload.data.meta?.total ?? 0;
+        if (pageOrders.length < ORDER_FETCH_LIMIT || allOrders.length >= total) {
+          break;
+        }
+      }
+
+      const dedupedOrders = Array.from(
+        new Map(
+          allOrders
+            .map((order) => [getOrderPrimaryKey(order), order] as const)
+            .filter(([orderId]) => !!orderId),
+        ).values(),
+      );
+
+      setOrders(dedupedOrders);
+      setFormData((prev) => ({ ...prev, order_id: prev.order_id || getOrderPrimaryKey(dedupedOrders[0]) || "" }));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Gagal memuat data pesanan.";
       alert(message);
@@ -130,13 +168,24 @@ export default function ManifestPage() {
   }, []);
 
   const orderById = useMemo(
-    () =>
-      Object.fromEntries(
-        orders
-          .map((order) => [getOrderPrimaryKey(order), order] as const)
-          .filter(([orderId]) => !!orderId),
-      ) as Record<string, TSalesOrder>,
-    [orders],
+    () => {
+      const map = new Map<string, TSalesOrder>();
+
+      for (const order of orders) {
+        const key = getOrderPrimaryKey(order);
+        if (key) map.set(key, order);
+      }
+
+      for (const item of items) {
+        const key = item.order_id ?? "";
+        if (key && item.order) {
+          map.set(key, item.order);
+        }
+      }
+
+      return Object.fromEntries(map) as Record<string, TSalesOrder>;
+    },
+    [orders, items],
   );
 
   const filteredItems = useMemo(() => {
@@ -147,7 +196,8 @@ export default function ManifestPage() {
       return (
         (item.resi ?? "").toLowerCase().includes(keyword) ||
         getOrderPrimaryKey(order).toLowerCase().includes(keyword) ||
-        (item.order_id ?? "").toLowerCase().includes(keyword)
+        (item.order_id ?? "").toLowerCase().includes(keyword) ||
+        (item.product?.nama_produk ?? "").toLowerCase().includes(keyword)
       );
     });
   }, [items, searchTerm, orderById]);
@@ -246,12 +296,11 @@ export default function ManifestPage() {
 
   const handleExportExcel = () => {
     const exportRows = filteredItems.map((item) => {
-      const order = orderById[item.order_id ?? ""];
+      const order = orderById[item.order_id ?? ""] ?? item.order ?? null;
 
       return {
-        manifest_id: getOrderPrimaryKey(item) || "-",
         order_id: getOrderPrimaryKey(order) || "Order tidak ditemukan",
-        produk: "-",
+        produk: item.product?.nama_produk ?? "Produk tidak ditemukan",
         resi: item.resi ?? "-",
         dibuat_pada: item.created_at ? dateTimeFormatter.format(new Date(item.created_at)) : "-",
       };
@@ -305,7 +354,6 @@ export default function ManifestPage() {
         <table className="min-w-max w-full border-separate border-spacing-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">ID Manifest</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Order</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Produk</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Resi</th>
@@ -315,17 +363,16 @@ export default function ManifestPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Memuat data...</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">Memuat data...</td></tr>
             ) : filteredItems.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Data manifest tidak ditemukan.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">Data manifest tidak ditemukan.</td></tr>
             ) : (
               filteredItems.map((item) => {
-                const order = orderById[item.order_id ?? ""];
+                const order = orderById[item.order_id ?? ""] ?? item.order ?? null;
                 return (
                   <tr key={getOrderPrimaryKey(item)} className="border-t border-slate-100">
-                    <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{shortId(getOrderPrimaryKey(item))}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{getOrderPrimaryKey(order) || item.order_id || "Order tidak ditemukan"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700">-</td>
+                    <td className="px-4 py-3 text-sm text-slate-700">{item.product?.nama_produk ?? "Produk tidak ditemukan"}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-slate-800 whitespace-nowrap">{item.resi ?? "-"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateTimeFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-center">
