@@ -14,7 +14,15 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 500);
 
   const { data, error, meta } = await listPacking(auth.ctx.supabase, page, limit);
-  if (error) return fail(ErrorCode.DB_ERROR, "Gagal mengambil data packing.", 500, error.message);
+  if (error) {
+    return fail(ErrorCode.DB_ERROR, "Gagal mengambil data packing.", 500, {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+      status: (error as { status?: number }).status,
+    });
+  }
   return ok({ packing: data, meta });
 }
 
