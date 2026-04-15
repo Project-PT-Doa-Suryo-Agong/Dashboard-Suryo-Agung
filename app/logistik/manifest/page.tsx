@@ -9,12 +9,33 @@ import type { ApiError, ApiSuccess } from "@/types/api";
 import type { TLogistikManifest, TSalesOrder } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
 
+type ProductLite = {
+  id: string;
+  nama_produk: string | null;
+  kategori: string | null;
+  foto_url: string | null;
+};
+
+type VariantLite = {
+  id: string;
+  product_id: string | null;
+  nama_varian: string | null;
+  sku: string | null;
+  harga: number | null;
+};
+
+type ManifestItem = TLogistikManifest & {
+  order?: TSalesOrder | null;
+  variant?: VariantLite | null;
+  product?: ProductLite | null;
+};
+
 type ManifestListPayload = {
-  manifest: TLogistikManifest[];
+  manifest: ManifestItem[];
   meta: { page: number; limit: number; total: number };
 };
 
-type ManifestPayload = { manifest: TLogistikManifest | null };
+type ManifestPayload = { manifest: ManifestItem | null };
 
 type OrdersListPayload = {
   orders: TSalesOrder[];
@@ -65,7 +86,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 export default function ManifestPage() {
-  const [items, setItems] = useState<TLogistikManifest[]>([]);
+  const [items, setItems] = useState<ManifestItem[]>([]);
   const [orders, setOrders] = useState<TSalesOrder[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -147,7 +168,8 @@ export default function ManifestPage() {
       return (
         (item.resi ?? "").toLowerCase().includes(keyword) ||
         getOrderPrimaryKey(order).toLowerCase().includes(keyword) ||
-        (item.order_id ?? "").toLowerCase().includes(keyword)
+        (item.order_id ?? "").toLowerCase().includes(keyword) ||
+        (item.product?.nama_produk ?? "").toLowerCase().includes(keyword)
       );
     });
   }, [items, searchTerm, orderById]);
@@ -251,7 +273,7 @@ export default function ManifestPage() {
       return {
         manifest_id: getOrderPrimaryKey(item) || "-",
         order_id: getOrderPrimaryKey(order) || "Order tidak ditemukan",
-        produk: "-",
+        produk: item.product?.nama_produk ?? "Produk tidak ditemukan",
         resi: item.resi ?? "-",
         dibuat_pada: item.created_at ? dateTimeFormatter.format(new Date(item.created_at)) : "-",
       };
@@ -325,7 +347,7 @@ export default function ManifestPage() {
                   <tr key={getOrderPrimaryKey(item)} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{shortId(getOrderPrimaryKey(item))}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{getOrderPrimaryKey(order) || item.order_id || "Order tidak ditemukan"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700">-</td>
+                    <td className="px-4 py-3 text-sm text-slate-700">{item.product?.nama_produk ?? "Produk tidak ditemukan"}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-slate-800 whitespace-nowrap">{item.resi ?? "-"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateTimeFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-center">
