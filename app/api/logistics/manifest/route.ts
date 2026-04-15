@@ -14,15 +14,7 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 50, 1), 500);
 
   const { data, error, meta } = await listManifest(auth.ctx.supabase, page, limit);
-  if (error) {
-    return fail(ErrorCode.DB_ERROR, "Gagal mengambil data manifest.", 500, {
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      hint: error.hint,
-      status: (error as { status?: number }).status,
-    });
-  }
+  if (error) return fail(ErrorCode.DB_ERROR, "Gagal mengambil data manifest.", 500, error.message);
   return ok({ manifest: data, meta });
 }
 
