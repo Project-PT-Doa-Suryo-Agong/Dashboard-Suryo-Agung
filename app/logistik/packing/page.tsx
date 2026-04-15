@@ -8,28 +8,52 @@ import type { ApiError, ApiSuccess } from "@/types/api";
 import type { LogisticsPackingStatus, TPacking, TSalesOrder } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
 
+type ProductLite = {
+  id: string;
+  nama_produk: string | null;
+  kategori: string | null;
+  foto_url: string | null;
+};
+
+type VariantLite = {
+  id: string;
+  product_id: string | null;
+  nama_varian: string | null;
+  sku: string | null;
+  harga: number | null;
+};
+
+type PackingItem = TPacking & {
+  order?: TSalesOrder | null;
+  variant?: VariantLite | null;
+  product?: ProductLite | null;
+};
+
 type FilterStatus = "all" | LogisticsPackingStatus;
 
 type PackingListPayload = {
-  packing: TPacking[];
+  packing: PackingItem[];
   meta: { page: number; limit: number; total: number };
 };
 
-type PackingPayload = { packing: TPacking | null };
+type PackingPayload = { packing: PackingItem | null };
 
 type OrdersListPayload = {
   orders: TSalesOrder[];
   meta: { page: number; limit: number; total: number };
 };
 
+const ORDER_FETCH_LIMIT = 200;
+const ORDER_FETCH_MAX_PAGES = 50;
+
 function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-function pickPacking(data: unknown): TPacking[] {
+function pickPacking(data: unknown): PackingItem[] {
   if (!data || typeof data !== "object") return [];
   const source = data as Record<string, unknown>;
-  return asArray<TPacking>(source.packing ?? source.packings ?? source.data);
+  return asArray<PackingItem>(source.packing ?? source.packings ?? source.data);
 }
 
 function pickOrders(data: unknown): TSalesOrder[] {
@@ -76,7 +100,7 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 export default function PackingPage() {
-  const [items, setItems] = useState<TPacking[]>([]);
+  const [items, setItems] = useState<PackingItem[]>([]);
   const [orders, setOrders] = useState<TSalesOrder[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -113,15 +137,34 @@ export default function PackingPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await apiFetch("/api/sales/orders?page=1&limit=200", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-      });
-      const payload = await parseJsonResponse<OrdersListPayload>(response);
-      const list = pickOrders(payload.data);
-      setOrders(list);
-      setFormData((prev) => ({ ...prev, order_id: prev.order_id || getOrderPrimaryKey(list[0]) || "" }));
+      const allOrders: TSalesOrder[] = [];
+
+      for (let page = 1; page <= ORDER_FETCH_MAX_PAGES; page += 1) {
+        const response = await apiFetch(`/api/sales/orders?page=${page}&limit=${ORDER_FETCH_LIMIT}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        });
+        const payload = await parseJsonResponse<OrdersListPayload>(response);
+        const pageOrders = pickOrders(payload.data);
+        allOrders.push(...pageOrders);
+
+        const total = payload.data.meta?.total ?? 0;
+        if (pageOrders.length < ORDER_FETCH_LIMIT || allOrders.length >= total) {
+          break;
+        }
+      }
+
+      const dedupedOrders = Array.from(
+        new Map(
+          allOrders
+            .map((order) => [getOrderPrimaryKey(order), order] as const)
+            .filter(([orderId]) => !!orderId),
+        ).values(),
+      );
+
+      setOrders(dedupedOrders);
+      setFormData((prev) => ({ ...prev, order_id: prev.order_id || getOrderPrimaryKey(dedupedOrders[0]) || "" }));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Gagal memuat data pesanan.";
       alert(message);
@@ -156,7 +199,9 @@ export default function PackingPage() {
 
     return items.filter((item) => {
       const order = orderById[item.order_id ?? ""];
-      const matchesSearch = getOrderPrimaryKey(order).toLowerCase().includes(keyword);
+      const matchesSearch =
+        getOrderPrimaryKey(order).toLowerCase().includes(keyword) ||
+        (item.product?.nama_produk ?? "").toLowerCase().includes(keyword);
       const matchesStatus = filterStatus === "all" ? true : item.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
@@ -311,12 +356,12 @@ export default function PackingPage() {
               </tr>
             ) : (
               filteredItems.map((item) => {
-                const order = orderById[item.order_id ?? ""];
+                const order = orderById[item.order_id ?? ""] ?? item.order ?? null;
                 return (
                   <tr key={getOrderPrimaryKey(item)} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{shortId(getOrderPrimaryKey(item))}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{getOrderPrimaryKey(order) || item.order_id || "Order tidak ditemukan"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700">-</td>
+                    <td className="px-4 py-3 text-sm text-slate-700">{item.product?.nama_produk ?? "Produk tidak ditemukan"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-sm">
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${statusBadgeClass(item.status ?? "pending")}`}>

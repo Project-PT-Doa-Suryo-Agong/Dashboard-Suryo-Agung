@@ -383,10 +383,12 @@ USING (
   core.get_user_role() IN ('Developer', 'CEO', 'Produksi', 'Produksi & Quality Control')
 );
 
-CREATE POLICY "Strategic can delete production orders"
+CREATE POLICY "Produksi and strategic can delete production orders"
 ON production.t_produksi_order FOR DELETE
 TO authenticated
-USING (core.is_strategic());
+USING (
+  core.get_user_role() IN ('Developer', 'CEO', 'Produksi', 'Produksi & Quality Control')
+);
 
 --  production.t_qc_inbound 
 
@@ -466,20 +468,22 @@ CREATE POLICY "Logistik and strategic can insert packing"
 ON logistics.t_packing FOR INSERT
 TO authenticated
 WITH CHECK (
-  core.get_user_role() IN ('Developer', 'CEO', 'Logistik')
+  core.get_user_role() IN ('Developer', 'CEO', 'Logistik', 'Produksi')
 );
 
 CREATE POLICY "Logistik and strategic can update packing"
 ON logistics.t_packing FOR UPDATE
 TO authenticated
 USING (
-  core.get_user_role() IN ('Developer', 'CEO', 'Logistik')
+  core.get_user_role() IN ('Developer', 'CEO', 'Logistik', 'Produksi')
 );
 
-CREATE POLICY "Strategic can delete packing"
+CREATE POLICY "Logistik and strategic can delete packing"
 ON logistics.t_packing FOR DELETE
 TO authenticated
-USING (core.is_strategic());
+USING (
+  core.get_user_role() IN ('Developer', 'CEO', 'Logistik', 'Produksi')
+);
 
 --  logistics.t_logistik_manifest 
 
@@ -728,15 +732,15 @@ USING (core.is_strategic());
 
 --  GRANT schema usage to authenticated users (penting untuk multi-schema!)
 
-GRANT USAGE ON SCHEMA core TO authenticated, anon;
-GRANT USAGE ON SCHEMA hr TO authenticated, anon;
-GRANT USAGE ON SCHEMA finance TO authenticated, anon;
-GRANT USAGE ON SCHEMA production TO authenticated, anon;
-GRANT USAGE ON SCHEMA logistics TO authenticated, anon;
-GRANT USAGE ON SCHEMA sales TO authenticated, anon;
-GRANT USAGE ON SCHEMA management TO authenticated, anon;
+GRANT USAGE ON SCHEMA core TO authenticated, anon, service_role;
+GRANT USAGE ON SCHEMA hr TO authenticated, anon, service_role;
+GRANT USAGE ON SCHEMA finance TO authenticated, anon, service_role;
+GRANT USAGE ON SCHEMA production TO authenticated, anon, service_role;
+GRANT USAGE ON SCHEMA logistics TO authenticated, anon, service_role;
+GRANT USAGE ON SCHEMA sales TO authenticated, anon, service_role;
+GRANT USAGE ON SCHEMA management TO authenticated, anon, service_role;
 
--- Grant SELECT/INSERT/UPDATE/DELETE pada semua tabel ke authenticated
+-- Grant SELECT/INSERT/UPDATE/DELETE pada semua tabel ke authenticated/service_role
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA core TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA hr TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA finance TO authenticated;
@@ -745,6 +749,25 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA logistics TO authen
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA sales TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA management TO authenticated;
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA core TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA hr TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA finance TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA production TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA logistics TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA sales TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA management TO service_role;
+
 -- Grant execute pada helper functions
 GRANT EXECUTE ON FUNCTION core.get_user_role() TO authenticated;
 GRANT EXECUTE ON FUNCTION core.is_strategic() TO authenticated;
+GRANT EXECUTE ON FUNCTION core.get_user_role() TO service_role;
+GRANT EXECUTE ON FUNCTION core.is_strategic() TO service_role;
+
+-- Optional: pastikan tabel baru di schema tersebut otomatis bisa diakses
+ALTER DEFAULT PRIVILEGES IN SCHEMA core GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA hr GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA finance GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA production GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA logistics GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA sales GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA management GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;

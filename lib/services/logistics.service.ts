@@ -1,4 +1,5 @@
 import type { TLogistikManifest, TPacking, TReturnOrder } from "@/types/supabase";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -23,10 +24,21 @@ type VariantLite = {
   harga: number | null;
 };
 
+type ProductLite = {
+  id: string;
+  nama_produk: string;
+  kategori: string | null;
+  foto_url?: string | null;
+};
+
 type LogisticsRowWithOrder = {
   order_id: string | null;
   [key: string]: unknown;
 };
+
+function readClient(client: DbClient) {
+  return supabaseAdmin as unknown as DbClient;
+}
 
 async function enrichLogisticsRows<T extends LogisticsRowWithOrder>(client: DbClient, rows: T[]) {
   const orderIds = Array.from(
@@ -37,15 +49,7 @@ async function enrichLogisticsRows<T extends LogisticsRowWithOrder>(client: DbCl
     return { data: rows, error: null };
   }
 
-  const toBaseRows = (sourceRows: T[]) =>
-    sourceRows.map((row) => ({
-      ...row,
-      order: null,
-      variant: null,
-    }));
-
-  const { data: orders, error: orderError } = await supabaseAdmin
-    .schema("sales")
+  const { data: orders, error: orderError } = await schema(readClient(client), "sales")
     .from("t_sales_order")
     .select("id, varian_id, affiliator_id, quantity, total_price, created_at")
     .in("id", orderIds);
@@ -65,8 +69,7 @@ async function enrichLogisticsRows<T extends LogisticsRowWithOrder>(client: DbCl
 
   let variantById = new Map<string, VariantLite>();
   if (variantIds.length > 0) {
-    const { data: variants, error: variantError } = await supabaseAdmin
-      .schema("core")
+    const { data: variants, error: variantError } = await schema(readClient(client), "core")
       .from("m_varian")
       .select("id, product_id, nama_varian, sku, harga")
       .in("id", variantIds);
@@ -76,6 +79,32 @@ async function enrichLogisticsRows<T extends LogisticsRowWithOrder>(client: DbCl
     }
 
     variantById = new Map(((variants ?? []) as VariantLite[]).map((variant) => [variant.id, variant]));
+  }
+
+  const productIds = Array.from(
+    new Set(
+      Array.from(variantById.values())
+        .map((variant) => variant.product_id)
+        .filter((value): value is string => typeof value === "string" && value.length > 0),
+    ),
+  );
+
+  let productById = new Map<string, ProductLite>();
+  if (productIds.length > 0) {
+    const { data: products, error: productError } = await schema(readClient(client), "core")
+      .from("m_produk")
+      .select("id, nama_produk, kategori")
+      .in("id", productIds);
+
+    if (productError) {
+      return { data: rows, error: productError };
+    }
+
+    const normalizedProducts = ((products ?? []) as Array<Omit<ProductLite, "foto_url">>).map((product) => ({
+      ...product,
+      foto_url: null,
+    }));
+    productById = new Map(normalizedProducts.map((product) => [product.id, product]));
   }
 
   const enriched = rows.map((row) => {
@@ -94,7 +123,8 @@ async function enrichLogisticsRows<T extends LogisticsRowWithOrder>(client: DbCl
 
 export async function listManifest(client: DbClient, page = 1, limit = 50) {
   const from = (page - 1) * limit;
-  const { data, error, count } = await db(client)
+  const readDb = db(readClient(client));
+  const { data, error, count } = await readDb
     .from("t_logistik_manifest")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
@@ -151,7 +181,8 @@ export async function deleteManifest(client: DbClient, orderId: string) {
 
 export async function listPacking(client: DbClient, page = 1, limit = 100) {
   const from = (page - 1) * limit;
-  const { data, error, count } = await db(client)
+  const readDb = db(readClient(client));
+  const { data, error, count } = await readDb
     .from("t_packing")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
@@ -184,7 +215,8 @@ export async function deletePacking(client: DbClient, orderId: string) {
 
 export async function listReturnOrder(client: DbClient, page = 1, limit = 50) {
   const from = (page - 1) * limit;
-  const { data, error, count } = await db(client)
+  const readDb = db(readClient(client));
+  const { data, error, count } = await readDb
     .from("t_return_order")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
