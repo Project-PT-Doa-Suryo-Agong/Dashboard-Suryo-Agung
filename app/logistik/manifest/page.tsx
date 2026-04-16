@@ -393,7 +393,7 @@ export default function ManifestPage() {
           <button
             type="button"
             onClick={handleExportExcel}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
           >
             Export ke Excel
           </button>
@@ -439,7 +439,7 @@ export default function ManifestPage() {
                           type="button"
                           onClick={() => openFormModal(item)}
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-400 transition hover:bg-amber-100 disabled:opacity-50"
                         >
                           <Truck size={15} />
                           Edit
@@ -448,7 +448,7 @@ export default function ManifestPage() {
                           type="button"
                           onClick={() => openDeleteModal(getOrderPrimaryKey(item))}
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-400 transition hover:bg-red-100 disabled:opacity-50"
                         >
                           <Trash2 size={15} />
                           Hapus

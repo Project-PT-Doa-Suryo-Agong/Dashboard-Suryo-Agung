@@ -88,9 +88,9 @@ async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> 
 }
 
 function statusBadgeClass(status: LogisticsPackingStatus): string {
-  if (status === "pending") return "bg-amber-100 text-amber-700";
-  if (status === "packed") return "bg-blue-100 text-blue-700";
-  return "bg-emerald-100 text-emerald-700";
+  if (status === "pending") return "bg-orange-500 text-white";
+  if (status === "packed") return "bg-blue-500 text-white";
+  return "bg-emerald-500 text-white";
 }
 
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -374,7 +374,7 @@ export default function PackingPage() {
                           type="button"
                           onClick={() => openFormModal(item)}
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-600 bg-amber-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-yellow-500 hover:text-white disabled:opacity-50"
                         >
                           <CheckCircle2 size={15} />
                           Update
@@ -383,7 +383,7 @@ export default function PackingPage() {
                           type="button"
                           onClick={() => openDeleteModal(getOrderPrimaryKey(item))}
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-600 bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-orange-600 hover:text-white disabled:opacity-50"
                         >
                           <Trash2 size={15} />
                           Hapus

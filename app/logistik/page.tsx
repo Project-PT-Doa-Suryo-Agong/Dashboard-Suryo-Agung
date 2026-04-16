@@ -66,9 +66,9 @@ function getReturnStatus(status: TReturnOrder["status"]): ReturnStatus {
 }
 
 function returnStatusClass(status: ReturnStatus): string {
-  if (status === "pending") return "bg-red-100 text-red-700";
-  if (status === "diproses") return "bg-orange-100 text-orange-700";
-  if (status === "selesai") return "bg-emerald-100 text-emerald-700";
+  if (status === "pending") return "bg-red-600 text-white";
+  if (status === "diproses") return "bg-orange-600 text-white";
+  if (status === "selesai") return "bg-emerald-600 text-white";
   return "bg-slate-100 text-slate-700";
 }
 
@@ -205,7 +205,7 @@ export default function LogistikDashboardPage() {
                   : `${packingBreakdown.packed} Selesai, ${packingBreakdown.pending} Proses, ${packingBreakdown.shipped} Dikirim`}
               </p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#BC934B]/15 text-[#BC934B]">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#BC934B] text-white">
               <Package className="h-5 w-5" />
             </span>
           </div>
@@ -218,7 +218,7 @@ export default function LogistikDashboardPage() {
               <p className="mt-1 text-2xl md:text-3xl font-bold text-slate-900">{isLoading ? "..." : activeManifestCount}</p>
               <p className="mt-1 text-xs md:text-sm text-slate-600">Data manifest saat ini</p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
               <Truck className="h-5 w-5" />
             </span>
           </div>
@@ -228,10 +228,10 @@ export default function LogistikDashboardPage() {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Retur Pending</p>
-              <p className="mt-1 text-2xl md:text-3xl font-bold text-orange-600">{isLoading ? "..." : pendingReturnCount}</p>
+              <p className="mt-1 text-2xl md:text-3xl font-bold text-slate-900">{isLoading ? "..." : pendingReturnCount}</p>
               <p className="mt-1 text-xs md:text-sm text-orange-500">Perlu penanganan segera</p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500 text-white">
               <RefreshCcw className="h-5 w-5" />
             </span>
           </div>
