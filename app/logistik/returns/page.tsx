@@ -138,9 +138,10 @@ export default function ReturnsPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDetailItem, setSelectedDetailItem] = useState<ReturnItem | null>(null);
 
-  const [formData, setFormData] = useState<{ order_id: string; alasan: string; foto_bukti_url: string | null }>({
+  const [formData, setFormData] = useState<{ order_id: string; alasan: string; status: string; foto_bukti_url: string | null }>({
     order_id: "",
     alasan: "",
+    status: "pending",
     foto_bukti_url: null,
   });
   const [selectedBuktiFile, setSelectedBuktiFile] = useState<File | null>(null);
@@ -257,7 +258,7 @@ export default function ReturnsPage() {
   }, [items, searchTerm, orderById]);
 
   const resetForm = () => {
-    setFormData({ order_id: getOrderPrimaryKey(selectableOrders[0]) || "", alasan: "", foto_bukti_url: null });
+    setFormData({ order_id: getOrderPrimaryKey(selectableOrders[0]) || "", alasan: "", status: "pending", foto_bukti_url: null });
     setSelectedBuktiFile(null);
     setEditData(null);
   };
@@ -268,6 +269,7 @@ export default function ReturnsPage() {
       setFormData({
         order_id: item.order_id ?? "",
         alasan: item.alasan ?? "",
+        status: item.status ?? "pending",
         foto_bukti_url: item.foto_bukti_url ?? null,
       });
       setSelectedBuktiFile(null);
@@ -304,6 +306,7 @@ export default function ReturnsPage() {
       const payload = {
         order_id: formData.order_id,
         alasan: formData.alasan.trim(),
+        status: formData.status,
         foto_bukti_url: fotoBuktiUrl,
       };
 
@@ -508,6 +511,19 @@ export default function ReturnsPage() {
               onChange={(event) => setFormData((prev) => ({ ...prev, alasan: event.target.value }))}
               className="w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             />
+          </label>
+
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium text-slate-700">Status</span>
+            <select
+              value={formData.status}
+              onChange={(event) => setFormData((prev) => ({ ...prev, status: event.target.value }))}
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
+            >
+              <option value="pending">pending</option>
+              <option value="diproses">diproses</option>
+              <option value="selesai">selesai</option>
+            </select>
           </label>
 
           <label className="block space-y-1.5">

@@ -63,6 +63,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const alasan = requireString(input, "alasan", { maxLen: 255 });
     if (!alasan.ok) return fail(ErrorCode.VALIDATION_ERROR, alasan.message, 400);
   }
+  if ("status" in input) {
+    const status = requireString(input, "status", { optional: true });
+    if (!status.ok) return fail(ErrorCode.VALIDATION_ERROR, status.message, 400);
+    if (status.data !== null && !["pending", "diproses", "selesai"].includes(status.data)) {
+      return fail(ErrorCode.VALIDATION_ERROR, "status harus pending, diproses, atau selesai.", 400);
+    }
+  }
   if ("foto_bukti_url" in input) {
     const fotoBuktiUrl = requireString(input, "foto_bukti_url", { optional: true });
     if (!fotoBuktiUrl.ok) return fail(ErrorCode.VALIDATION_ERROR, fotoBuktiUrl.message, 400);
@@ -98,6 +105,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const payload = {
     ...input,
     ...(typeof input.alasan === "string" ? { alasan: input.alasan.trim() } : {}),
+    ...(typeof input.status === "string" ? { status: input.status.trim() } : {}),
     ...(resolvedFotoBukti !== undefined ? { foto_bukti_url: resolvedFotoBukti } : {}),
   };
 

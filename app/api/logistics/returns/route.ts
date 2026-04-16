@@ -113,6 +113,11 @@ export async function POST(request: Request) {
   if (!orderId.ok) return fail(ErrorCode.VALIDATION_ERROR, orderId.message, 400);
   const alasan = requireString(input, "alasan", { maxLen: 255 });
   if (!alasan.ok) return fail(ErrorCode.VALIDATION_ERROR, alasan.message, 400);
+  const status = requireString(input, "status", { optional: true });
+  if (!status.ok) return fail(ErrorCode.VALIDATION_ERROR, status.message, 400);
+  if (status.data !== null && !["pending", "diproses", "selesai"].includes(status.data)) {
+    return fail(ErrorCode.VALIDATION_ERROR, "status harus pending, diproses, atau selesai.", 400);
+  }
   const fotoBuktiUrl = requireString(input, "foto_bukti_url", { optional: true });
   if (!fotoBuktiUrl.ok) return fail(ErrorCode.VALIDATION_ERROR, fotoBuktiUrl.message, 400);
 
@@ -127,6 +132,7 @@ export async function POST(request: Request) {
   const payload: TReturnOrderInsert = {
     order_id: orderId.data,
     alasan: alasan.data!,
+    status: status.data ?? "pending",
     foto_bukti_url: fotoBuktiUrl.data ? await uploadReturnProofFromDataUrl(fotoBuktiUrl.data, orderId.data!) : null,
   };
 
