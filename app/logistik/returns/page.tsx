@@ -7,7 +7,6 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { TReturnOrder, TSalesOrder } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type ProductLite = {
   id: string;
@@ -28,6 +27,7 @@ type ReturnItem = TReturnOrder & {
   order?: TSalesOrder | null;
   variant?: VariantLite | null;
   product?: ProductLite | null;
+  foto_bukti_signed_url?: string | null;
 };
 
 type ReturnsListPayload = {
@@ -87,31 +87,20 @@ function getReturnPrimaryKey(value: { id?: string | null } | null | undefined): 
 
 const MAX_BUKTI_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_BUKTI_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-const RETURN_BUKTI_BUCKET = "returns";
 
-function buildUploadPath(file: File): string {
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-  const random = Math.random().toString(36).slice(2, 10);
-  return `${Date.now()}-${random}.${ext}`;
-}
-
-async function uploadReturnBukti(file: File, oldPath?: string | null): Promise<string> {
-  const supabase = createSupabaseBrowserClient();
-  const uploadPath = buildUploadPath(file);
-
-  if (oldPath) {
-    await supabase.storage.from(RETURN_BUKTI_BUCKET).remove([oldPath]);
-  }
-
-  const { error } = await supabase.storage
-    .from(RETURN_BUKTI_BUCKET)
-    .upload(uploadPath, file, { upsert: false, cacheControl: "3600" });
-
-  if (error) {
-    throw new Error(`Gagal upload bukti retur: ${error.message}`);
-  }
-
-  return uploadPath;
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Gagal membaca file bukti."));
+      }
+    };
+    reader.onerror = () => reject(new Error("Gagal membaca file bukti."));
+    reader.readAsDataURL(file);
+  });
 }
 
 function getStorageFileName(path: string | null | undefined): string {
@@ -125,13 +114,6 @@ function getOrderDisplayCode(
   fallbackOrderId?: string | null,
 ): string {
   return value?.order_code?.trim() || value?.id || fallbackOrderId || "Order tidak ditemukan";
-}
-
-function getReturnBuktiPublicUrl(path: string | null | undefined): string | null {
-  if (!path) return null;
-  const supabase = createSupabaseBrowserClient();
-  const { data } = supabase.storage.from(RETURN_BUKTI_BUCKET).getPublicUrl(path);
-  return data.publicUrl || null;
 }
 
 function isPdfFile(path: string | null | undefined): boolean {
@@ -316,7 +298,7 @@ export default function ReturnsPage() {
     try {
       let fotoBuktiUrl = formData.foto_bukti_url;
       if (selectedBuktiFile) {
-        fotoBuktiUrl = await uploadReturnBukti(selectedBuktiFile, editData?.foto_bukti_url);
+        fotoBuktiUrl = await fileToDataUrl(selectedBuktiFile);
       }
 
       const payload = {
@@ -394,7 +376,7 @@ export default function ReturnsPage() {
   const detailOrder = selectedDetailItem
     ? orderById[selectedDetailItem.order_id ?? ""] ?? selectedDetailItem.order ?? null
     : null;
-  const detailBuktiUrl = getReturnBuktiPublicUrl(selectedDetailItem?.foto_bukti_url);
+  const detailBuktiUrl = selectedDetailItem?.foto_bukti_signed_url ?? null;
   const detailHasPdf = isPdfFile(selectedDetailItem?.foto_bukti_url);
 
   return (

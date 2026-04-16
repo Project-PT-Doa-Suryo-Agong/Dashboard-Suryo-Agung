@@ -4,6 +4,40 @@ import { createReturnOrder, listReturnOrder } from "@/lib/services/logistics.ser
 import { requireString, requireUUID } from "@/lib/validation/body-validator";
 import type { TReturnOrderInsert } from "@/types/supabase";
 import { ErrorCode } from "@/lib/http/error-codes";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+
+const RETURN_BUKTI_BUCKET = "returns";
+
+function parseDataUrl(value: string): { mimeType: string; buffer: Buffer; ext: string } | null {
+  const matches = value.match(/^data:([A-Za-z0-9.+/-]+);base64,(.+)$/);
+  if (!matches || matches.length !== 3) return null;
+
+  const mimeType = matches[1];
+  const base64Data = matches[2];
+  const buffer = Buffer.from(base64Data, "base64");
+  const ext = mimeType.split("/")[1]?.toLowerCase() || "bin";
+  return { mimeType, buffer, ext };
+}
+
+async function uploadReturnProofFromDataUrl(value: string, orderId: string): Promise<string> {
+  const parsed = parseDataUrl(value);
+  if (!parsed) return value;
+
+  const fileName = `${orderId}-${Date.now()}.${parsed.ext}`;
+  const { error } = await supabaseAdmin.storage
+    .from(RETURN_BUKTI_BUCKET)
+    .upload(fileName, parsed.buffer, {
+      contentType: parsed.mimeType,
+      upsert: true,
+      cacheControl: "3600",
+    });
+
+  if (error) {
+    throw new Error(`Gagal upload bukti retur ke storage: ${error.message}`);
+  }
+
+  return fileName;
+}
 
 export async function GET(request: Request) {
   const auth = await requireLevel("strategic", "managerial", "operational");
@@ -15,7 +49,52 @@ export async function GET(request: Request) {
 
   const { data, error, meta } = await listReturnOrder(auth.ctx.supabase, page, limit);
   if (error) return fail(ErrorCode.DB_ERROR, "Gagal mengambil data retur.", 500, error.message);
-  return ok({ returns: data, meta });
+
+  const returns = data ?? [];
+  const buktiPaths = Array.from(
+    new Set(
+      returns
+        .map((item) => item.foto_bukti_url)
+        .filter(
+          (path): path is string =>
+            typeof path === "string" && path.trim().length > 0 && !/^https?:\/\//i.test(path),
+        ),
+    ),
+  );
+
+  const signedUrlByPath: Record<string, string> = {};
+  if (buktiPaths.length > 0) {
+    const { data: signedUrls, error: signedError } = await auth.ctx.supabase.storage
+      .from(RETURN_BUKTI_BUCKET)
+      .createSignedUrls(buktiPaths, 60 * 60);
+
+    if (signedError) {
+      return fail(ErrorCode.DB_ERROR, "Gagal membuat signed URL bukti retur.", 500, signedError.message);
+    }
+
+    for (const item of signedUrls ?? []) {
+      if (item.path && item.signedUrl) {
+        signedUrlByPath[item.path] = item.signedUrl;
+      }
+    }
+  }
+
+  const enriched = returns.map((item) => {
+    const rawPath = item.foto_bukti_url;
+    const fotoBuktiSignedUrl =
+      typeof rawPath === "string" && rawPath.length > 0
+        ? /^https?:\/\//i.test(rawPath)
+          ? rawPath
+          : signedUrlByPath[rawPath] ?? null
+        : null;
+
+    return {
+      ...item,
+      foto_bukti_signed_url: fotoBuktiSignedUrl,
+    };
+  });
+
+  return ok({ returns: enriched, meta });
 }
 
 export async function POST(request: Request) {
@@ -34,13 +113,21 @@ export async function POST(request: Request) {
   if (!orderId.ok) return fail(ErrorCode.VALIDATION_ERROR, orderId.message, 400);
   const alasan = requireString(input, "alasan", { maxLen: 255 });
   if (!alasan.ok) return fail(ErrorCode.VALIDATION_ERROR, alasan.message, 400);
-  const fotoBuktiUrl = requireString(input, "foto_bukti_url", { maxLen: 500, optional: true });
+  const fotoBuktiUrl = requireString(input, "foto_bukti_url", { optional: true });
   if (!fotoBuktiUrl.ok) return fail(ErrorCode.VALIDATION_ERROR, fotoBuktiUrl.message, 400);
+
+  if (
+    fotoBuktiUrl.data &&
+    !fotoBuktiUrl.data.startsWith("data:") &&
+    fotoBuktiUrl.data.length > 500
+  ) {
+    return fail(ErrorCode.VALIDATION_ERROR, "foto_bukti_url maksimal 500 karakter.", 400);
+  }
 
   const payload: TReturnOrderInsert = {
     order_id: orderId.data,
     alasan: alasan.data!,
-    foto_bukti_url: fotoBuktiUrl.data,
+    foto_bukti_url: fotoBuktiUrl.data ? await uploadReturnProofFromDataUrl(fotoBuktiUrl.data, orderId.data!) : null,
   };
 
   const { data, error } = await createReturnOrder(auth.ctx.supabase, payload);
