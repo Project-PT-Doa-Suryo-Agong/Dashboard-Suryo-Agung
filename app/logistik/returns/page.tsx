@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Plus, RefreshCcw, Search, Trash2 } from "lucide-react";
+import { Eye, Plus, RefreshCcw, Search, Trash2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
@@ -120,6 +120,18 @@ function getStorageFileName(path: string | null | undefined): string {
   return parts[parts.length - 1] || path;
 }
 
+function getReturnBuktiPublicUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  const supabase = createSupabaseBrowserClient();
+  const { data } = supabase.storage.from(RETURN_BUKTI_BUCKET).getPublicUrl(path);
+  return data.publicUrl || null;
+}
+
+function isPdfFile(path: string | null | undefined): boolean {
+  if (!path) return false;
+  return path.toLowerCase().endsWith(".pdf");
+}
+
 export default function ReturnsPage() {
   const [items, setItems] = useState<ReturnItem[]>([]);
   const [orders, setOrders] = useState<TSalesOrder[]>([]);
@@ -134,6 +146,8 @@ export default function ReturnsPage() {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedReturnId, setSelectedReturnId] = useState<string | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedDetailItem, setSelectedDetailItem] = useState<ReturnItem | null>(null);
 
   const [formData, setFormData] = useState<{ order_id: string; alasan: string; foto_bukti_url: string | null }>({
     order_id: "",
@@ -359,6 +373,22 @@ export default function ReturnsPage() {
     }
   };
 
+  const openDetailModal = (item: ReturnItem) => {
+    setSelectedDetailItem(item);
+    setIsDetailModalOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedDetailItem(null);
+  };
+
+  const detailOrder = selectedDetailItem
+    ? orderById[selectedDetailItem.order_id ?? ""] ?? selectedDetailItem.order ?? null
+    : null;
+  const detailBuktiUrl = getReturnBuktiPublicUrl(selectedDetailItem?.foto_bukti_url);
+  const detailHasPdf = isPdfFile(selectedDetailItem?.foto_bukti_url);
+
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 max-w-7xl mx-auto w-full">
       <div className="space-y-1">
@@ -394,17 +424,17 @@ export default function ReturnsPage() {
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">ID Retur</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Order</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Produk</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Alasan</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Bukti</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Tanggal</th>
               <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">Aksi</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">Memuat data...</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Memuat data...</td></tr>
             ) : filteredItems.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">Data retur tidak ditemukan.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Data retur tidak ditemukan.</td></tr>
             ) : (
               filteredItems.map((item, index) => {
                 const returnId = getReturnPrimaryKey(item);
@@ -416,10 +446,18 @@ export default function ReturnsPage() {
                     <td className="px-4 py-3 text-sm text-slate-800 whitespace-nowrap">{getOrderPrimaryKey(order) || item.order_id || "Order tidak ditemukan"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700">{item.product?.nama_produk ?? "Produk tidak ditemukan"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700">{item.alasan ?? "-"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.foto_bukti_url ? getStorageFileName(item.foto_bukti_url) : "-"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-center">
                       <div className="inline-flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openDetailModal(item)}
+                          disabled={isSubmitting}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-sky-600 bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
+                        >
+                          <Eye size={15} />
+                          Detail
+                        </button>
                         <button
                           type="button"
                           onClick={() => openFormModal(item)}
@@ -433,7 +471,7 @@ export default function ReturnsPage() {
                           type="button"
                           onClick={() => openDeleteModal(returnId)}
                           disabled={isSubmitting || !returnId}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-600 bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-orange-600 hover:text-whitedisabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-600 bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-orange-600 hover:text-white disabled:opacity-50"
                         >
                           <Trash2 size={15} />
                           Hapus
@@ -536,6 +574,70 @@ export default function ReturnsPage() {
         cancelText="Batal"
         variant="danger"
       />
+
+      <Modal isOpen={isDetailModalOpen} onClose={closeDetailModal} title="Detail Retur" maxWidth="max-w-lg">
+        {!selectedDetailItem ? null : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">ID Retur</p>
+                <p className="text-sm font-semibold text-slate-800 break-all">
+                  {getReturnPrimaryKey(selectedDetailItem) || "-"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Order</p>
+                <p className="text-sm font-semibold text-slate-800 break-all">
+                  {getOrderPrimaryKey(detailOrder) || selectedDetailItem.order_id || "-"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Produk</p>
+                <p className="text-sm text-slate-700">{selectedDetailItem.product?.nama_produk ?? "Produk tidak ditemukan"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Tanggal Retur</p>
+                <p className="text-sm text-slate-700">
+                  {selectedDetailItem.created_at ? dateFormatter.format(new Date(selectedDetailItem.created_at)) : "-"}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Alasan Retur</p>
+              <p className="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 whitespace-pre-wrap">
+                {selectedDetailItem.alasan ?? "-"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Bukti Retur</p>
+              {!selectedDetailItem.foto_bukti_url ? (
+                <p className="mt-1 text-sm text-slate-500">Belum ada file bukti.</p>
+              ) : !detailBuktiUrl ? (
+                <p className="mt-1 text-sm text-red-500">Gagal memuat file bukti.</p>
+              ) : detailHasPdf ? (
+                <a
+                  href={detailBuktiUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-100"
+                >
+                  Lihat PDF: {getStorageFileName(selectedDetailItem.foto_bukti_url)}
+                </a>
+              ) : (
+                <a href={detailBuktiUrl} target="_blank" rel="noreferrer" className="block mt-2">
+                  <img
+                    src={detailBuktiUrl}
+                    alt="Bukti retur"
+                    className="max-h-72 w-full rounded-lg border border-slate-200 object-contain bg-slate-50"
+                  />
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
