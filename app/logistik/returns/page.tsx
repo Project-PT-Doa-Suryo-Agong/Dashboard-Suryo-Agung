@@ -574,7 +574,10 @@ export default function ReturnsPage() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-500">ID Retur</p>
                 <p className="text-sm font-semibold text-slate-800 break-all">
-                  {getReturnPrimaryKey(selectedDetailItem) || "-"}
+                  {(() => {
+                    const returnId = getReturnPrimaryKey(selectedDetailItem);
+                    return returnId ? returnId.slice(0, 8).toUpperCase() : "-";
+                  })()}
                 </p>
               </div>
               <div>
