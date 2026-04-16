@@ -1,13 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Plus, RefreshCcw, Search, Trash2 } from "lucide-react";
+import { Eye, Plus, RefreshCcw, Search, Trash2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { TReturnOrder, TSalesOrder } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type ProductLite = {
   id: string;
@@ -28,6 +27,7 @@ type ReturnItem = TReturnOrder & {
   order?: TSalesOrder | null;
   variant?: VariantLite | null;
   product?: ProductLite | null;
+  foto_bukti_signed_url?: string | null;
 };
 
 type ReturnsListPayload = {
@@ -66,7 +66,8 @@ async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> 
   }
   if (!response.ok || !payload.success) {
     const message = payload.success ? "Terjadi kesalahan." : payload.error.message;
-    throw new Error(message);
+    const details = !payload.success && typeof payload.error.details === "string" ? payload.error.details : "";
+    throw new Error(details ? `${message} (${details})` : message);
   }
   return payload;
 }
@@ -87,37 +88,88 @@ function getReturnPrimaryKey(value: { id?: string | null } | null | undefined): 
 
 const MAX_BUKTI_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_BUKTI_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-const RETURN_BUKTI_BUCKET = "returns";
 
-function buildUploadPath(file: File): string {
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-  const random = Math.random().toString(36).slice(2, 10);
-  return `${Date.now()}-${random}.${ext}`;
-}
-
-async function uploadReturnBukti(file: File, oldPath?: string | null): Promise<string> {
-  const supabase = createSupabaseBrowserClient();
-  const uploadPath = buildUploadPath(file);
-
-  if (oldPath) {
-    await supabase.storage.from(RETURN_BUKTI_BUCKET).remove([oldPath]);
-  }
-
-  const { error } = await supabase.storage
-    .from(RETURN_BUKTI_BUCKET)
-    .upload(uploadPath, file, { upsert: false, cacheControl: "3600" });
-
-  if (error) {
-    throw new Error(`Gagal upload bukti retur: ${error.message}`);
-  }
-
-  return uploadPath;
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Gagal membaca file bukti."));
+      }
+    };
+    reader.onerror = () => reject(new Error("Gagal membaca file bukti."));
+    reader.readAsDataURL(file);
+  });
 }
 
 function getStorageFileName(path: string | null | undefined): string {
   if (!path) return "-";
   const parts = path.split("/");
   return parts[parts.length - 1] || path;
+}
+
+function getOrderDisplayCode(
+  value: { order_code?: string | null; id?: string | null } | null | undefined,
+  fallbackOrderId?: string | null,
+): string {
+  return value?.order_code?.trim() || value?.id || fallbackOrderId || "Order tidak ditemukan";
+}
+
+function isPdfFile(path: string | null | undefined): boolean {
+  if (!path) return false;
+  return path.toLowerCase().endsWith(".pdf");
+}
+
+function normalizeReturnStatus(value: string | null | undefined): "pending" | "diproses" | "selesai" {
+  const normalized = (value ?? "").toLowerCase();
+  if (
+    ["inspected", "processed", "diproses", "proses", "in_progress", "on_progress", "inprogress", "processing"].includes(
+      normalized,
+    )
+  ) {
+    return "diproses";
+  }
+  if (
+    [
+      "completed", "selesai", "done", "finished", "closed", "resolved",
+      "returned", "restocked", "rejected",
+    ].includes(normalized)
+  ) {
+    return "selesai";
+  }
+  return "pending";
+}
+
+function getReturnStatusUi(value: string | null | undefined): { label: string; className: string } {
+  const raw = (value ?? "").toLowerCase();
+  if (raw === "inspected") {
+    return { label: "Inspected", className: "bg-blue-500 text-white border-blue-200" };
+  }
+  if (raw === "restocked") {
+    return { label: "Restocked", className: "bg-emerald-600 text-white border-emerald-200" };
+  }
+  if (raw === "rejected") {
+    return { label: "Rejected", className: "bg-red-500 text-white border-red-200" };
+  }
+  const normalized = normalizeReturnStatus(value);
+  if (normalized === "diproses") {
+    return {
+      label: "Diproses",
+      className: "bg-orange-500 text-white border-orange-200",
+    };
+  }
+  if (normalized === "selesai") {
+    return {
+      label: "Selesai",
+      className: "bg-emerald-500 text-white border-emerald-200",
+    };
+  }
+  return {
+    label: "Pending",
+    className: "bg-red-500 text-white border-red-200",
+  };
 }
 
 export default function ReturnsPage() {
@@ -134,10 +186,13 @@ export default function ReturnsPage() {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedReturnId, setSelectedReturnId] = useState<string | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedDetailItem, setSelectedDetailItem] = useState<ReturnItem | null>(null);
 
-  const [formData, setFormData] = useState<{ order_id: string; alasan: string; foto_bukti_url: string | null }>({
+  const [formData, setFormData] = useState<{ order_id: string; alasan: string; status: string; foto_bukti_url: string | null }>({
     order_id: "",
     alasan: "",
+    status: "pending",
     foto_bukti_url: null,
   });
   const [selectedBuktiFile, setSelectedBuktiFile] = useState<File | null>(null);
@@ -244,8 +299,9 @@ export default function ReturnsPage() {
 
     return items.filter((item) => {
       const order = orderById[item.order_id ?? ""] ?? item.order ?? null;
+      const readableOrderCode = getOrderDisplayCode(order, item.order_id);
       return (
-        getOrderPrimaryKey(order).toLowerCase().includes(keyword) ||
+        readableOrderCode.toLowerCase().includes(keyword) ||
         (item.alasan ?? "").toLowerCase().includes(keyword) ||
         (item.product?.nama_produk ?? "").toLowerCase().includes(keyword)
       );
@@ -253,7 +309,7 @@ export default function ReturnsPage() {
   }, [items, searchTerm, orderById]);
 
   const resetForm = () => {
-    setFormData({ order_id: getOrderPrimaryKey(selectableOrders[0]) || "", alasan: "", foto_bukti_url: null });
+    setFormData({ order_id: getOrderPrimaryKey(selectableOrders[0]) || "", alasan: "", status: "pending", foto_bukti_url: null });
     setSelectedBuktiFile(null);
     setEditData(null);
   };
@@ -264,6 +320,7 @@ export default function ReturnsPage() {
       setFormData({
         order_id: item.order_id ?? "",
         alasan: item.alasan ?? "",
+        status: normalizeReturnStatus(item.status),
         foto_bukti_url: item.foto_bukti_url ?? null,
       });
       setSelectedBuktiFile(null);
@@ -294,12 +351,13 @@ export default function ReturnsPage() {
     try {
       let fotoBuktiUrl = formData.foto_bukti_url;
       if (selectedBuktiFile) {
-        fotoBuktiUrl = await uploadReturnBukti(selectedBuktiFile, editData?.foto_bukti_url);
+        fotoBuktiUrl = await fileToDataUrl(selectedBuktiFile);
       }
 
       const payload = {
         order_id: formData.order_id,
         alasan: formData.alasan.trim(),
+        status: formData.status,
         foto_bukti_url: fotoBuktiUrl,
       };
 
@@ -359,6 +417,22 @@ export default function ReturnsPage() {
     }
   };
 
+  const openDetailModal = (item: ReturnItem) => {
+    setSelectedDetailItem(item);
+    setIsDetailModalOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedDetailItem(null);
+  };
+
+  const detailOrder = selectedDetailItem
+    ? orderById[selectedDetailItem.order_id ?? ""] ?? selectedDetailItem.order ?? null
+    : null;
+  const detailBuktiUrl = selectedDetailItem?.foto_bukti_signed_url ?? null;
+  const detailHasPdf = isPdfFile(selectedDetailItem?.foto_bukti_url);
+
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 max-w-7xl mx-auto w-full">
       <div className="space-y-1">
@@ -394,8 +468,9 @@ export default function ReturnsPage() {
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">ID Retur</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Order</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Produk</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Alasan</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Bukti</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Status</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Tanggal</th>
               <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">Aksi</th>
             </tr>
@@ -410,21 +485,36 @@ export default function ReturnsPage() {
                 const returnId = getReturnPrimaryKey(item);
                 const rowKey = returnId || `${item.order_id ?? "no-order"}-${item.created_at ?? "no-date"}-${index}`;
                 const order = orderById[item.order_id ?? ""] ?? item.order ?? null;
+                const readableOrderCode = getOrderDisplayCode(order, item.order_id);
+                const statusUi = getReturnStatusUi(item.status);
                 return (
                   <tr key={rowKey} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{returnId ? returnId.slice(0, 8).toUpperCase() : "-"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-800 whitespace-nowrap">{getOrderPrimaryKey(order) || item.order_id || "Order tidak ditemukan"}</td>
+                    <td className="px-4 py-3 text-sm text-slate-800 whitespace-nowrap">{readableOrderCode}</td>
                     <td className="px-4 py-3 text-sm text-slate-700">{item.product?.nama_produk ?? "Produk tidak ditemukan"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700">{item.alasan ?? "-"}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.foto_bukti_url ? getStorageFileName(item.foto_bukti_url) : "-"}</td>
+                    <td className="px-4 py-3 text-sm text-slate-700">
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${statusUi.className}`}>
+                        {statusUi.label}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-center">
                       <div className="inline-flex items-center gap-2">
                         <button
                           type="button"
+                          onClick={() => openDetailModal(item)}
+                          disabled={isSubmitting}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-sky-600 bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
+                        >
+                          <Eye size={15} />
+                          Detail
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => openFormModal(item)}
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-600 bg-amber-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-yellow-500 hover:text-white disabled:opacity-50"
                         >
                           <RefreshCcw size={15} />
                           Edit
@@ -433,7 +523,7 @@ export default function ReturnsPage() {
                           type="button"
                           onClick={() => openDeleteModal(returnId)}
                           disabled={isSubmitting || !returnId}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-600 bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-orange-600 hover:text-white disabled:opacity-50"
                         >
                           <Trash2 size={15} />
                           Hapus
@@ -465,7 +555,8 @@ export default function ReturnsPage() {
               ) : null}
               {selectableOrders.map((order) => {
                 const orderId = getOrderPrimaryKey(order);
-                return <option key={orderId} value={orderId}>{orderId}</option>;
+                const readableOrderCode = getOrderDisplayCode(order, orderId);
+                return <option key={orderId} value={orderId}>{readableOrderCode}</option>;
               })}
             </select>
           </label>
@@ -478,6 +569,19 @@ export default function ReturnsPage() {
               onChange={(event) => setFormData((prev) => ({ ...prev, alasan: event.target.value }))}
               className="w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
             />
+          </label>
+
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium text-slate-700">Status</span>
+            <select
+              value={formData.status}
+              onChange={(event) => setFormData((prev) => ({ ...prev, status: event.target.value }))}
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
+            >
+              <option value="pending">Pending</option>
+              <option value="diproses">Diproses</option>
+              <option value="selesai">Selesai</option>
+            </select>
           </label>
 
           <label className="block space-y-1.5">
@@ -536,6 +640,73 @@ export default function ReturnsPage() {
         cancelText="Batal"
         variant="danger"
       />
+
+      <Modal isOpen={isDetailModalOpen} onClose={closeDetailModal} title="Detail Retur" maxWidth="max-w-lg">
+        {!selectedDetailItem ? null : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">ID Retur</p>
+                <p className="text-sm font-semibold text-slate-800 break-all">
+                  {(() => {
+                    const returnId = getReturnPrimaryKey(selectedDetailItem);
+                    return returnId ? returnId.slice(0, 8).toUpperCase() : "-";
+                  })()}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Order</p>
+                <p className="text-sm font-semibold text-slate-800 break-all">
+                  {getOrderDisplayCode(detailOrder, selectedDetailItem.order_id)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Produk</p>
+                <p className="text-sm text-slate-700">{selectedDetailItem.product?.nama_produk ?? "Produk tidak ditemukan"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Tanggal Retur</p>
+                <p className="text-sm text-slate-700">
+                  {selectedDetailItem.created_at ? dateFormatter.format(new Date(selectedDetailItem.created_at)) : "-"}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Alasan Retur</p>
+              <p className="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 whitespace-pre-wrap">
+                {selectedDetailItem.alasan ?? "-"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Bukti Retur</p>
+              {!selectedDetailItem.foto_bukti_url ? (
+                <p className="mt-1 text-sm text-slate-500">Belum ada file bukti.</p>
+              ) : !detailBuktiUrl ? (
+                <p className="mt-1 text-sm text-red-500">Gagal memuat file bukti.</p>
+              ) : detailHasPdf ? (
+                <a
+                  href={detailBuktiUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-100"
+                >
+                  Lihat PDF: {getStorageFileName(selectedDetailItem.foto_bukti_url)}
+                </a>
+              ) : (
+                <a href={detailBuktiUrl} target="_blank" rel="noreferrer" className="block mt-2">
+                  <img
+                    src={detailBuktiUrl}
+                    alt="Bukti retur"
+                    className="max-h-72 w-full rounded-lg border border-slate-200 object-contain bg-slate-50"
+                  />
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

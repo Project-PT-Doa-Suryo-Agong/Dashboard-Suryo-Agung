@@ -71,6 +71,13 @@ function getOrderPrimaryKey(value: { order_id?: string | null; id?: string | nul
   return value?.order_id ?? value?.id ?? "";
 }
 
+function getOrderDisplayCode(
+  value: { order_code?: string | null; id?: string | null } | null | undefined,
+  fallbackOrderId?: string | null,
+): string {
+  return value?.order_code?.trim() || value?.id || fallbackOrderId || "Order tidak ditemukan";
+}
+
 async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> {
   const raw = await response.text();
   let payload: ApiSuccess<T> | ApiError;
@@ -88,9 +95,9 @@ async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> 
 }
 
 function statusBadgeClass(status: LogisticsPackingStatus): string {
-  if (status === "pending") return "bg-amber-100 text-amber-700";
-  if (status === "packed") return "bg-blue-100 text-blue-700";
-  return "bg-emerald-100 text-emerald-700";
+  if (status === "pending") return "bg-orange-500 text-white";
+  if (status === "packed") return "bg-blue-500 text-white";
+  return "bg-emerald-500 text-white";
 }
 
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -198,9 +205,9 @@ export default function PackingPage() {
     const keyword = searchTerm.trim().toLowerCase();
 
     return items.filter((item) => {
-      const order = orderById[item.order_id ?? ""];
+      const order = orderById[item.order_id ?? ""] ?? item.order ?? null;
       const matchesSearch =
-        getOrderPrimaryKey(order).toLowerCase().includes(keyword) ||
+        getOrderDisplayCode(order, item.order_id).toLowerCase().includes(keyword) ||
         (item.product?.nama_produk ?? "").toLowerCase().includes(keyword);
       const matchesStatus = filterStatus === "all" ? true : item.status === filterStatus;
       return matchesSearch && matchesStatus;
@@ -360,7 +367,7 @@ export default function PackingPage() {
                 return (
                   <tr key={getOrderPrimaryKey(item)} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-sm font-mono text-slate-800 whitespace-nowrap">{shortId(getOrderPrimaryKey(item))}</td>
-                    <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{getOrderPrimaryKey(order) || item.order_id || "Order tidak ditemukan"}</td>
+                    <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{getOrderDisplayCode(order, item.order_id)}</td>
                     <td className="px-4 py-3 text-sm text-slate-700">{item.product?.nama_produk ?? "Produk tidak ditemukan"}</td>
                     <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{item.created_at ? dateFormatter.format(new Date(item.created_at)) : "-"}</td>
                     <td className="px-4 py-3 text-sm">
@@ -374,7 +381,7 @@ export default function PackingPage() {
                           type="button"
                           onClick={() => openFormModal(item)}
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-600 bg-amber-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-yellow-500 hover:text-white disabled:opacity-50"
                         >
                           <CheckCircle2 size={15} />
                           Update
@@ -383,7 +390,7 @@ export default function PackingPage() {
                           type="button"
                           onClick={() => openDeleteModal(getOrderPrimaryKey(item))}
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-600 bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-orange-600 hover:text-white disabled:opacity-50"
                         >
                           <Trash2 size={15} />
                           Hapus
@@ -415,7 +422,7 @@ export default function PackingPage() {
               {orders.map((order) => {
                 const orderId = getOrderPrimaryKey(order);
                 return (
-                  <option key={orderId} value={orderId}>{orderId}</option>
+                  <option key={orderId} value={orderId}>{getOrderDisplayCode(order, orderId)}</option>
                 );
               })}
             </select>

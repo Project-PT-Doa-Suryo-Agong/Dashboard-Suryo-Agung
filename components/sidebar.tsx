@@ -373,8 +373,8 @@ export default function Sidebar(props: SidebarProps) {
           />
           {/* Dialog */}
           <div className="relative bg-white rounded-2xl shadow-2xl p-4 md:p-6 w-72 md:w-80 flex flex-col items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <LogOut size={20} className="text-red-500" />
+            <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center">
+              <LogOut size={20} className="text-white" />
             </div>
             <div className="text-center">
               <h3 className="text-sm md:text-base font-bold text-slate-900">
