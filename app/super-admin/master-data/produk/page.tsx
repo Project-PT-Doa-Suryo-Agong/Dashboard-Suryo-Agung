@@ -1,4 +1,3 @@
-import { SearchBar } from "@/components/ui/search-bar";
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -252,12 +251,150 @@ export default function ProdukPage() {
             <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
               Kategori <span className="text-red-400">*</span>
             </label>
-            <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Cari nama produk atau kategori..."
-            className="relative"
-          />
+            <div className="relative">
+              <select
+                value={kategori}
+                onChange={(e) => setKategori(e.target.value)}
+                required
+                className="w-full appearance-none px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all cursor-pointer"
+              >
+                <option value="" disabled>
+                  - Pilih Kategori -
+                </option>
+                {KATEGORI_LIST.map((k) => (
+                  <option key={k} value={k}>
+                    {k}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={16}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"
+              />
+            </div>
+          </div>
+
+          {/* Foto Produk — full width */}
+          <div className="md:col-span-2">
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+              Foto Produk <span className="text-slate-400 normal-case font-normal">(opsional)</span>
+            </label>
+
+            <div className="flex items-start gap-4">
+              {/* Preview box */}
+              <div className="relative flex-shrink-0 w-28 h-28 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center group">
+                {displayPreview ? (
+                  <>
+                    <Image
+                      src={displayPreview}
+                      alt="Preview foto produk"
+                      fill
+                      className="object-cover"
+                      sizes="112px"
+                      unoptimized={displayPreview.startsWith("blob:")}
+                    />
+                    {/* Remove overlay */}
+                    <button
+                      type="button"
+                      onClick={handleRemoveFoto}
+                      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                      title="Hapus foto"
+                    >
+                      <X size={20} className="text-white" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-1 text-slate-400">
+                    <ImagePlus size={24} />
+                    <span className="text-[10px]">Belum ada foto</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Controls */}
+              <div className="flex flex-col gap-2 pt-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleFotoChange}
+                  id="foto-produk-input"
+                />
+                <label
+                  htmlFor="foto-produk-input"
+                  className="inline-flex items-center gap-2 cursor-pointer rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors"
+                >
+                  <ImagePlus size={15} />
+                  {displayPreview ? "Ganti Foto" : "Pilih Foto"}
+                </label>
+
+                {displayPreview && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveFoto}
+                    className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <X size={15} />
+                    Hapus Foto
+                  </button>
+                )}
+
+                <p className="text-xs text-slate-400 mt-1">
+                  Format: JPG, PNG, WEBP. Maks 5 MB.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit button */}
+          <div className="md:col-span-2 flex justify-end">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl shadow-md shadow-green-100 transition-all"
+            >
+              <Save size={17} />
+              {isUploading
+                ? "Mengunggah foto..."
+                : isSubmitting
+                  ? "Menyimpan..."
+                  : editingId
+                    ? "Simpan Perubahan"
+                    : "Save Product"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* ── Table Section ── */}
+      <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {readError ? (
+          <p className="px-5 pt-5 text-sm text-rose-600">Gagal memuat data produk: {readError}</p>
+        ) : null}
+        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Package size={18} className="text-slate-400" />
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
+              Daftar Produk Induk
+            </h3>
+            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
+              {filtered.length}
+            </span>
+          </div>
+          <div className="relative w-full sm:w-64">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari nama produk atau kategori..."
+              className="w-full pl-9 pr-4 py-2.5 bg-slate-200 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 transition-all"
+            />
+          </div>
         </div>
 
         <div className="overflow-x-auto">

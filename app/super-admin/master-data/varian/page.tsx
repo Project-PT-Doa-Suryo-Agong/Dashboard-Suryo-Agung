@@ -1,4 +1,3 @@
-import { SearchBar } from "@/components/ui/search-bar";
 "use client";
 
 import { useMemo, useState } from "react";
@@ -196,12 +195,117 @@ export default function VarianPage() {
             <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
               Produk Induk <span className="text-red-400">*</span>
             </label>
-            <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Cari SKU, varian, produk..."
-            className="relative"
-          />
+            <div className="relative">
+              <select
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+                required
+                className="w-full appearance-none px-4 py-3 pr-10 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all"
+              >
+                <option value="">Pilih produk induk</option>
+                {produkList.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.nama_produk}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            </div>
+          </div>
+
+          {/* Nama Varian */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+              Nama Varian <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={namaVarian}
+              onChange={(e) => setNamaVarian(e.target.value)}
+              required
+              placeholder="contoh: Merah - XL"
+              className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all"
+            />
+          </div>
+
+          {/* SKU */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+              SKU <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              required
+              placeholder="contoh: TS-MRH-XL"
+              className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all font-mono"
+            />
+          </div>
+
+          {/* Harga */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+              Harga <span className="text-red-400">*</span>
+            </label>
+            <div className="flex">
+              <span className="inline-flex items-center px-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-sm font-semibold text-slate-500">
+                Rp
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={harga}
+                onChange={(e) => setHarga(e.target.value)}
+                required
+                placeholder="85000"
+                className="flex-1 px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-r-xl focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 text-sm outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="md:col-span-2 flex justify-end">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl shadow-md shadow-green-100 transition-all"
+            >
+              <Save size={17} />
+              {isSubmitting ? "Menyimpan..." : editingId ? "Simpan Perubahan" : "Tambah Varian"}
+            </button>
+          </div>
+
+        </form>
+      </section>
+
+      {/* ── TABLE CARD ── */}
+      <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {variantReadError || productReadError ? (
+          <p className="px-5 pt-5 text-sm text-rose-600">
+            Gagal memuat data varian: {variantReadError ?? productReadError}
+          </p>
+        ) : null}
+
+        {/* Table Header Bar */}
+        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <PackageOpen size={18} className="text-slate-400" />
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Daftar Varian</h3>
+            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
+              {filteredVarian.length}
+            </span>
+          </div>
+          <div className="relative w-full sm:w-64">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari SKU, varian, produk..."
+              className="w-full pl-9 pr-4 py-2.5 bg-slate-200 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 transition-all"
+            />
+          </div>
         </div>
 
         {/* Table */}
