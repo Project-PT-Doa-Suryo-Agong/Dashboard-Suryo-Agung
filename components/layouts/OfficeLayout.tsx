@@ -6,21 +6,12 @@ import Topbar from '@/components/topbar';
 import { useProfile } from '@/hooks/use-profile';
 
 const navItems = [
-  { label: 'Dashboard', href: '/developer', icon: 'LayoutDashboard' },
-  {
-    label: 'Master Data',
-    href: '/developer/master-data',
-    icon: 'Database',
-    children: [
-      { label: 'Vendor', href: '/developer/master-data/vendor', icon: 'Truck' },
-      { label: 'Produk Induk', href: '/developer/master-data/produk', icon: 'Package' },
-      { label: 'Varian Produk', href: '/developer/master-data/varian', icon: 'Tags' },
-    ],
-  },
-  { label: 'User', href: '/developer/users', icon: 'User' },
+  { label: 'Dashboard Overview', href: '/office', icon: 'LayoutDashboard' },
+  { label: 'Product', href: '/office/products', icon: 'Package' },
+  { label: 'Vendors', href: '/office/vendors', icon: 'Handshake' },
 ];
 
-export default function DeveloperLayout({
+export default function OfficeClientLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -29,17 +20,7 @@ export default function DeveloperLayout({
   const { name, role } = useProfile();
 
   return (
-    <div className="flex min-h-screen bg-background-light font-display">
-      {/* Kiri: Sidebar */}
-      <Sidebar
-        title="Developer"
-        subtitle="Developer Dashboard Page"
-        logoIcon="Code2"
-        navItems={navItems}
-        isOpen={isMobileSidebarOpen}
-        onClose={() => setIsMobileSidebarOpen(false)}
-      />
-
+    <div className="flex h-screen overflow-hidden bg-background-light font-display">
       {isMobileSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
@@ -48,10 +29,21 @@ export default function DeveloperLayout({
         />
       )}
 
+      {/* Kiri: Sidebar */}
+      <Sidebar
+        title="Creative & Sales"
+        subtitle="Management Portal"
+        logoIcon="Palette"
+        navItems={navItems}
+        footerAction={{ label: 'New Campaign', icon: 'Plus' }}
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+      />
+
       {/* Kanan: Area Utama */}
       <main className="flex-1 min-w-0 w-full overflow-x-hidden flex flex-col bg-slate-100/50">
         <Topbar
-          title="Developer Dashboard"
+          title="Office Support Dashboard"
           user={{ name: name ?? '...', role: role ?? '' }}
           onMenuClick={() => setIsMobileSidebarOpen(true)}
         />
