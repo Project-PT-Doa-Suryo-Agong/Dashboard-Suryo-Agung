@@ -43,6 +43,8 @@ import {
   Undo2,
   ListChecks,
   CheckSquare,
+  BriefcaseBusiness,
+  Building,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -81,7 +83,9 @@ const ICONS: Record<string, LucideIcon> = {
   ChartCandlestick,
   Undo2,
   ListChecks,
-  CheckSquare, 
+  CheckSquare,
+  BriefcaseBusiness,
+  Building,
 };
 
 export interface NavItem {
