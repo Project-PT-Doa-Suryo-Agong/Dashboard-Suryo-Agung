@@ -1,5 +1,5 @@
 "use client";
-
+import { SearchBar } from "@/components/ui/search-bar";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -164,8 +164,8 @@ export default function VarianPage() {
           <span className="text-orange-300 font-medium">Varian</span>
         </nav>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center">
-            <Tag size={18} className="text-orange-500" />
+          <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center">
+            <Tag size={18} className="text-white" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Master Data: Varian Produk</h2>
@@ -290,22 +290,18 @@ export default function VarianPage() {
         {/* Table Header Bar */}
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <PackageOpen size={18} className="text-slate-400" />
+            <PackageOpen size={18} className="text-orange-500" />
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Daftar Varian</h3>
             <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
               {filteredVarian.length}
             </span>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari SKU, varian, produk..."
-              className="w-full pl-9 pr-4 py-2.5 bg-slate-200 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 transition-all"
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Cari SKU, varian, produk..."
+            className="w-full sm:w-64"
+          />
         </div>
 
         {/* Table */}

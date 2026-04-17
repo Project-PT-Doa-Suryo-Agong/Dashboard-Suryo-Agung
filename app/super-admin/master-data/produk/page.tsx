@@ -1,5 +1,5 @@
 "use client";
-
+import { SearchBar } from "@/components/ui/search-bar";
 import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -199,8 +199,8 @@ export default function ProdukPage() {
           <span className="text-emerald-300 font-medium">Produk</span>
         </nav>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-            <Package size={18} className="text-emerald-500" />
+          <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center">
+            <Package size={18} className="text-white" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-slate-100 tracking-tight">
@@ -216,7 +216,7 @@ export default function ProdukPage() {
       {/* ── Form Section ── */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-6">
-          <PlusCircle size={18} className="text-slate-400" />
+          <PlusCircle size={18} className="text-emerald-500" />
           <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
             {editingId ? "Edit Produk" : "Tambah Produk Baru"}
           </h3>
@@ -374,7 +374,7 @@ export default function ProdukPage() {
         ) : null}
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Package size={18} className="text-slate-400" />
+            <Package size={18} className="text-emerald-500" />
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
               Daftar Produk Induk
             </h3>
@@ -382,19 +382,12 @@ export default function ProdukPage() {
               {filtered.length}
             </span>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama produk atau kategori..."
-              className="w-full pl-9 pr-4 py-2.5 bg-slate-200 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-slate-200/20 focus:border-slate-200 transition-all"
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Cari nama produk atau kategori..."
+            className="w-full sm:w-64"
+          />
         </div>
 
         <div className="overflow-x-auto">
