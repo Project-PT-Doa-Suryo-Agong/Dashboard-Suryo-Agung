@@ -7,6 +7,7 @@ import { useProfile } from '@/hooks/use-profile';
 
 const navItems = [
   { label: 'Dashboard', href: '/super-admin', icon: 'LayoutDashboard' },
+  { label: 'User Management', href: '/super-admin/users', icon: 'User' },
   {
     label: 'Master Data',
     href: '/super-admin/master-data',
@@ -17,11 +18,10 @@ const navItems = [
       { label: 'Varian Produk', href: '/super-admin/master-data/varian', icon: 'Tags' },
     ],
   },
-  { label: 'User', href: '/super-admin/users', icon: 'User' },
   {
     label: 'Management',
     href: '/management',
-    icon: 'Briefcase',
+    icon: 'BriefcaseBusiness',
     children: [
       { label: 'Overview', href: '/management', icon: 'LayoutDashboard' },
       { label: 'Budget', href: '/management/budget', icon: 'Banknote' },
