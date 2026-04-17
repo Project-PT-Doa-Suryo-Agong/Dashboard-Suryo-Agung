@@ -1,4 +1,5 @@
 "use client";
+import { SearchBar } from "@/components/ui/search-bar";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Plus, Search, Truck, Trash2 } from "lucide-react";
@@ -386,16 +387,12 @@ export default function ManifestPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div className="relative w-full md:max-w-md">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
+        <SearchBar
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={setSearchTerm}
             placeholder="Cari order / varian / resi..."
-            className="w-full rounded-xl border border-slate-300 bg-slate-200 py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
+            className="relative w-full md:max-w-md"
           />
-        </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
           <button

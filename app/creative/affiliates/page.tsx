@@ -1,4 +1,5 @@
 "use client";
+import { SearchBar } from "@/components/ui/search-bar";
 
 import { FormEvent, useEffect, useState } from "react";
 import { Edit, PlusCircle, Save, Search, Trash2, Users } from "lucide-react";
@@ -224,16 +225,12 @@ export default function AffiliatesPage() {
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <h3 className="text-slate-800 font-bold">Daftar Affiliator</h3>
-          <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Cari nama atau platform..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-100 py-2.5 pl-9 pr-3 text-sm text-slate-700 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Cari nama atau platform..."
+            className="relative w-full md:w-80"
+          />
         </div>
 
         <div className="overflow-x-auto">

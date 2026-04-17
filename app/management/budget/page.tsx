@@ -8,6 +8,7 @@ import type { ApiError, ApiSuccess } from "@/types/api";
 import type { ManagementBudgetStatus, TBudgetRequest } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
 import { RowActions, EditButton, DetailButton, DeleteButton } from "@/components/ui/RowActions";
+import { SearchBar } from "@/components/ui/search-bar";
 
 type BudgetRequestFilterStatus = "all" | ManagementBudgetStatus;
 
@@ -44,7 +45,7 @@ const divisionOptions = [
   "Logistics & Packing",
   "Creative & Sales",
   "Office Support",
-  "Developer",
+  "Super Admin",
 ] as const;
 
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -274,10 +275,9 @@ export default function ManagementBudgetPage() {
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:max-w-2xl">
-          <input
-            type="text"
+          <SearchBar
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={setSearchTerm}
             placeholder="Cari divisi..."
             className="w-full sm:flex-1 rounded-xl border border-slate-300 bg-slate-200 py-2.5 px-3 text-sm text-slate-700 shadow-sm"
           />

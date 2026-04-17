@@ -1,7 +1,8 @@
-﻿import { fail } from "@/lib/http/response";
+import { fail } from "@/lib/http/response";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getProfileById } from "@/lib/services/profile.service";
 import { buildAccessSummary, canAccessCluster } from "@/lib/access/policy";
+import { headers, cookies } from "next/headers";
 import type { AccessLevel } from "@/types/access";
 import { ErrorCode } from "@/lib/http/error-codes";
 
@@ -25,6 +26,7 @@ export async function requireAuth(): Promise<
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
+    console.log("[AUTH GUARD] getUser failed:", error?.message || "No user data");
     return {
       ok: false,
       response: fail(ErrorCode.UNAUTHORIZED, "Sesi tidak valid atau belum login.", 401),
@@ -35,7 +37,22 @@ export async function requireAuth(): Promise<
   const fallbackRole =
     (typeof data.user.user_metadata?.role === "string" ? data.user.user_metadata.role : null) ??
     (typeof data.user.app_metadata?.role === "string" ? data.user.app_metadata.role : null);
-  const resolvedRole = profile?.role ?? fallbackRole;
+
+  const headerStore = await headers();
+  const cookieStore = await cookies();
+  const roleFromHeader = headerStore.get("x-user-role");
+  const roleFromCookie = cookieStore.get("role")?.value;
+
+  const resolvedRole = roleFromHeader ?? roleFromCookie ?? profile?.role ?? fallbackRole;
+  
+  console.log("[AUTH GUARD] Debug Roles:", {
+    roleFromHeader,
+    roleFromCookie,
+    profileRole: profile?.role,
+    fallbackRole,
+    resolvedRole,
+  });
+  
   const access = buildAccessSummary({
     role: resolvedRole,
     division: null,

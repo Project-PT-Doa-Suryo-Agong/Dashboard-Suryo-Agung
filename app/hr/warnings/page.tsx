@@ -1,4 +1,5 @@
 "use client";
+import { SearchBar } from "@/components/ui/search-bar";
 
 import { FormEvent, useMemo, useState, useEffect } from "react";
 import { AlertTriangle, Pencil, Search, Trash2 } from "lucide-react";
@@ -219,19 +220,12 @@ export default function EmployeeWarningsPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-md">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-          <input
-            type="text"
+        <SearchBar
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={setSearchTerm}
             placeholder="Cari nama karyawan..."
-            className="w-full rounded-xl border border-slate-300 bg-slate-200 py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
+            className="relative w-full sm:max-w-md"
           />
-        </div>
 
         <button
           type="button"

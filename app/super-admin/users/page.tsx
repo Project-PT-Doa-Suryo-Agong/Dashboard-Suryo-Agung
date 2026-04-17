@@ -17,7 +17,7 @@ type SystemRoleKey =
 	| 'logistik'
 	| 'creative'
 	| 'office'
-	| 'developer';
+	| 'Super Admin';
 
 type ProfilesListPayload = {
 	profiles: Profile[];
@@ -33,7 +33,7 @@ type ProfilePayload = {
 };
 
 const ROLE_OPTIONS: Array<{ key: SystemRoleKey; label: UserRole }> = [
-	{ key: 'developer', label: 'Developer' },
+	{ key: 'Super Admin', label: 'Super Admin' },
 	{ key: 'management', label: 'Management & Strategy' },
 	{ key: 'finance', label: 'Finance & Administration' },
 	{ key: 'hr', label: 'HR & Operation Manager' },
@@ -46,14 +46,14 @@ const ROLE_OPTIONS: Array<{ key: SystemRoleKey; label: UserRole }> = [
 const LABEL_TO_ROLE_KEY = new Map<UserRole, SystemRoleKey>(ROLE_OPTIONS.map((item) => [item.label, item.key]));
 
 const ROLE_BADGE_MAP: Record<UserRole, string> = {
-	Developer: 'bg-purple-100 text-purple-700 border-purple-200',
-	'Management & Strategy': 'bg-slate-900 text-white border-slate-900',
-	'Finance & Administration': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-	'HR & Operation Manager': 'bg-sky-100 text-sky-700 border-sky-200',
-	'Produksi & Quality Control': 'bg-amber-100 text-amber-700 border-amber-200',
-	'Logistics & Packing': 'bg-orange-100 text-orange-700 border-orange-200',
-	'Creative & Sales': 'bg-pink-100 text-pink-700 border-pink-200',
-	'Office Support': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+	'Super Admin': 'bg-purple-500 text-white border-purple-500',
+	'Management & Strategy': 'bg-slate-500 text-white border-slate-500',
+	'Finance & Administration': 'bg-emerald-500 text-white border-emerald-500',
+	'HR & Operation Manager': 'bg-sky-500 text-white border-sky-500',
+	'Produksi & Quality Control': 'bg-amber-500 text-white border-amber-500',
+	'Logistics & Packing': 'bg-orange-500 text-white border-orange-500',
+	'Creative & Sales': 'bg-pink-500 text-white border-pink-500',
+	'Office Support': 'bg-indigo-500 text-white border-indigo-500',
 	CEO: 'bg-slate-800 text-white border-slate-800',
 	Finance: 'bg-emerald-50 text-emerald-600 border-emerald-100',
 	HR: 'bg-sky-50 text-sky-600 border-sky-100',
@@ -72,7 +72,7 @@ async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> 
   return payload;
 }
 
-export default function DeveloperUsersPage() {
+export default function SuperAdminUsersPage() {
 	const [users, setUsers] = useState<Profile[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export default function DeveloperUsersPage() {
 	const [password, setPassword] = useState('');
 	const [nama, setNama] = useState('');
 	const [phone, setPhone] = useState('');
-	const [role, setRole] = useState<SystemRoleKey>('developer');
+	const [role, setRole] = useState<SystemRoleKey>('Super Admin');
 
 	const submitLabel = editingId ? 'Update User' : 'Tambah User';
 
@@ -123,7 +123,7 @@ export default function DeveloperUsersPage() {
 		setPassword('');
 		setNama('');
 		setPhone('');
-		setRole('developer');
+		setRole('Super Admin');
 	};
 
 	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -174,11 +174,12 @@ export default function DeveloperUsersPage() {
 
 	const handleEdit = (user: Profile) => {
 		setEditingId(user.id);
-		setNama(user.nama);
+		setNama(user.nama ?? '');
 		setPhone(user.phone ?? '');
-		setRole(LABEL_TO_ROLE_KEY.get(user.role) ?? 'developer');
+		setRole(LABEL_TO_ROLE_KEY.get(user.role) ?? 'Super Admin');
 		setPassword('');
 		setEmail('');
+		window.scrollTo({ top: 0, behavior: 'smooth' });
 	};
 
 	const handleDelete = async (id: string) => {
@@ -209,7 +210,7 @@ export default function DeveloperUsersPage() {
 
 			<section className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 md:p-4 lg:p-6 space-y-4 md:space-y-5">
 				<div className="flex items-center gap-2 md:gap-3">
-					<span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[#BC934B]/15 text-[#BC934B] shrink-0 md:h-10 md:w-10">
+					<span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500 text-white shrink-0 md:h-10 md:w-10">
 						<UserPlus size={16} />
 					</span>
 					<div className="min-w-0">

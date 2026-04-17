@@ -1,4 +1,5 @@
 "use client";
+import { SearchBar } from "@/components/ui/search-bar";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -118,15 +119,15 @@ export default function VendorPage() {
       {/* Header */}
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-3">
-          <Link href="/developer" className="hover:text-slate-300 text-slate-100 transition-colors">Developer</Link>
+          <Link href="/super-admin" className="hover:text-slate-300 text-slate-100 transition-colors">Super Admin</Link>
           <ChevronRight size={13} className="text-slate-30" />
-          <Link href="/developer/master-data" className="hover:text-slate-300 text-slate-100 transition-colors">Master Data</Link>
+          <Link href="/super-admin/master-data" className="hover:text-slate-300 text-slate-100 transition-colors">Master Data</Link>
           <ChevronRight size={13} className="text-slate-30" />
           <span className="text-blue-300 font-medium">Vendor</span>
         </nav>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-            <Truck size={18} className="text-blue-500" />
+          <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center">
+            <Truck size={18} className="text-white" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Master Data: Vendor</h2>
@@ -138,7 +139,7 @@ export default function VendorPage() {
       {/* Form Card */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-6">
-          <PlusCircle size={18} className="text-slate-400" />
+          <PlusCircle size={18} className="text-blue-500" />
           <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
             {editingId ? 'Edit Vendor' : 'Tambah Vendor Baru'}
           </h3>
@@ -207,16 +208,12 @@ export default function VendorPage() {
               {filtered.length}
             </span>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama vendor atau kontak..."
-              className="w-full pl-9 pr-4 py-2.5 bg-slate-200 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-slate-200/20 focus:border-slate-500 transition-all"
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Cari nama vendor atau kontak..."
+            className="relative w-full sm:w-64"
+          />
         </div>
 
         <div className="overflow-x-auto">

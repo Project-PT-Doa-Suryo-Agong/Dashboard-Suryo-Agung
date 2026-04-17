@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 
 type AppRole =
-  | "developer"
+  | "Super Admin"
   | "management"
   | "finance"
   | "hr"
@@ -19,9 +19,9 @@ type ProtectedRoute = {
 const LOGIN_PATH = "/auth/login";
 const DEV_ROOT_HOST = "lvh.me";
 
-const VALID_SUBDOMAINS: AppRole[] = [
+const VALID_SUBDOMAINS: string[] = [
   "creative",
-  "developer",
+  "super-admin",
   "finance",
   "hr",
   "logistik",
@@ -31,18 +31,18 @@ const VALID_SUBDOMAINS: AppRole[] = [
 ];
 
 const ACCESS_CONTROL_LIST: ProtectedRoute[] = [
-  { prefix: "/finance", allowed: ["finance", "management"] },
-  { prefix: "/logistik", allowed: ["logistik", "management"] },
-  { prefix: "/hr", allowed: ["hr", "management"] },
-  { prefix: "/management", allowed: ["management"] },
-  { prefix: "/produksi", allowed: ["produksi", "management"] },
-  { prefix: "/creative", allowed: ["creative", "management"] },
-  { prefix: "/office", allowed: ["office", "management"] },
-  { prefix: "/developer", allowed: ["developer"] },
+  { prefix: "/finance", allowed: ["finance", "management", "Super Admin"] },
+  { prefix: "/logistik", allowed: ["logistik", "management", "Super Admin"] },
+  { prefix: "/hr", allowed: ["hr", "management", "Super Admin"] },
+  { prefix: "/management", allowed: ["management", "Super Admin"] },
+  { prefix: "/produksi", allowed: ["produksi", "management", "Super Admin"] },
+  { prefix: "/creative", allowed: ["creative", "management", "Super Admin"] },
+  { prefix: "/office", allowed: ["office", "management", "Super Admin"] },
+  { prefix: "/super-admin", allowed: ["Super Admin"] },
 ];
 
 const ROLE_DASHBOARD: Record<AppRole, string> = {
-  developer: "/developer",
+  "Super Admin": "/super-admin",
   management: "/management",
   finance: "/finance",
   hr: "/hr",
@@ -60,8 +60,8 @@ function normalizeRole(input: string | null | undefined): AppRole | null {
 
   // ── Pass 1: exact slug match ──────────────────────────────────────────────
   const exactMap: Record<string, AppRole> = {
-    "developer":           "developer",
-    "senior-developer":    "developer",
+    "super-admin":         "Super Admin",
+    "developer":           "Super Admin",
     "ceo":                 "management",
     "management":          "management",
     "manager":             "management",
@@ -92,7 +92,7 @@ function normalizeRole(input: string | null | undefined): AppRole | null {
   if (exactMap[slug]) return exactMap[slug];
 
   // ── Pass 2: substring keyword fallback (handles arbitrary compound names) ─
-  if (slug.includes("developer"))  return "developer";
+  if (slug.includes("super-admin") || slug.includes("developer"))  return "Super Admin";
   if (slug.includes("management")) return "management";
   if (slug.includes("ceo"))        return "management";
   if (slug.includes("finance"))    return "finance";
@@ -236,6 +236,12 @@ function resolveRewrittenPath(pathname: string, hostHeader: string): string {
     return pathname;
   }
 
+  // Preserve absolute cross-module routing (to stop 404s on layout skips).
+  const hasValidPrefix = VALID_SUBDOMAINS.some(v => pathname === `/${v}` || pathname.startsWith(`/${v}/`));
+  if (hasValidPrefix) {
+    return pathname;
+  }
+
   if (pathname === `/${subdomain}` || pathname.startsWith(`/${subdomain}/`)) {
     return pathname;
   }
@@ -258,6 +264,7 @@ export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
   const hostHeader = request.headers.get("host") ?? "";
   const authRootHost = resolveAuthRootHost(hostHeader);
+  const requestHeaders = new Headers(request.headers);
   let response = NextResponse.next();
 
   console.log("[PROXY] incoming:", hostHeader, request.method, url.pathname);
@@ -315,17 +322,24 @@ export async function proxy(request: NextRequest) {
     }
 
     console.log("[PROXY] BRANCH → access granted, continuing");
+    requestHeaders.set("x-user-role", role);
   }
 
   if (effectivePathname !== url.pathname) {
     console.log("[PROXY] BRANCH → rewriting", url.pathname, "→", effectivePathname);
-    const rewrite = NextResponse.rewrite(new URL(effectivePathname, request.url));
+    const rewrite = NextResponse.rewrite(new URL(effectivePathname, request.url), {
+      request: { headers: requestHeaders }
+    });
     response.cookies.getAll().forEach(c => rewrite.cookies.set(c.name, c.value));
     return rewrite;
   }
 
   console.log("[PROXY] BRANCH → passthrough (no rewrite needed)");
-  return response;
+  const passthrough = NextResponse.next({
+    request: { headers: requestHeaders }
+  });
+  response.cookies.getAll().forEach(c => passthrough.cookies.set(c.name, c.value));
+  return passthrough;
 }
 
 export const middleware = proxy;

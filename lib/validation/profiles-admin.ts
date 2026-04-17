@@ -12,7 +12,7 @@ type SystemRoleKey =
   | "logistik"
   | "creative"
   | "office"
-  | "developer";
+  | "Super Admin";
 
 export const USER_ROLES: SystemRoleKey[] = [
   'management',
@@ -22,7 +22,7 @@ export const USER_ROLES: SystemRoleKey[] = [
   'logistik',
   'creative',
   'office',
-  'developer'
+  'Super Admin'
 ];
 
 export const SYSTEM_ROLE_TO_CORE_ROLE: Record<SystemRoleKey, CoreUserRole> = {
@@ -33,11 +33,11 @@ export const SYSTEM_ROLE_TO_CORE_ROLE: Record<SystemRoleKey, CoreUserRole> = {
   logistik: "Logistics & Packing",
   creative: "Creative & Sales",
   office: "Office Support",
-  developer: "Developer",
+  "Super Admin": "Super Admin",
 };
 
 export const VALID_CORE_ROLES: CoreUserRole[] = [
-  "Developer",
+  "Super Admin",
   "Management & Strategy",
   "Finance & Administration",
   "HR & Operation Manager",
