@@ -10,7 +10,7 @@ export default async function FinanceLayout({
   const headerStore = await headers();
   const role = headerStore.get("x-user-role");
 
-  if (role === "super-admin") {
+  if (role === "Super Admin") {
     return <SuperAdminLayout>{children}</SuperAdminLayout>;
   }
 

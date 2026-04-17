@@ -17,7 +17,7 @@ type SystemRoleKey =
 	| 'logistik'
 	| 'creative'
 	| 'office'
-	| 'super-admin';
+	| 'Super Admin';
 
 type ProfilesListPayload = {
 	profiles: Profile[];
@@ -33,7 +33,7 @@ type ProfilePayload = {
 };
 
 const ROLE_OPTIONS: Array<{ key: SystemRoleKey; label: UserRole }> = [
-	{ key: 'super-admin', label: 'Super Admin' },
+	{ key: 'Super Admin', label: 'Super Admin' },
 	{ key: 'management', label: 'Management & Strategy' },
 	{ key: 'finance', label: 'Finance & Administration' },
 	{ key: 'hr', label: 'HR & Operation Manager' },
@@ -81,7 +81,7 @@ export default function SuperAdminUsersPage() {
 	const [password, setPassword] = useState('');
 	const [nama, setNama] = useState('');
 	const [phone, setPhone] = useState('');
-	const [role, setRole] = useState<SystemRoleKey>('super-admin');
+	const [role, setRole] = useState<SystemRoleKey>('Super Admin');
 
 	const submitLabel = editingId ? 'Update User' : 'Tambah User';
 
@@ -123,7 +123,7 @@ export default function SuperAdminUsersPage() {
 		setPassword('');
 		setNama('');
 		setPhone('');
-		setRole('super-admin');
+		setRole('Super Admin');
 	};
 
 	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -176,7 +176,7 @@ export default function SuperAdminUsersPage() {
 		setEditingId(user.id);
 		setNama(user.nama);
 		setPhone(user.phone ?? '');
-		setRole(LABEL_TO_ROLE_KEY.get(user.role) ?? 'super-admin');
+		setRole(LABEL_TO_ROLE_KEY.get(user.role) ?? 'Super Admin');
 		setPassword('');
 		setEmail('');
 	};

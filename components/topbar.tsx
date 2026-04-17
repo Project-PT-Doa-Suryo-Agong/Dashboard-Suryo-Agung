@@ -17,7 +17,11 @@ export default function Topbar({ title = 'Dashboard Overview', user, onMenuClick
   const name = user?.name?.trim() ?? '';
   const role = user?.role?.trim() ?? '';
   const displayName = name || 'Pengguna';
-  const displayRole = role || 'Tanpa role';
+  let displayRole = role || 'Tanpa role';
+  if (displayRole.toLowerCase() === 'super-admin') {
+    displayRole = 'Super Admin';
+  }
+  
   const avatar = user?.avatar;
   const initials = name
     .split(' ')
