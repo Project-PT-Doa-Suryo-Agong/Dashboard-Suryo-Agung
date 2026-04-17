@@ -6,7 +6,8 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { TKPIWeekly } from "@/types/supabase";
-import { apiFetch } from "@/lib/utils/api-fetch";
+import { apiFetch }
+import { SearchBar } from "@/components/ui/search-bar" from "@/lib/utils/api-fetch";
 import { RowActions, EditButton, DetailButton, DeleteButton } from "@/components/ui/RowActions";
 
 type KpiListPayload = {
@@ -286,13 +287,12 @@ export default function ManagementKpiPage() {
       </section>
 
       <section className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Cari nama divisi..."
-          className="w-full sm:max-w-sm rounded-xl border border-slate-300 bg-slate-200 py-2.5 px-3 text-sm text-slate-700 shadow-sm outline-none"
-        />
+        <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Cari nama divisi..."
+            className="w-full sm:max-w-sm rounded-xl border border-slate-300 bg-slate-200 py-2.5 px-3 text-sm text-slate-700 shadow-sm outline-none"
+          />
 
         <button
           type="button"

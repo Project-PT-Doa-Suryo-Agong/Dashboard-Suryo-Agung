@@ -1,3 +1,4 @@
+import { SearchBar } from "@/components/ui/search-bar";
 "use client";
 
 import { FormEvent, useMemo, useState, useEffect } from "react";
@@ -272,19 +273,12 @@ export default function AttendancePage() {
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex w-full flex-col gap-3 sm:flex-row lg:max-w-2xl">
-          <div className="relative w-full sm:flex-1">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Cari nama karyawan..."
-              className="w-full rounded-xl border border-slate-300 bg-slate-200 py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
-            />
-          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Cari nama karyawan..."
+            className="relative w-full sm:flex-1"
+          />
           <select
             value={filterStatus}
             onChange={(event) =>

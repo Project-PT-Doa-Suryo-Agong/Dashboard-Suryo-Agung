@@ -1,3 +1,4 @@
+import { SearchBar } from "@/components/ui/search-bar";
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -374,16 +375,12 @@ export default function FinancePayrollPage() {
 
       <section className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-slate-100">
-          <div className="relative w-full md:max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Cari nama karyawan..."
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
-            />
-          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Cari nama karyawan..."
+            className="relative w-full md:max-w-md"
+          />
         </div>
 
         <div className="overflow-x-auto w-full -mx-4 md:mx-0 px-4 md:px-0">

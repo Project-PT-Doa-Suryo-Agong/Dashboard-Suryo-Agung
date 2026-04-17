@@ -1,3 +1,4 @@
+import { SearchBar } from "@/components/ui/search-bar";
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -243,16 +244,12 @@ export default function OfficeProductsPage() {
 
       <section className="flex flex-col gap-3 md:gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex w-full flex-col gap-3 sm:flex-row xl:max-w-3xl">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Cari nama produk, nama varian, atau SKU..."
-              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
-            />
-          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Cari nama produk, nama varian, atau SKU..."
+            className="relative flex-1"
+          />
 
           <select
             value={selectedKategori}

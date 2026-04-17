@@ -1,3 +1,4 @@
+import { SearchBar } from "@/components/ui/search-bar";
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -198,16 +199,12 @@ export default function OfficeVendorsPage() {
       </section>
 
       <section className="flex flex-col gap-3 md:gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xl">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
+        <SearchBar
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={setSearchTerm}
             placeholder="Cari nama vendor atau kontak..."
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+            className="relative w-full sm:max-w-xl"
           />
-        </div>
 
         {!isOfficeSupport && (
           <button
