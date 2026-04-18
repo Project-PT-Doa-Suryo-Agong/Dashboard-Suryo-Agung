@@ -252,7 +252,7 @@ export default function ManagementKpiPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rata-Rata Performa</p>
               <p className="text-2xl md:text-3xl font-bold text-slate-900">{averagePerformance}%</p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
               <Activity className="h-5 w-5" />
             </span>
           </div>
@@ -266,7 +266,7 @@ export default function ManagementKpiPage() {
                 {bestDivision ? `${bestDivision.divisi ?? "-"} (${getScore(bestDivision)}%)` : "-"}
               </p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-[#BC934B]">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-white">
               <Trophy className="h-5 w-5" />
             </span>
           </div>
@@ -279,7 +279,7 @@ export default function ManagementKpiPage() {
               <p className="text-2xl md:text-3xl font-bold text-rose-600">{needAttentionCount}</p>
               <p className="text-xs md:text-sm text-rose-500">Score di bawah target (&lt; 70%)</p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-rose-500 text-white">
               <Activity className="h-5 w-5" />
             </span>
           </div>

@@ -72,9 +72,9 @@ function formatRupiah(value: number): string {
 }
 
 function statusBadgeClass(status: ManagementBudgetStatus | null): string {
-  if (status === "pending") return "bg-amber-100 text-amber-700";
-  if (status === "approved") return "bg-emerald-100 text-emerald-700";
-  return "bg-rose-100 text-rose-700";
+  if (status === "pending") return "bg-amber-500 text-white";
+  if (status === "approved") return "bg-green-500 text-white";
+  return "bg-red-500 text-white";
 }
 
 function statusLabel(status: ManagementBudgetStatus | null): string {
@@ -274,7 +274,7 @@ export default function ManagementBudgetPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:max-w-2xl">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:max-w-3xl">
           <SearchBar
             value={searchTerm}
             onChange={setSearchTerm}
@@ -340,37 +340,11 @@ export default function ManagementBudgetPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <div className="inline-flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => openReviewModal(item)}
-                          disabled={isSubmitting}
-                          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-slate-600 transition disabled:opacity-50 ${
-                            isProcessed ? "border-slate-200 bg-slate-100" : "border-green-300 hover:bg-green-50"
-                          }`}
-                          aria-label="Tinjau"
-                        >
-                          <Eye size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(item)}
-                          disabled={isSubmitting}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50 disabled:opacity-50"
-                          aria-label="Edit"
-                        >
-                          <Edit size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openDeleteModal(item.id)}
-                          disabled={isSubmitting}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                          aria-label="Hapus"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                      <RowActions>
+                        <DetailButton onClick={() => openReviewModal(item)} disabled={isSubmitting} label="Tinjau" />
+                        <EditButton onClick={() => openEditModal(item)} disabled={isSubmitting} />
+                        <DeleteButton onClick={() => openDeleteModal(item.id)} disabled={isSubmitting} />
+                      </RowActions>
                     </td>
                   </tr>
                 );
