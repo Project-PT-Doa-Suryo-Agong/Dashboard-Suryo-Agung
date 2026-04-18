@@ -455,10 +455,10 @@ export default function ProductionOrdersPage() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 disabled:opacity-50 w-full sm:w-auto"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 disabled:opacity-50 w-full sm:w-auto"
           >
             <FileSpreadsheet className="h-4 w-4" />
-            Import Excel
+            Import
           </button>
           <button
             type="button"
@@ -466,7 +466,7 @@ export default function ProductionOrdersPage() {
             className={`${CRUD_PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}
           >
             <Plus className="h-4 w-4" />
-            Buat Pesanan Baru
+            Pesanan Baru
           </button>
         </div>
       </section>
