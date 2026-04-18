@@ -72,9 +72,9 @@ function formatRupiah(value: number): string {
 }
 
 function statusBadgeClass(status: ManagementBudgetStatus | null): string {
-  if (status === "pending") return "bg-amber-100 text-amber-700";
-  if (status === "approved") return "bg-emerald-100 text-emerald-700";
-  return "bg-rose-100 text-rose-700";
+  if (status === "pending") return "bg-amber-500 text-white";
+  if (status === "approved") return "bg-green-500 text-white";
+  return "bg-red-500 text-white";
 }
 
 function statusLabel(status: ManagementBudgetStatus | null): string {
@@ -274,7 +274,7 @@ export default function ManagementBudgetPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:max-w-2xl">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:max-w-3xl">
           <SearchBar
             value={searchTerm}
             onChange={setSearchTerm}
