@@ -1,7 +1,7 @@
 import { fail, ok } from "@/lib/http/response";
 import { requireLevel } from "@/lib/guards/auth.guard";
 import { listBudgetRequest, createBudgetRequest } from "@/lib/services/management.service";
-import { requireNumber, requireString } from "@/lib/validation/body-validator";
+import { requireNumber, requireString, requireUUID } from "@/lib/validation/body-validator";
 import type { TBudgetRequestInsert } from "@/types/supabase";
 import { ErrorCode } from "@/lib/http/error-codes";
 

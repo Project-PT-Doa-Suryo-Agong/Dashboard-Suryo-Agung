@@ -716,6 +716,7 @@ export interface Database {
         Insert: {
           id?: string;
           order_code?: string | null;
+          coa_id?: string | null;
           varian_id?: string | null;
           affiliator_id?: string | null;
           quantity: number;
@@ -725,6 +726,7 @@ export interface Database {
         Update: {
           id?: string;
           order_code?: string | null;
+          coa_id?: string | null;
           varian_id?: string | null;
           affiliator_id?: string | null;
           quantity?: number;
