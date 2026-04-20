@@ -1,386 +1,269 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from 'react';
-import { Edit, PlusCircle, Save, Trash2 } from 'lucide-react';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import Modal from '@/components/ui/Modal';
-import type { ApiError, ApiSuccess } from '@/types/api';
-import type { TLivePerformance } from '@/types/supabase';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { PlusCircle } from "lucide-react";
+import { SearchBar } from "@/components/ui/search-bar";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { RowActions, EditButton, DeleteButton } from "@/components/ui/RowActions";
 import { apiFetch } from "@/lib/utils/api-fetch";
-import { RowActions, EditButton, DetailButton, DeleteButton } from "@/components/ui/RowActions";
+import type { TContentStatistic, TContentPlanner } from "@/types/supabase";
 
-type LiveListPayload = {
-  live: TLivePerformance[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-  };
-};
+export default function ContentStatsPage() {
+	const [stats, setStats] = useState<TContentStatistic[]>([]);
+	const [planners, setPlanners] = useState<TContentPlanner[]>([]);
+	const [searchQuery, setSearchQuery] = useState("");
 
-type LivePayload = {
-  live: TLivePerformance | null;
-};
+	const [isLoading, setIsLoading] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-const STREAMING_PLATFORM_OPTIONS = [
-  'Twitch',
-  'YouTube Live',
-  'TikTok Live',
-  'Instagram Live',
-  'Shopee Live',
-] as const;
+	// form
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [contentPlannerId, setContentPlannerId] = useState<string | null>(null);
+	const [link, setLink] = useState("");
+	const [jumlahView, setJumlahView] = useState<number | null>(null);
+	const [monetasi, setMonetasi] = useState<number | null>(null);
 
-async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T>> {
-  const raw = await response.text();
-  let payload: ApiSuccess<T> | ApiError;
-  try {
-    payload = JSON.parse(raw) as ApiSuccess<T> | ApiError;
-  } catch {
-    const fallback = response.ok ? 'Respons server tidak valid (bukan JSON).' : raw.slice(0, 200);
-    throw new Error(fallback || 'Respons server tidak valid.');
-  }
-  if (!response.ok || !payload.success) {
-    const message = payload.success ? 'Terjadi kesalahan.' : payload.error.message;
-    throw new Error(message);
-  }
-  return payload;
+	// delete
+	const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+	const [deleteTargetName, setDeleteTargetName] = useState("");
+
+	const formatCurrency = useCallback((v?: number | null) => {
+		const n = v ?? 0;
+		return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
+	}, []);
+
+	const loadPlanners = useCallback(async () => {
+		try {
+			const res = await apiFetch(`/api/sales/content?page=1&limit=500`);
+			const json = await res.json();
+			if (json?.ok) setPlanners(json.data.content ?? []);
+		} catch (e) {
+			console.error(e);
+		}
+	}, []);
+
+	const loadStats = useCallback(async () => {
+		setIsLoading(true);
+		try {
+			const res = await apiFetch(`/api/sales/content-stats?page=1&limit=500`);
+			const json = await res.json();
+			if (json?.ok) setStats(json.data.content_stats ?? []);
+		} catch (e) {
+			console.error(e);
+		} finally {
+			setIsLoading(false);
+		}
+	}, []);
+
+	useEffect(() => {
+		loadPlanners();
+		loadStats();
+	}, [loadPlanners, loadStats]);
+
+	const resetForm = () => {
+		setEditingId(null);
+		setContentPlannerId(null);
+		setLink("");
+		setJumlahView(null);
+		setMonetasi(null);
+	};
+
+	const handleEdit = (row: TContentStatistic) => {
+		setEditingId(row.id);
+		setContentPlannerId(row.content_planner_id ?? null);
+		setLink(row.link ?? "");
+		setJumlahView(row.jumlah_view ?? null);
+		setMonetasi(row.monetasi ?? null);
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	};
+
+	const openDeleteDialog = (row: TContentStatistic) => {
+		setDeleteTargetId(row.id);
+		setDeleteTargetName(row.t_content_planner?.judul ?? "content ini");
+	};
+	const closeDeleteDialog = () => {
+		setDeleteTargetId(null);
+		setDeleteTargetName("");
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (isSubmitting) return;
+		if (!contentPlannerId) return alert("Pilih konten planner.");
+
+		setIsSubmitting(true);
+		try {
+			const payload: Record<string, unknown> = {
+				content_planner_id: contentPlannerId,
+				link: link || null,
+				jumlah_view: jumlahView ?? null,
+				monetasi: monetasi ?? null,
+			};
+
+			if (editingId) {
+				const res = await apiFetch(`/api/sales/content-stats/${editingId}`, { method: "PATCH", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+				const json = await res.json();
+				if (!json?.ok) throw new Error(json?.message || "Gagal update");
+			} else {
+				const res = await apiFetch(`/api/sales/content-stats`, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+				const json = await res.json();
+				if (!json?.ok) throw new Error(json?.message || "Gagal membuat");
+			}
+
+			await loadStats();
+			resetForm();
+		} catch (err) {
+			alert(err instanceof Error ? err.message : "Terjadi kesalahan saat menyimpan.");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const handleDelete = async () => {
+		if (!deleteTargetId) return;
+		setIsSubmitting(true);
+		try {
+			const res = await apiFetch(`/api/sales/content-stats/${deleteTargetId}`, { method: "DELETE" });
+			const json = await res.json();
+			if (!json?.ok) throw new Error(json?.message || "Gagal hapus");
+			await loadStats();
+			closeDeleteDialog();
+		} catch (err) {
+			alert(err instanceof Error ? err.message : "Gagal menghapus.");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const filtered = useMemo(() => {
+		const q = searchQuery.toLowerCase();
+		return stats.filter((s) => {
+			const title = s.t_content_planner?.judul ?? "";
+			return title.toLowerCase().includes(q) || (s.link ?? "").toLowerCase().includes(q);
+		});
+	}, [searchQuery, stats]);
+
+	return (
+		<div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+			<div>
+				<div className="flex items-center gap-3">
+					<div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center">
+						<PlusCircle size={18} className="text-white" />
+					</div>
+					<div>
+						<h2 className="text-2xl font-bold text-slate-100 tracking-tight">Content Statistics</h2>
+						<p className="text-sm text-slate-200 mt-0.5">Kelola statistik konten dari content planner.</p>
+					</div>
+				</div>
+			</div>
+
+			{/* Form */}
+			<section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+				<div className="flex items-center gap-2 mb-6">
+					<h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{editingId ? "Edit Statistik" : "Tambah Statistik Konten"}</h3>
+				</div>
+
+				<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div>
+						<label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Judul Konten <span className="text-red-400">*</span></label>
+						<select value={contentPlannerId ?? ""} onChange={(e) => setContentPlannerId(e.target.value || null)} required className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl text-sm">
+							<option value="">Pilih konten...</option>
+							{planners.map((p) => (
+								<option key={p.id} value={p.id}>{p.judul}</option>
+							))}
+						</select>
+					</div>
+
+					<div>
+						<label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Link</label>
+						<input type="text" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Link ke konten (opsional)" className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl text-sm" />
+					</div>
+
+					<div>
+						<label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Jumlah View</label>
+						<input type="number" value={jumlahView ?? "" as any} onChange={(e) => setJumlahView(e.target.value ? Number(e.target.value) : null)} min={0} className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl text-sm" />
+					</div>
+
+					<div>
+						<label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Monetasi</label>
+						<input type="number" value={monetasi ?? "" as any} onChange={(e) => setMonetasi(e.target.value ? Number(e.target.value) : null)} min={0} className="w-full px-4 py-3 bg-slate-200 border border-slate-200 text-slate-700 rounded-xl text-sm" />
+					</div>
+
+					<div className="md:col-span-3 flex justify-end">
+						{editingId && (
+							<button type="button" onClick={resetForm} className="px-4 py-2 mr-3 text-sm rounded-lg bg-white border">Batal Edit</button>
+						)}
+						<button type="submit" disabled={isSubmitting} className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-bold py-3 px-6 rounded-xl">
+							{isSubmitting ? "Menyimpan..." : editingId ? "Simpan Perubahan" : "Tambah Statistik"}
+						</button>
+					</div>
+				</form>
+			</section>
+
+			{/* Table */}
+			<section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+				<div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+					<div className="flex items-center gap-2">
+						<h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Daftar Statistik Konten</h3>
+						<span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">{filtered.length}</span>
+					</div>
+					<SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Cari judul atau link..." className="w-full sm:w-64" />
+				</div>
+
+				<div className="overflow-x-auto">
+					<table className="w-full text-left">
+						<thead className="bg-slate-50/80">
+							<tr>
+								<th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase">Judul Konten</th>
+								<th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase">Link</th>
+								<th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase">Jumlah View</th>
+								<th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase">Monetasi</th>
+								<th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase">Terakhir Update</th>
+								<th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase text-right">Aksi</th>
+							</tr>
+						</thead>
+						<tbody className="divide-y divide-slate-100">
+							{isLoading ? (
+								<tr>
+									<td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-400">Memuat data...</td>
+								</tr>
+							) : filtered.length === 0 ? (
+								<tr>
+									<td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-400">Tidak ada statistik konten.</td>
+								</tr>
+							) : (
+								filtered.map((r) => (
+									<tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
+										<td className="px-6 py-4 text-sm font-semibold text-slate-800">{r.t_content_planner?.judul ?? "-"}</td>
+										<td className="px-6 py-4 text-sm text-slate-600">{r.link ? <a href={r.link} target="_blank" rel="noreferrer" className="text-blue-600 underline">lihat</a> : "-"}</td>
+										<td className="px-6 py-4 text-sm text-slate-600">{r.jumlah_view ?? "-"}</td>
+										<td className="px-6 py-4 text-sm text-slate-600">{r.monetasi !== null ? formatCurrency(r.monetasi) : "-"}</td>
+										<td className="px-6 py-4 text-sm text-slate-500">{r.updated_at ? r.updated_at.split("T")[0] : "-"}</td>
+										<td className="px-6 py-4 text-right">
+											<RowActions>
+												<EditButton onClick={() => handleEdit(r)} disabled={isSubmitting} />
+												<DeleteButton onClick={() => openDeleteDialog(r)} disabled={isSubmitting} />
+											</RowActions>
+										</td>
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
+				</div>
+			</section>
+
+			<ConfirmDialog
+				isOpen={deleteTargetId !== null}
+				onClose={closeDeleteDialog}
+				onConfirm={handleDelete}
+				title="Hapus Statistik Konten"
+				description={`Apakah kamu yakin ingin menghapus statistik untuk "${deleteTargetName}"? Tindakan ini tidak dapat dibatalkan.`}
+				confirmText={isSubmitting ? "Menghapus..." : "Ya, Hapus"}
+				cancelText="Batal"
+				variant="danger"
+			/>
+		</div>
+	);
 }
 
-function formatRupiah(value: number | null): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value ?? 0);
-}
-
-function formatDate(value: string | null): string {
-  if (!value) return '-';
-  return new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value));
-}
-
-export default function LivePerformancePage() {
-  const [items, setItems] = useState<TLivePerformance[]>([]);
-  const [platform, setPlatform] = useState('');
-  const [revenue, setRevenue] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editData, setEditData] = useState<TLivePerformance | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  const fetchLivePerformance = async () => {
-    setIsLoading(true);
-    try {
-      const response = await apiFetch('/api/sales/live?page=1&limit=500', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store',
-      });
-      const payload = await parseJsonResponse<LiveListPayload>(response);
-      setItems(payload.data.live ?? []);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Gagal memuat data live performance.';
-      alert(message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchLivePerformance();
-  }, []);
-
-  const resetForm = () => {
-    setPlatform('');
-    setRevenue('');
-    setEditData(null);
-  };
-
-  const handleSaveRecord = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (isSubmitting) return;
-
-    const parsedRevenue = Number(revenue);
-    if (Number.isNaN(parsedRevenue) || parsedRevenue < 0) {
-      alert('Revenue harus angka valid.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await apiFetch('/api/sales/live', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platform: platform.trim(),
-          revenue: parsedRevenue,
-        }),
-      });
-      await parseJsonResponse<LivePayload>(response);
-      await fetchLivePerformance();
-      resetForm();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Gagal menyimpan live performance.';
-      alert(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const openEditModal = (item: TLivePerformance) => {
-    setEditData(item);
-    setPlatform(item.platform);
-    setRevenue(String(item.revenue ?? 0));
-    setIsEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    resetForm();
-  };
-
-  const handleUpdateRecord = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!editData || isSubmitting) return;
-
-    const parsedRevenue = Number(revenue);
-    if (Number.isNaN(parsedRevenue) || parsedRevenue < 0) {
-      alert('Revenue harus angka valid.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await apiFetch(`/api/sales/live/${editData.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platform: platform.trim(),
-          revenue: parsedRevenue,
-        }),
-      });
-      await parseJsonResponse<LivePayload>(response);
-      await fetchLivePerformance();
-      closeEditModal();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Gagal update live performance.';
-      alert(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const openDeleteModal = (id: string) => {
-    setDeleteId(id);
-    setIsDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteId(null);
-    setIsDeleteModalOpen(false);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteId || isSubmitting) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await apiFetch(`/api/sales/live/${deleteId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      await parseJsonResponse<null>(response);
-      await fetchLivePerformance();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Gagal menghapus live performance.';
-      alert(message);
-    } finally {
-      setIsSubmitting(false);
-      closeDeleteModal();
-    }
-  };
-
-  return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
-      <div className="flex items-center gap-4 mb-2">
-        <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Live Performance Analytics</h2>
-      </div>
-
-      <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <PlusCircle className="text-slate-500 w-6 h-6" />
-          <h3 className="text-slate-800 font-bold">Log Live Session</h3>
-        </div>
-        
-        <form onSubmit={handleSaveRecord} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Streaming Platform</label>
-            <select
-              required
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
-              disabled={isSubmitting}
-              className="w-full bg-slate-200 text-slate-500  border border-slate-200 rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-all"
-            >
-              <option value="" disabled>Select Platform</option>
-              {STREAMING_PLATFORM_OPTIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Revenue Generated</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">Rp</span>
-              <input 
-                required
-                type="number"
-                value={revenue}
-                onChange={(e) => setRevenue(e.target.value)}
-                disabled={isSubmitting}
-                className="w-full bg-slate-200 text-slate-500 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" 
-                placeholder="0" 
-              />
-            </div>
-          </div>
-          
-          <div>
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 border border-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-green-200 transition-all flex items-center gap-2 justify-center"
-            >
-              <Save className="w-5 h-5" />
-              {isSubmitting ? 'Menyimpan...' : 'Save Record'}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-slate-800 font-bold">Recent Live Sessions</h3>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/80">
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Session ID</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Platform</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Revenue</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Date Recorded</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
-                    Memuat data...
-                  </td>
-                </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
-                    Belum ada data live performance.
-                  </td>
-                </tr>
-              ) : (
-                items.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900 font-mono">{item.id}</td>
-                    <td className="px-6 py-4 text-sm text-slate-700">{item.platform}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900 text-right">{formatRupiah(item.revenue)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500 text-right">{formatDate(item.created_at)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <RowActions>
-                        <EditButton onClick={() => openEditModal(item)} disabled={isSubmitting} />
-                        <DeleteButton onClick={() => openDeleteModal(item.id)} disabled={isSubmitting} />
-                      </RowActions>
-                    </td>
-                  </tr>
-                ))
-              )}
-
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {isEditModalOpen && editData && (
-        <Modal
-          isOpen={isEditModalOpen}
-          onClose={closeEditModal}
-          title="Edit Live Performance"
-          maxWidth="max-w-md"
-        >
-          <form onSubmit={handleUpdateRecord} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Streaming Platform</label>
-              <select
-                required
-                value={platform}
-                onChange={(event) => setPlatform(event.target.value)}
-                disabled={isSubmitting}
-                className="w-full bg-slate-100 border border-slate-200 rounded-xl py-3 px-4 text-sm text-slate-700"
-              >
-                <option value="" disabled>Select Platform</option>
-                {STREAMING_PLATFORM_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Revenue Generated</label>
-              <input
-                required
-                type="number"
-                value={revenue}
-                onChange={(event) => setRevenue(event.target.value)}
-                disabled={isSubmitting}
-                className="w-full bg-slate-100 border border-slate-200 rounded-xl py-3 px-4 text-sm text-slate-700"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={closeEditModal}
-                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="rounded-xl bg-green-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-              >
-                {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      <ConfirmDialog
-        isOpen={isDeleteModalOpen}
-        onClose={closeDeleteModal}
-        onConfirm={handleConfirmDelete}
-        title="Hapus Live Performance"
-        description="Apakah Anda yakin ingin menghapus data live performance ini?"
-        confirmText="Ya, Hapus"
-        cancelText="Batal"
-        variant="danger"
-      />
-
-    </div>
-  );
-}
