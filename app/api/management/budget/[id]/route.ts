@@ -36,6 +36,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return fail(ErrorCode.VALIDATION_ERROR, "status harus pending, approved, atau rejected.", 400);
     }
   }
+  if ("coa_id" in input) {
+    const coaId = requireUUID(input, "coa_id", { optional: true });
+    if (!coaId.ok) return fail(ErrorCode.VALIDATION_ERROR, coaId.message, 400);
+  }
 
   const { data, error } = await updateBudgetRequest(auth.ctx.supabase, id, input);
   if (error) return fail(ErrorCode.DB_ERROR, "Gagal update budget request.", 500, error.message);

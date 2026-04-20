@@ -36,11 +36,15 @@ export async function POST(request: Request) {
     return fail(ErrorCode.VALIDATION_ERROR, "status harus pending, approved, atau rejected.", 400);
   }
 
+  const coaId = requireUUID(input, "coa_id", { optional: true });
+  if (!coaId.ok) return fail(ErrorCode.VALIDATION_ERROR, coaId.message, 400);
+
   const payload: TBudgetRequestInsert = {
     ...input,
     divisi: divisi.data!,
     amount: amount.data!,
     status: status.data as TBudgetRequestInsert["status"],
+    coa_id: coaId.data,
   };
 
   const { data, error } = await createBudgetRequest(auth.ctx.supabase, payload);
