@@ -41,10 +41,10 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 function statusBadgeClass(status: AttendanceStatus) {
-  if (status === "hadir") return "bg-emerald-100 text-emerald-700";
-  if (status === "izin") return "bg-amber-100 text-amber-700";
-  if (status === "sakit") return "bg-blue-100 text-blue-700";
-  return "bg-red-100 text-red-700";
+  if (status === "hadir") return "bg-emerald-500 text-white";
+  if (status === "izin") return "bg-amber-500 text-white";
+  if (status === "sakit") return "bg-blue-500 text-white";
+  return "bg-red-500 text-white";
 }
 
 export default function AttendancePage() {
@@ -282,29 +282,29 @@ export default function AttendancePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+        <div className="rounded-xl border border-white bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
             Hadir
           </p>
-          <p className="mt-1 text-2xl font-bold text-emerald-800">{attendanceSummary.hadir}</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-600">{attendanceSummary.hadir}</p>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+        <div className="rounded-xl border border-white bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">
             Izin
           </p>
-          <p className="mt-1 text-2xl font-bold text-amber-800">{attendanceSummary.izin}</p>
+          <p className="mt-1 text-2xl font-bold text-amber-600">{attendanceSummary.izin}</p>
         </div>
-        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+        <div className="rounded-xl border border-white bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">
             Sakit
           </p>
-          <p className="mt-1 text-2xl font-bold text-blue-800">{attendanceSummary.sakit}</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{attendanceSummary.sakit}</p>
         </div>
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+        <div className="rounded-xl border border-white bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-red-500">
             Alpha
           </p>
-          <p className="mt-1 text-2xl font-bold text-red-800">{attendanceSummary.alpha}</p>
+          <p className="mt-1 text-2xl font-bold text-red-600">{attendanceSummary.alpha}</p>
         </div>
       </div>
 
@@ -334,7 +334,7 @@ export default function AttendancePage() {
         <button
           type="button"
           onClick={openAddModal}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
         >
           <UserCheck size={18} />
           Input Presensi
@@ -350,7 +350,7 @@ export default function AttendancePage() {
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Status</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Jam Masuk</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Jam Keluar</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Is Dinas</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Dinas</th>
               <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">Aksi</th>
             </tr>
           </thead>
