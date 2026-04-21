@@ -30,7 +30,7 @@ Dokumen ini merangkum endpoint internal Next.js App Router di folder `app/api`, 
 | /api/profiles | GET | level(strategic, managerial, operational) | active | List profile |
 | /api/profiles | POST | level(strategic, managerial) | active | Create profile (admin use-case) |
 | /api/profiles/[id] | GET | level(strategic, managerial) | active | Detail profile by id |
-| /api/profiles/[id] | PATCH | level(strategic, managerial) | active | Update profile by id |
+| /api/profiles/[id] | PATCH | level(strategic, managerial) | active | Update profile by id; reset password user lain hanya oleh Super Admin |
 | /api/profiles/[id] | DELETE | level(strategic) | active | Delete profile by id |
 
 ## Core Master Data
@@ -57,6 +57,10 @@ Dokumen ini merangkum endpoint internal Next.js App Router di folder `app/api`, 
 | /api/hr/attendance/[id] | PATCH, DELETE | level(strategic, managerial, operational) | active | Attendance by id |
 | /api/hr/warnings | GET, POST | level(strategic, managerial, operational) | active | Employee warning |
 | /api/hr/warnings/[id] | PATCH, DELETE | level(strategic, managerial, operational) | active | Employee warning by id |
+| /api/hr/contracts/templates | GET | level(strategic, managerial, operational) | active | List template PKWT/PKWTP + field form |
+| /api/hr/contracts/templates/[type] | GET | level(strategic, managerial, operational) | active | Detail template kontrak (type: pkwt/pkwtp) |
+| /api/hr/contracts/templates/[type] | PUT | level(strategic, managerial) | active | Update isi template kontrak |
+| /api/hr/contracts/generate | POST | level(strategic, managerial, operational) | active | Generate draft surat dari info karyawan |
 
 ## Finance
 
@@ -97,6 +101,8 @@ Dokumen ini merangkum endpoint internal Next.js App Router di folder `app/api`, 
 | /api/sales/affiliates/[id] | PATCH, DELETE | level(strategic, managerial, operational) | active | Affiliator by id |
 | /api/sales/content | GET, POST | level(strategic, managerial, operational) | active | Content planner |
 | /api/sales/content/[id] | PATCH, DELETE | level(strategic, managerial, operational) | active | Content by id |
+| /api/sales/content-stats | GET, POST | level(strategic, managerial, operational) | active | Statistik konten |
+| /api/sales/content-stats/[id] | PATCH, DELETE | level(strategic, managerial, operational) | active | Statistik konten by id |
 | /api/sales/live | GET, POST | level(strategic, managerial, operational) | active | Live performance |
 | /api/sales/live/[id] | PATCH, DELETE | level(strategic, managerial, operational) | active | Live performance by id |
 
@@ -130,6 +136,8 @@ Pemakaian `supabaseAdmin` saat ini di:
 
 - `/api/finance/reimburse` (upload bukti reimburse ke storage private)
 - `/api/finance/reimburse/[id]` (update/upload ulang bukti reimburse)
+- `/api/profiles` (create auth user via admin API saat create profile)
+- `/api/profiles/[id]` (update password auth user via admin API pada flow Super Admin)
 
 Endpoint lain berjalan lewat supabase server client berbasis cookie session user (RLS tetap berlaku), kecuali service tertentu yang melakukan enrichment lintas schema di layer service.
 
