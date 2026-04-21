@@ -173,6 +173,18 @@ export interface Database {
           profile_id: string | null;
           nama: string;
           posisi: string | null;
+          nik: string | null;
+          foto_perorangan_url: string | null;
+          foto_ktp_url: string | null;
+          foto_kk_url: string | null;
+          alamat_domisili: string | null;
+          nomor_whatsapp: string | null;
+          email_pribadi: string | null;
+          pendidikan_terakhir: string | null;
+          jurusan: string | null;
+          pengalaman_kerja_sebelumnya: string | null;
+          keahlian_khusus: string | null;
+          motivasi_kerja: string | null;
           divisi: string | null;
           status: HrEmployeeStatus | null;
           gaji_pokok: number | null;
@@ -184,6 +196,18 @@ export interface Database {
           profile_id?: string | null;
           nama: string;
           posisi?: string | null;
+          nik?: string | null;
+          foto_perorangan_url?: string | null;
+          foto_ktp_url?: string | null;
+          foto_kk_url?: string | null;
+          alamat_domisili?: string | null;
+          nomor_whatsapp?: string | null;
+          email_pribadi?: string | null;
+          pendidikan_terakhir?: string | null;
+          jurusan?: string | null;
+          pengalaman_kerja_sebelumnya?: string | null;
+          keahlian_khusus?: string | null;
+          motivasi_kerja?: string | null;
           divisi?: string | null;
           status?: HrEmployeeStatus | null;
           gaji_pokok?: number | null;
@@ -195,6 +219,18 @@ export interface Database {
           profile_id?: string | null;
           nama?: string;
           posisi?: string | null;
+          nik?: string | null;
+          foto_perorangan_url?: string | null;
+          foto_ktp_url?: string | null;
+          foto_kk_url?: string | null;
+          alamat_domisili?: string | null;
+          nomor_whatsapp?: string | null;
+          email_pribadi?: string | null;
+          pendidikan_terakhir?: string | null;
+          jurusan?: string | null;
+          pengalaman_kerja_sebelumnya?: string | null;
+          keahlian_khusus?: string | null;
+          motivasi_kerja?: string | null;
           divisi?: string | null;
           status?: HrEmployeeStatus | null;
           gaji_pokok?: number | null;
@@ -245,6 +281,32 @@ export interface Database {
           employee_id?: string | null;
           level?: string | null;
           alasan?: string | null;
+        };
+        Relationships: [];
+      };
+      m_sop: {
+        Row: {
+          id: string;
+          judul: string;
+          divisi: CoreUserRole | string | null;
+          konten: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          judul: string;
+          divisi?: CoreUserRole | string | null;
+          konten?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          judul?: string;
+          divisi?: CoreUserRole | string | null;
+          konten?: string | null;
+          updated_at?: string | null;
         };
         Relationships: [];
       };
@@ -821,6 +883,8 @@ export type MVendorInsert = Tables<"core", "m_vendor">["Insert"];
 export type MKaryawan        = Tables<"hr", "m_karyawan">["Row"];
 export type TAttendance      = Tables<"hr", "t_attendance">["Row"];
 export type TEmployeeWarning = Tables<"hr", "t_employee_warning">["Row"];
+export type MSop             = Tables<"hr", "m_sop">["Row"];
+export type MSopInsert       = Tables<"hr", "m_sop">["Insert"];
 
 // finance
 export type TCashflow       = Tables<"finance", "t_cashflow">["Row"];

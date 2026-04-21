@@ -8,7 +8,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { CoreUserRole, HrEmployeeStatus, MKaryawan } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
-import { RowActions, EditButton, DeleteButton } from "@/components/ui/RowActions";
+import { RowActions, EditButton, DeleteButton, DetailButton } from "@/components/ui/RowActions";
 import {
   useKaryawan,
   useInsertKaryawan,
@@ -16,14 +16,7 @@ import {
   useDeleteKaryawan,
 } from "@/lib/supabase/hooks/index";
 
-type KaryawanItem = {
-  id: string;
-  nama: string;
-  posisi: string;
-  divisi: string;
-  status: HrEmployeeStatus;
-  gaji_pokok: number;
-};
+// use MKaryawan from types/supabase for full employee shape
 
 type RolesPayload = {
   roles_in_profiles: CoreUserRole[];
@@ -61,8 +54,8 @@ function Badge({ status }: { status: HrEmployeeStatus }) {
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
         status === "aktif"
-          ? "bg-emerald-100 text-emerald-700"
-          : "bg-red-100 text-red-700"
+          ? "bg-green-500 text-white"
+          : "bg-red-500 text-white"
       }`}
     >
       {status}
@@ -84,11 +77,13 @@ export default function KaryawanPage() {
   const [roleOptions, setRoleOptions] = useState<CoreUserRole[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isFormModalOpen, setIsFormModalOpen] = useState<boolean>(false);
-  const [editData, setEditData] = useState<KaryawanItem | null>(null);
+  const [editData, setEditData] = useState<MKaryawan | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [gajiPokokInput, setGajiPokokInput] = useState<string>("");
   const [isDivisiManuallyEdited, setIsDivisiManuallyEdited] = useState<boolean>(false);
+  const [detailItem, setDetailItem] = useState<MKaryawan | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
 
   const divisiOptions = useMemo(() => {
     return roleOptions.length > 0 ? roleOptions : FALLBACK_DIVISI_OPTIONS;
@@ -141,17 +136,18 @@ export default function KaryawanPage() {
   }, []);
 
   // ── Normalize karyawan data ──
-  const items: KaryawanItem[] = useMemo(
+  const items: MKaryawan[] = useMemo(
     () =>
-      rawKaryawan.map((item: MKaryawan) => ({
-        id: item.id,
-        nama: item.nama,
-        posisi: item.posisi ?? "",
-        divisi: item.divisi ?? divisiOptions[0],
-        status: item.status ?? "aktif",
-        gaji_pokok: item.gaji_pokok ?? 0,
-      })),
-    [rawKaryawan],
+      rawKaryawan.map((item: MKaryawan) =>
+        ({
+          ...item,
+          posisi: item.posisi ?? "",
+          divisi: item.divisi ?? divisiOptions[0],
+          status: item.status ?? "aktif",
+          gaji_pokok: item.gaji_pokok ?? 0,
+        } as MKaryawan),
+      ),
+    [rawKaryawan, divisiOptions],
   );
 
   const filteredItems = useMemo(() => {
@@ -159,6 +155,14 @@ export default function KaryawanPage() {
     if (!keyword) return items;
     return items.filter((item) => (item.nama ?? "").toLowerCase().includes(keyword));
   }, [items, searchTerm]);
+
+  const getInitials = (name?: string) => {
+    if (!name) return "--";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "--";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  };
 
   useEffect(() => {
     if (divisiOptions.length === 0) return;
@@ -188,8 +192,8 @@ export default function KaryawanPage() {
     setIsFormModalOpen(true);
   };
 
-  const openEditModal = (item: KaryawanItem) => {
-    setEditData(item);
+  const openEditModal = (item: MKaryawan) => {
+    setEditData(item as unknown as MKaryawan);
     setFormData({
       email: "",
       password: "",
@@ -203,6 +207,29 @@ export default function KaryawanPage() {
     setIsDivisiManuallyEdited(false);
     setIsFormModalOpen(true);
   };
+
+  const openDetailModal = (item: MKaryawan) => {
+    setDetailItem(item);
+    setIsDetailOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setDetailItem(null);
+    setIsDetailOpen(false);
+  };
+
+  // Lock background scroll when detail modal is open (per-page)
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (isDetailOpen) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = original || "";
+      };
+    }
+    return () => {};
+  }, [isDetailOpen]);
 
   const closeFormModal = () => {
     setIsFormModalOpen(false);
@@ -316,7 +343,7 @@ export default function KaryawanPage() {
         <button
           type="button"
           onClick={openAddModal}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 hover:bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
         >
           <PlusCircle size={18} />
           Tambah Karyawan
@@ -327,52 +354,44 @@ export default function KaryawanPage() {
         <table className="min-w-max w-full border-separate border-spacing-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Nama Lengkap
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Posisi
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Divisi
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Gaji Pokok
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Status
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Aksi
-              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Foto</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Nama</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Divisi</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Posisi</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">Status</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">Aksi</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-8 text-center text-sm text-slate-500"
-                >
-                  Memuat data...
-                </td>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Memuat data...</td>
               </tr>
             ) : filteredItems.length > 0 ? (
               filteredItems.map((item) => (
                 <tr key={item.id} className="border-t border-slate-100">
-                  <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                    {item.nama}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center">
+                      {item.foto_perorangan_url ? (
+                        <img
+                          src={item.foto_perorangan_url}
+                          alt={item.nama ?? "foto"}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-sm font-semibold text-slate-700">
+                          {getInitials(item.nama)}
+                        </div>
+                      )}
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">{item.posisi}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-slate-900">{item.nama}</td>
                   <td className="px-4 py-3 text-sm text-slate-700">{item.divisi}</td>
-                  <td className="px-4 py-3 text-sm text-right text-slate-700">
-                    {rupiahFormatter.format(item.gaji_pokok)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <Badge status={item.status} />
-                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-700">{item.posisi}</td>
+                  <td className="px-4 py-3 text-center"><Badge status={(item.status ?? "nonaktif") as HrEmployeeStatus} /></td>
                   <td className="px-4 py-3">
                     <RowActions>
+                      <DetailButton onClick={() => openDetailModal(item)} />
                       <EditButton onClick={() => openEditModal(item)} />
                       <DeleteButton onClick={() => openDeleteModal(item.id)} />
                     </RowActions>
@@ -381,12 +400,7 @@ export default function KaryawanPage() {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-8 text-center text-sm text-slate-500"
-                >
-                  Data karyawan tidak ditemukan.
-                </td>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">Data karyawan tidak ditemukan.</td>
               </tr>
             )}
           </tbody>
@@ -560,6 +574,121 @@ export default function KaryawanPage() {
         cancelText="Batal"
         variant="danger"
       />
+      <Modal isOpen={isDetailOpen} onClose={closeDetailModal} title="Detail Karyawan" maxWidth="max-w-2xl">
+        {detailItem ? (
+          <div className="space-y-4">
+            <section>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">Data Pribadi</h4>
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  {detailItem.foto_perorangan_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={detailItem.foto_perorangan_url} alt={detailItem.nama ?? "foto"} className="h-24 w-24 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-24 w-24 rounded-full bg-slate-200 flex items-center justify-center text-xl font-semibold text-slate-700">{getInitials(detailItem.nama)}</div>
+                  )}
+                </div>
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <div className="text-xs text-slate-500">NIK</div>
+                    <div className="text-sm text-slate-900">{detailItem.nik ?? "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Nama Lengkap</div>
+                    <div className="text-sm text-slate-900">{detailItem.nama}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Alamat Domisili</div>
+                    <div className="text-sm text-slate-900">{detailItem.alamat_domisili ?? "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Nomor WhatsApp</div>
+                    <div className="text-sm text-slate-900">{detailItem.nomor_whatsapp ?? "-"}</div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <div className="text-xs text-slate-500">Email Pribadi</div>
+                    <div className="text-sm text-slate-900">{detailItem.email_pribadi ?? "-"}</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">Dokumen</h4>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <div className="text-xs text-slate-500 mb-1">Foto KTP</div>
+                  {detailItem.foto_ktp_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={detailItem.foto_ktp_url} alt="KTP" className="w-full max-h-56 object-cover rounded-md border" />
+                  ) : (
+                    <div className="w-full h-36 rounded-md bg-slate-100 flex items-center justify-center text-sm text-slate-500">Tidak ada foto</div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="text-xs text-slate-500 mb-1">Foto KK</div>
+                  {detailItem.foto_kk_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={detailItem.foto_kk_url} alt="KK" className="w-full max-h-56 object-cover rounded-md border" />
+                  ) : (
+                    <div className="w-full h-36 rounded-md bg-slate-100 flex items-center justify-center text-sm text-slate-500">Tidak ada foto</div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">Pekerjaan</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <div className="text-xs text-slate-500">Divisi</div>
+                  <div className="text-sm text-slate-900">{detailItem.divisi ?? "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Posisi</div>
+                  <div className="text-sm text-slate-900">{detailItem.posisi ?? "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Status</div>
+                  <div className="text-sm text-slate-900"><Badge status={detailItem.status ?? "nonaktif"} /></div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Gaji Pokok</div>
+                  <div className="text-sm text-slate-900">{rupiahFormatter.format(detailItem.gaji_pokok ?? 0)}</div>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">Latar Belakang</h4>
+              <div className="grid grid-cols-1 gap-2">
+                <div>
+                  <div className="text-xs text-slate-500">Pendidikan Terakhir</div>
+                  <div className="text-sm text-slate-900">{detailItem.pendidikan_terakhir ?? "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Jurusan</div>
+                  <div className="text-sm text-slate-900">{detailItem.jurusan ?? "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Pengalaman Kerja Sebelumnya</div>
+                  <div className="text-sm text-slate-900">{detailItem.pengalaman_kerja_sebelumnya ?? "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Keahlian Khusus</div>
+                  <div className="text-sm text-slate-900">{detailItem.keahlian_khusus ?? "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Motivasi Kerja</div>
+                  <div className="text-sm text-slate-900">{detailItem.motivasi_kerja ?? "-"}</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        ) : (
+          <div>Memuat...</div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -46,6 +46,7 @@ import {
   BriefcaseBusiness,
   Building,
   Eye,
+  FileText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -88,6 +89,7 @@ const ICONS: Record<string, LucideIcon> = {
   BriefcaseBusiness,
   Building,
   Eye,
+  FileText,
 };
 
 export interface NavItem {

@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Kehadiran', href: '/hr/attendance', icon: 'CalendarDays' },
   { label: 'Karyawan', href: '/hr/karyawan', icon: 'Users' },
   { label: 'Peringatan', href: '/hr/warnings', icon: 'BookAlert' },
+  { label: 'SOP', href: '/hr/sop', icon: 'FileText' },
 ];
 
 export default function HRClientLayout({

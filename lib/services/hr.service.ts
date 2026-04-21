@@ -1,4 +1,4 @@
-import type { MKaryawan, TAttendance, TEmployeeWarning } from "@/types/supabase";
+import type { MKaryawan, TAttendance, TEmployeeWarning, MSop } from "@/types/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createProfile } from "./profile.service";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -173,6 +173,33 @@ export async function updateWarning(client: DbClient, id: string, input: Record<
 
 export async function deleteWarning(client: DbClient, id: string) {
   const { error, count } = await db(client).from("t_employee_warning").delete({ count: "exact" }).eq("id", id);
+  return { error, deleted: (count ?? 0) > 0 };
+}
+
+// ─── SOP (hr.m_sop) ─────────────────────────────────────────────────────────
+
+export async function listSOP(client: DbClient, page = 1, limit = 50) {
+  const from = (page - 1) * limit;
+  const { data, error, count } = await db(client)
+    .from("m_sop")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, from + limit - 1);
+  return { data: (data ?? []) as MSop[], error, meta: { page, limit, total: count ?? 0 } };
+}
+
+export async function createSOP(client: DbClient, input: Record<string, unknown>) {
+  const { data, error } = await db(client).from("m_sop").insert(input).select("*").single();
+  return { data: data as MSop | null, error };
+}
+
+export async function updateSOP(client: DbClient, id: string, input: Record<string, unknown>) {
+  const { data, error } = await db(client).from("m_sop").update(input).eq("id", id).select("*").maybeSingle();
+  return { data: data as MSop | null, error };
+}
+
+export async function deleteSOP(client: DbClient, id: string) {
+  const { error, count } = await db(client).from("m_sop").delete({ count: "exact" }).eq("id", id);
   return { error, deleted: (count ?? 0) > 0 };
 }
 
