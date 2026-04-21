@@ -30,7 +30,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   console.log("[HR ROUTE][attendance][PATCH] auth level:", auth.ctx.accessLevel);
   console.log("[HR ROUTE][attendance][PATCH] role:", auth.ctx.role);
   console.log("[HR ROUTE][attendance][PATCH] query result:", {
-    id: data?.id ?? null,
+    employee_id: data?.employee_id ?? null,
+    tanggal: data?.tanggal ?? null,
     hasError: Boolean(error),
     error: error?.message,
   });

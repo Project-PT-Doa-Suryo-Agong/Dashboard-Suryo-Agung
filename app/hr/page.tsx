@@ -155,7 +155,7 @@ export default function HrDashboardPage() {
 			attendances
 				.filter((item) => (item.tanggal ?? "") === todayDate)
 				.map((item) => ({
-					id: item.id,
+						id: `${item.employee_id ?? "unknown"}-${item.tanggal ?? ""}`,
 					employeeName: item.employee_id ? employeeNameById[item.employee_id] ?? "Karyawan tidak ditemukan" : "Karyawan tidak ditemukan",
 					status: (item.status ?? "alpha") as AttendanceStatus,
 					tanggal: item.tanggal ?? todayDate,

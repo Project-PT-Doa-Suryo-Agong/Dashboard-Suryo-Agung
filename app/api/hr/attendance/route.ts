@@ -83,7 +83,8 @@ export async function POST(request: Request) {
   console.log("[HR ROUTE][attendance][POST] auth level:", auth.ctx.accessLevel);
   console.log("[HR ROUTE][attendance][POST] role:", auth.ctx.role);
   console.log("[HR ROUTE][attendance][POST] query result:", {
-    id: data?.id ?? null,
+    employee_id: data?.employee_id ?? null,
+    tanggal: data?.tanggal ?? null,
     hasError: Boolean(error),
     error: error?.message,
   });
