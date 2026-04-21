@@ -6,7 +6,7 @@ import { Pencil, Search, Trash2, UserCheck } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { HrAttendanceStatus, MKaryawan, TAttendance } from "@/types/supabase";
-import { RowActions, EditButton, DeleteButton } from "@/components/ui/RowActions";
+import { RowActions, EditButton, DeleteButton, DetailButton } from "@/components/ui/RowActions";
 import {
   useAttendance,
   useInsertAttendance,
@@ -41,10 +41,10 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 function statusBadgeClass(status: AttendanceStatus) {
-  if (status === "hadir") return "bg-emerald-100 text-emerald-700";
-  if (status === "izin") return "bg-amber-100 text-amber-700";
-  if (status === "sakit") return "bg-blue-100 text-blue-700";
-  return "bg-red-100 text-red-700";
+  if (status === "hadir") return "bg-emerald-500 text-white";
+  if (status === "izin") return "bg-amber-500 text-white";
+  if (status === "sakit") return "bg-blue-500 text-white";
+  return "bg-red-500 text-white";
 }
 
 export default function AttendancePage() {
@@ -55,15 +55,27 @@ export default function AttendancePage() {
   const [editData, setEditData] = useState<AttendanceItem | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [deleteTarget, setDeleteTarget] = useState<{ employee_id: string; tanggal: string } | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
+  const [detailItem, setDetailItem] = useState<AttendanceItem | null>(null);
 
   const [formData, setFormData] = useState<{
     employee_id: string;
     tanggal: string;
     status: AttendanceStatus;
+    jam_masuk?: string;
+    jam_keluar?: string;
+    jarak_meter?: number | null;
+    is_dinas?: "Ya" | "Tidak";
+    laporan_harian?: string | null;
   }>({
     employee_id: "",
     tanggal: todayDate,
     status: "hadir",
+    jam_masuk: undefined,
+    jam_keluar: undefined,
+    jarak_meter: null,
+    is_dinas: "Tidak",
+    laporan_harian: null,
   });
 
   // ── Supabase Direct ──
@@ -125,6 +137,11 @@ export default function AttendancePage() {
       employee_id: employees[0]?.id ?? "",
       tanggal: todayDate,
       status: "hadir",
+      jam_masuk: undefined,
+      jam_keluar: undefined,
+      jarak_meter: null,
+      is_dinas: "Tidak",
+      laporan_harian: null,
     });
     setEditData(null);
   };
@@ -140,6 +157,11 @@ export default function AttendancePage() {
       employee_id: item.employee_id ?? "",
       tanggal: item.tanggal ?? todayDate,
       status: item.status ?? "alpha",
+      jam_masuk: item.jam_masuk ?? undefined,
+      jam_keluar: item.jam_keluar ?? undefined,
+      jarak_meter: item.jarak_meter ?? null,
+      is_dinas: item.is_dinas ?? "Tidak",
+      laporan_harian: item.laporan_harian ?? null,
     });
     setIsFormModalOpen(true);
   };
@@ -152,6 +174,16 @@ export default function AttendancePage() {
   const openDeleteModal = (target: { employee_id: string; tanggal: string }) => {
     setDeleteTarget(target);
     setIsDeleteModalOpen(true);
+  };
+
+  const openDetailModal = (item: AttendanceItem) => {
+    setDetailItem(item);
+    setIsDetailOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setDetailItem(null);
+    setIsDetailOpen(false);
   };
 
   const closeDeleteModal = () => {
@@ -174,10 +206,15 @@ export default function AttendancePage() {
 
     setIsSubmitting(true);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       employee_id: selectedEmployee.id,
       tanggal: formData.tanggal,
       status: formData.status,
+      jam_masuk: formData.jam_masuk ?? null,
+      jam_keluar: formData.jam_keluar ?? null,
+      jarak_meter: formData.jarak_meter ?? null,
+      is_dinas: formData.is_dinas ?? "Tidak",
+      laporan_harian: formData.laporan_harian ?? null,
     };
 
     try {
@@ -245,29 +282,29 @@ export default function AttendancePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+        <div className="rounded-xl border border-white bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
             Hadir
           </p>
-          <p className="mt-1 text-2xl font-bold text-emerald-800">{attendanceSummary.hadir}</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-600">{attendanceSummary.hadir}</p>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+        <div className="rounded-xl border border-white bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">
             Izin
           </p>
-          <p className="mt-1 text-2xl font-bold text-amber-800">{attendanceSummary.izin}</p>
+          <p className="mt-1 text-2xl font-bold text-amber-600">{attendanceSummary.izin}</p>
         </div>
-        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+        <div className="rounded-xl border border-white bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">
             Sakit
           </p>
-          <p className="mt-1 text-2xl font-bold text-blue-800">{attendanceSummary.sakit}</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{attendanceSummary.sakit}</p>
         </div>
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+        <div className="rounded-xl border border-white bg-white px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-red-500">
             Alpha
           </p>
-          <p className="mt-1 text-2xl font-bold text-red-800">{attendanceSummary.alpha}</p>
+          <p className="mt-1 text-2xl font-bold text-red-600">{attendanceSummary.alpha}</p>
         </div>
       </div>
 
@@ -297,7 +334,7 @@ export default function AttendancePage() {
         <button
           type="button"
           onClick={openAddModal}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95"
         >
           <UserCheck size={18} />
           Input Presensi
@@ -308,21 +345,13 @@ export default function AttendancePage() {
         <table className="min-w-max w-full border-separate border-spacing-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Nama Karyawan
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Divisi
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Tanggal
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Status
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Aksi
-              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Nama Karyawan</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Tanggal</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Jam Masuk</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Jam Keluar</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Dinas</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -344,7 +373,6 @@ export default function AttendancePage() {
                     <td className="px-4 py-3 text-sm font-medium text-slate-900">
                       {employeeName}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-700">{employee?.divisi ?? "-"}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
                       {item.tanggal ? dateFormatter.format(new Date(item.tanggal)) : "-"}
                     </td>
@@ -357,8 +385,16 @@ export default function AttendancePage() {
                         {item.status ?? "alpha"}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-sm text-slate-700">{item.jam_masuk ?? "-"}</td>
+                    <td className="px-4 py-3 text-sm text-slate-700">{item.jam_keluar ?? "-"}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${item.is_dinas === "Ya" ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"}`}>
+                        {item.is_dinas ?? "Tidak"}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">
                       <RowActions>
+                        <DetailButton onClick={() => openDetailModal(item)} />
                         <EditButton onClick={() => openEditModal(item)} />
                         <DeleteButton onClick={() => {
                           if (!item.employee_id || !item.tanggal) {
@@ -449,6 +485,38 @@ export default function AttendancePage() {
             </label>
           </div>
 
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Jam Masuk</span>
+              <input type="time" value={formData.jam_masuk ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jam_masuk: e.target.value }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20" />
+            </label>
+
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Jam Keluar</span>
+              <input type="time" value={formData.jam_keluar ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jam_keluar: e.target.value }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20" />
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Jarak (meter)</span>
+              <input type="number" value={formData.jarak_meter ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jarak_meter: e.target.value ? Number(e.target.value) : null }))} min={0} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20" />
+            </label>
+
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">Is Dinas</span>
+              <select value={formData.is_dinas} onChange={(e) => setFormData((p) => ({ ...p, is_dinas: e.target.value as "Ya" | "Tidak" }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20">
+                <option value="Tidak">Tidak</option>
+                <option value="Ya">Ya</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Laporan Harian</label>
+            <textarea rows={4} value={formData.laporan_harian ?? ""} onChange={(e) => setFormData((p) => ({ ...p, laporan_harian: e.target.value }))} placeholder="Ringkasan kegiatan..." className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20" />
+          </div>
+
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
@@ -479,6 +547,19 @@ export default function AttendancePage() {
         cancelText="Batal"
         variant="danger"
       />
+
+      <Modal isOpen={isDetailOpen} onClose={closeDetailModal} title={detailItem ? `Detail: ${employeeById[detailItem.employee_id ?? ""]?.nama ?? "-"}` : "Detail Presensi"} maxWidth="max-w-2xl">
+        <div className="space-y-2">
+          <p className="text-sm text-slate-700">Nama: {detailItem ? employeeById[detailItem.employee_id ?? ""]?.nama ?? "-" : "-"}</p>
+          <p className="text-sm text-slate-700">Tanggal: {detailItem?.tanggal ? dateFormatter.format(new Date(detailItem.tanggal)) : "-"}</p>
+          <p className="text-sm text-slate-700">Status: <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeClass(detailItem?.status ?? "alpha")}`}>{detailItem?.status ?? "alpha"}</span></p>
+          <p className="text-sm text-slate-700">Jam Masuk: {detailItem?.jam_masuk ?? "-"}</p>
+          <p className="text-sm text-slate-700">Jam Keluar: {detailItem?.jam_keluar ?? "-"}</p>
+          <p className="text-sm text-slate-700">Jarak: {detailItem?.jarak_meter != null ? `${detailItem.jarak_meter} m` : "-"}</p>
+          <p className="text-sm text-slate-700">Is Dinas: {detailItem?.is_dinas ?? "Tidak"}</p>
+          <p className="text-sm text-slate-700 whitespace-pre-line">Laporan Harian: {detailItem?.laporan_harian ?? "-"}</p>
+        </div>
+      </Modal>
     </div>
   );
 }

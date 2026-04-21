@@ -10,14 +10,9 @@ const schema = (client: DbClient, name: string) => (client as unknown as SchemaC
 const db = (client: DbClient) => schema(client, "hr");
 
 function normalizeAttendanceRow(row: Record<string, unknown>): TAttendance {
-  const normalized = { ...row } as Record<string, unknown>;
-  if (typeof normalized.id !== "string" || normalized.id.length === 0) {
-    const legacyId = normalized.attendance_id;
-    if (typeof legacyId === "string" && legacyId.length > 0) {
-      normalized.id = legacyId;
-    }
-  }
-  return normalized as unknown as TAttendance;
+  // New DB schema uses composite PK (employee_id + tanggal) and no single `id` column.
+  // Return the row as-is and let callers access `employee_id` + `tanggal` as identity.
+  return row as unknown as TAttendance;
 }
 
 function missingIdColumnError(error: unknown) {
@@ -55,14 +50,15 @@ export async function listAttendance(client: DbClient, page = 1, limit = 50, emp
   const from = (page - 1) * limit;
   let query = db(client)
     .from("t_attendance")
-    .select("*", { count: "exact" })
+    // include karyawan join for convenience (nama, divisi)
+    .select("*, m_karyawan(nama, divisi)", { count: "exact" })
     .order("tanggal", { ascending: false })
     .order("created_at", { ascending: false })
     .order("employee_id", { ascending: true })
     .range(from, from + limit - 1);
   if (employeeId) query = query.eq("employee_id", employeeId);
   const { data, error, count } = await query;
-  const normalized = (data ?? []).map((item: Record<string, unknown>) => normalizeAttendanceRow(item));
+  const normalized = (data ?? []) as TAttendance[];
   return { data: normalized, error, meta: { page, limit, total: count ?? 0 } };
 }
 

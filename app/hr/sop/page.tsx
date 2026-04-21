@@ -165,7 +165,7 @@ export default function SopPage() {
 
         <button type="button" onClick={openAddModal} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95">
           <PlusCircle size={18} />
-          Buat SOP
+          Tambah SOP Baru
         </button>
       </div>
 
