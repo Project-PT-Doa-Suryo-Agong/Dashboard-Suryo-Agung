@@ -184,6 +184,29 @@ Bagian di bawah ini sudah difilter. Poin yang backend-nya sudah selesai dan tida
 - Komponen tabel UI / view di layar tersebut juga diarahkan agar dapat menampilkan relasi data COA.
 - **Peringatan Pre-Check Mode**: Jika tabel `sales.t_sales_order` & `management.t_budget_request` belum ditambahkan kolom `coa_id` di layer database (sebagaimana `reimbursement` dan `payroll`), tolong eksekusikan penambahannya lewat _SQL Editor_ Supabase secara manual sebelum melakukan testing integrasi.
 
+### 9. Super Admin - Ubah Password User Lain
+- Endpoint `PATCH /api/profiles/:id` sekarang menerima field opsional `password` untuk reset password user target.
+- Frontend pada halaman Super Admin User Management perlu mengaktifkan input password saat mode edit (jangan lagi selalu disabled).
+- Saat edit user, kirim field `password` hanya jika diisi. Jika kosong, jangan sertakan field ini agar password lama tetap dipakai.
+- Validasi frontend: password minimal 6 karakter sebelum submit.
+- Tampilkan pesan error dari API jika mendapat `403` (contoh: bukan Super Admin atau mencoba ubah password akun sendiri lewat endpoint ini).
+- Setelah submit berhasil, kosongkan kembali field password agar tidak tertinggal di state/form.
+
+### 10. Human Resources - Editor Surat PKWT/PKWTP
+- Menu baru backend untuk cluster HR sudah ditambahkan dengan key `hr_contract_template_editor` dan label `Editor Surat PKWT/PKWTP`.
+- Frontend perlu menambahkan halaman/menu HR baru (misalnya `Human Resources -> Surat PKWT/PKWTP`) yang memanggil endpoint berikut:
+  - `GET /api/hr/contracts/templates` untuk mengambil daftar template + schema field form informasi karyawan.
+  - `GET /api/hr/contracts/templates/:type` untuk mengambil detail template (`type`: `pkwt` atau `pkwtp`).
+  - `PUT /api/hr/contracts/templates/:type` untuk menyimpan hasil edit template.
+  - `POST /api/hr/contracts/generate` untuk generate draft surat berdasarkan form informasi karyawan.
+- Payload minimal generate:
+  - `templateType`: `pkwt` atau `pkwtp`.
+  - `employee`: object berisi field form (contoh: `employee_name`, `employee_nik`, `employee_identity_number`, `employee_address`, `employee_position`, `employee_department`, `contract_number`, `contract_start_date`, dst).
+- Validasi penting di frontend:
+  - Untuk `pkwt`, wajib isi `contract_end_date`.
+  - Untuk `pkwtp`, wajib isi `probation_months` dan `probation_end_date`.
+- Template editable backend disimpan di `data/hr-contract-templates.json` dan sudah disesuaikan untuk identitas `PT DOA SURYO AGONG`.
+
 ## Getting Started
 
 ### Prerequisites
