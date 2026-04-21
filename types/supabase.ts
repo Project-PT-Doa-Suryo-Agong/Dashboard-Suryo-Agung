@@ -284,6 +284,32 @@ export interface Database {
         };
         Relationships: [];
       };
+      m_sop: {
+        Row: {
+          id: string;
+          judul: string;
+          divisi: CoreUserRole | string | null;
+          konten: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          judul: string;
+          divisi?: CoreUserRole | string | null;
+          konten?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          judul?: string;
+          divisi?: CoreUserRole | string | null;
+          konten?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
@@ -857,6 +883,8 @@ export type MVendorInsert = Tables<"core", "m_vendor">["Insert"];
 export type MKaryawan        = Tables<"hr", "m_karyawan">["Row"];
 export type TAttendance      = Tables<"hr", "t_attendance">["Row"];
 export type TEmployeeWarning = Tables<"hr", "t_employee_warning">["Row"];
+export type MSop             = Tables<"hr", "m_sop">["Row"];
+export type MSopInsert       = Tables<"hr", "m_sop">["Insert"];
 
 // finance
 export type TCashflow       = Tables<"finance", "t_cashflow">["Row"];

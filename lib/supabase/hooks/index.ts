@@ -16,6 +16,7 @@ export { useVendors, useVendor, useInsertVendor, useUpdateVendor, useDeleteVendo
 export { useKaryawan, useKaryawanById, useInsertKaryawan, useUpdateKaryawan, useDeleteKaryawan } from "./use-karyawan";
 export { useAttendance, useInsertAttendance, useUpdateAttendance, useDeleteAttendance } from "./use-attendance";
 export { useWarnings, useInsertWarning, useUpdateWarning, useDeleteWarning } from "./use-warnings";
+export { useSops, useInsertSop, useUpdateSop, useDeleteSop } from "./use-sop";
 
 // ── Finance ──
 export { useCashflow, useInsertCashflow, useUpdateCashflow, useDeleteCashflow } from "./use-finance";

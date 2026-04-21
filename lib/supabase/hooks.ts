@@ -339,3 +339,6 @@ export function useDelete(schema: SchemaName, table: string, idColumn = "id") {
     remove: (id: string) => Promise<boolean>;
   };
 }
+
+// Re-export domain-specific SOP hooks (created in hooks/use-sop.ts)
+export { useSops, useInsertSop, useUpdateSop, useDeleteSop } from "./hooks/use-sop";
