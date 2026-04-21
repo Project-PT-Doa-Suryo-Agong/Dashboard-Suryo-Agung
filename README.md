@@ -184,6 +184,14 @@ Bagian di bawah ini sudah difilter. Poin yang backend-nya sudah selesai dan tida
 - Komponen tabel UI / view di layar tersebut juga diarahkan agar dapat menampilkan relasi data COA.
 - **Peringatan Pre-Check Mode**: Jika tabel `sales.t_sales_order` & `management.t_budget_request` belum ditambahkan kolom `coa_id` di layer database (sebagaimana `reimbursement` dan `payroll`), tolong eksekusikan penambahannya lewat _SQL Editor_ Supabase secara manual sebelum melakukan testing integrasi.
 
+### 9. Super Admin - Ubah Password User Lain
+- Endpoint `PATCH /api/profiles/:id` sekarang menerima field opsional `password` untuk reset password user target.
+- Frontend pada halaman Super Admin User Management perlu mengaktifkan input password saat mode edit (jangan lagi selalu disabled).
+- Saat edit user, kirim field `password` hanya jika diisi. Jika kosong, jangan sertakan field ini agar password lama tetap dipakai.
+- Validasi frontend: password minimal 6 karakter sebelum submit.
+- Tampilkan pesan error dari API jika mendapat `403` (contoh: bukan Super Admin atau mencoba ubah password akun sendiri lewat endpoint ini).
+- Setelah submit berhasil, kosongkan kembali field password agar tidak tertinggal di state/form.
+
 ## Getting Started
 
 ### Prerequisites

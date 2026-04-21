@@ -118,6 +118,14 @@ export async function updateProfileById(
   return { data: data as Profile | null, error };
 }
 
+export async function updateProfileAuthPasswordById(id: string, password: string) {
+  const { data, error } = await supabaseAdmin.auth.admin.updateUserById(id, {
+    password,
+  });
+
+  return { data, error };
+}
+
 export async function deleteProfileById(client: DbClient, id: string) {
   const { error, count } = await db(client)
     .from("profiles")

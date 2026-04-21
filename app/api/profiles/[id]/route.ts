@@ -3,6 +3,7 @@ import { requireLevel } from "@/lib/guards/auth.guard";
 import {
   deleteProfileById,
   getProfileById,
+  updateProfileAuthPasswordById,
   updateProfileById,
 } from "@/lib/services/profile.service";
 import { parseUpdateProfileByIdInput } from "@/lib/validation/profiles-admin";
@@ -55,22 +56,100 @@ export async function PATCH(
     return fail(ErrorCode.INVALID_JSON, "Body request harus JSON valid.", 400);
   }
 
-  const parsed = parseUpdateProfileByIdInput(body);
-  if (!parsed.ok) {
-    return fail(ErrorCode.VALIDATION_ERROR, parsed.message, 400);
+  if (!body || typeof body !== "object") {
+    return fail(ErrorCode.VALIDATION_ERROR, "Body request harus berupa object JSON.", 400);
   }
 
-  const { data, error } = await updateProfileById(auth.ctx.supabase, id, parsed.data);
+  const payload = body as Record<string, unknown>;
+  const hasProfileFields =
+    payload.nama !== undefined ||
+    payload.role !== undefined ||
+    payload.phone !== undefined;
+  const hasPasswordField = payload.password !== undefined;
 
-  if (error) {
-    return fail(ErrorCode.DB_ERROR, "Gagal memperbarui profil.", 500, error.message);
+  if (!hasProfileFields && !hasPasswordField) {
+    return fail(ErrorCode.VALIDATION_ERROR, "Tidak ada field yang dapat diupdate.", 400);
   }
 
-  if (!data) {
-    return fail(ErrorCode.NOT_FOUND, "Profil tidak ditemukan.", 404);
+  let parsedPassword: string | null = null;
+  if (hasPasswordField) {
+    if (typeof payload.password !== "string" || payload.password.length < 6) {
+      return fail(ErrorCode.VALIDATION_ERROR, "password minimal 6 karakter.", 400);
+    }
+    parsedPassword = payload.password;
   }
 
-  return ok({ profile: data }, "Profil berhasil diperbarui.");
+  let updatedProfile = null;
+
+  if (hasProfileFields) {
+    const parsed = parseUpdateProfileByIdInput({
+      nama: payload.nama,
+      role: payload.role,
+      phone: payload.phone,
+    });
+    if (!parsed.ok) {
+      return fail(ErrorCode.VALIDATION_ERROR, parsed.message, 400);
+    }
+
+    const { data, error } = await updateProfileById(auth.ctx.supabase, id, parsed.data);
+
+    if (error) {
+      return fail(ErrorCode.DB_ERROR, "Gagal memperbarui profil.", 500, error.message);
+    }
+
+    if (!data) {
+      return fail(ErrorCode.NOT_FOUND, "Profil tidak ditemukan.", 404);
+    }
+
+    updatedProfile = data;
+  }
+
+  if (parsedPassword !== null) {
+    const { data: actorProfile, error: actorProfileError } = await getProfileById(
+      auth.ctx.supabase,
+      auth.ctx.userId
+    );
+
+    if (actorProfileError) {
+      return fail(ErrorCode.DB_ERROR, "Gagal memverifikasi role user.", 500, actorProfileError.message);
+    }
+
+    if (!actorProfile || actorProfile.role !== "Super Admin") {
+      return fail(ErrorCode.FORBIDDEN, "Hanya Super Admin yang dapat mengubah password user lain.", 403);
+    }
+
+    if (id === auth.ctx.userId) {
+      return fail(ErrorCode.FORBIDDEN, "Perubahan password sendiri tidak diizinkan di endpoint ini.", 403);
+    }
+
+    const { error: updatePasswordError } = await updateProfileAuthPasswordById(id, parsedPassword);
+    if (updatePasswordError) {
+      return fail(
+        ErrorCode.DB_ERROR,
+        "Gagal memperbarui password user.",
+        500,
+        updatePasswordError.message
+      );
+    }
+  }
+
+  if (!updatedProfile) {
+    const { data, error } = await getProfileById(auth.ctx.supabase, id);
+    if (error) {
+      return fail(ErrorCode.DB_ERROR, "Gagal mengambil data profil.", 500, error.message);
+    }
+    if (!data) {
+      return fail(ErrorCode.NOT_FOUND, "Profil tidak ditemukan.", 404);
+    }
+    updatedProfile = data;
+  }
+
+  const message =
+    parsedPassword !== null
+      ? "Profil berhasil diperbarui dan password user berhasil diubah."
+      : "Profil berhasil diperbarui.";
+
+  return ok({ profile: updatedProfile }, message);
 }
 
 export async function DELETE(
