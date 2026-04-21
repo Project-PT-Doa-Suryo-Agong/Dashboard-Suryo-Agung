@@ -6,7 +6,7 @@ import {
   updateAttendanceByEmployeeDate,
   deleteAttendanceByEmployeeDate,
 } from "@/lib/services/hr.service";
-import { requireDate, requireString, requireUUID } from "@/lib/validation/body-validator";
+import { requireDate, requireString, requireUUID, requireNumber } from "@/lib/validation/body-validator";
 import { ErrorCode } from "@/lib/http/error-codes";
 
 export async function GET(request: Request) {
@@ -54,11 +54,31 @@ export async function POST(request: Request) {
     return fail(ErrorCode.VALIDATION_ERROR, "status harus hadir, izin, sakit, atau alpha.", 400);
   }
 
-  const { data, error } = await createAttendance(auth.ctx.supabase, {
+  // Optional fields
+  const jamMasuk = requireString(input, "jam_masuk", { optional: true });
+  if (!jamMasuk.ok) return fail(ErrorCode.VALIDATION_ERROR, jamMasuk.message, 400);
+  const jamKeluar = requireString(input, "jam_keluar", { optional: true });
+  if (!jamKeluar.ok) return fail(ErrorCode.VALIDATION_ERROR, jamKeluar.message, 400);
+  const jarakMeter = requireNumber(input, "jarak_meter", { optional: true });
+  if (!jarakMeter.ok) return fail(ErrorCode.VALIDATION_ERROR, jarakMeter.message, 400);
+  const isDinas = requireString(input, "is_dinas", { optional: true });
+  if (!isDinas.ok) return fail(ErrorCode.VALIDATION_ERROR, isDinas.message, 400);
+  if (isDinas.data && !["Ya", "Tidak"].includes(isDinas.data)) return fail(ErrorCode.VALIDATION_ERROR, "is_dinas harus 'Ya' atau 'Tidak'.", 400);
+  const laporanHarian = requireString(input, "laporan_harian", { optional: true });
+  if (!laporanHarian.ok) return fail(ErrorCode.VALIDATION_ERROR, laporanHarian.message, 400);
+
+  const payload: Record<string, unknown> = {
     employee_id: employeeId.data,
     tanggal: tanggal.data,
     status: status.data,
-  });
+    jam_masuk: jamMasuk.ok ? jamMasuk.data : null,
+    jam_keluar: jamKeluar.ok ? jamKeluar.data : null,
+    jarak_meter: jarakMeter.ok ? jarakMeter.data : null,
+    is_dinas: isDinas.ok ? isDinas.data : "Tidak",
+    laporan_harian: laporanHarian.ok ? laporanHarian.data : null,
+  };
+
+  const { data, error } = await createAttendance(auth.ctx.supabase, payload);
 
   console.log("[HR ROUTE][attendance][POST] auth level:", auth.ctx.accessLevel);
   console.log("[HR ROUTE][attendance][POST] role:", auth.ctx.role);
@@ -113,6 +133,37 @@ export async function PATCH(request: Request) {
       return fail(ErrorCode.VALIDATION_ERROR, "status harus hadir, izin, sakit, atau alpha.", 400);
     }
     payload.status = status.data;
+  }
+
+  if ("jam_masuk" in input) {
+    const jamMasuk = requireString(input, "jam_masuk");
+    if (!jamMasuk.ok) return fail(ErrorCode.VALIDATION_ERROR, jamMasuk.message, 400);
+    payload.jam_masuk = jamMasuk.data;
+  }
+
+  if ("jam_keluar" in input) {
+    const jamKeluar = requireString(input, "jam_keluar");
+    if (!jamKeluar.ok) return fail(ErrorCode.VALIDATION_ERROR, jamKeluar.message, 400);
+    payload.jam_keluar = jamKeluar.data;
+  }
+
+  if ("jarak_meter" in input) {
+    const jarakMeter = requireNumber(input, "jarak_meter");
+    if (!jarakMeter.ok) return fail(ErrorCode.VALIDATION_ERROR, jarakMeter.message, 400);
+    payload.jarak_meter = jarakMeter.data;
+  }
+
+  if ("is_dinas" in input) {
+    const isDinas = requireString(input, "is_dinas");
+    if (!isDinas.ok) return fail(ErrorCode.VALIDATION_ERROR, isDinas.message, 400);
+    if (isDinas.data && !["Ya", "Tidak"].includes(isDinas.data)) return fail(ErrorCode.VALIDATION_ERROR, "is_dinas harus 'Ya' atau 'Tidak'.", 400);
+    payload.is_dinas = isDinas.data;
+  }
+
+  if ("laporan_harian" in input) {
+    const laporanHarian = requireString(input, "laporan_harian");
+    if (!laporanHarian.ok) return fail(ErrorCode.VALIDATION_ERROR, laporanHarian.message, 400);
+    payload.laporan_harian = laporanHarian.data;
   }
 
   const { data, error } = await updateAttendanceByEmployeeDate(

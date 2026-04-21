@@ -240,24 +240,37 @@ export interface Database {
       };
       t_attendance: {
         Row: {
-          id: string;
-          employee_id: string | null;
-          tanggal: string | null;
+          employee_id: string;
+          tanggal: string;
           status: HrAttendanceStatus | null;
+          jam_masuk: string | null;
+          jam_keluar: string | null;
+          jarak_meter: number | null;
+          is_dinas: "Ya" | "Tidak" | null;
+          laporan_harian: string | null;
           created_at: string | null;
+          m_karyawan?: { nama: string | null } | null;
         };
         Insert: {
-          id?: string;
-          employee_id?: string | null;
-          tanggal?: string | null;
+          employee_id: string;
+          tanggal?: string;
           status?: HrAttendanceStatus | null;
+          jam_masuk?: string | null;
+          jam_keluar?: string | null;
+          jarak_meter?: number | null;
+          is_dinas?: "Ya" | "Tidak" | null;
+          laporan_harian?: string | null;
           created_at?: string | null;
         };
         Update: {
-          id?: string;
-          employee_id?: string | null;
-          tanggal?: string | null;
+          employee_id?: string;
+          tanggal?: string;
           status?: HrAttendanceStatus | null;
+          jam_masuk?: string | null;
+          jam_keluar?: string | null;
+          jarak_meter?: number | null;
+          is_dinas?: "Ya" | "Tidak" | null;
+          laporan_harian?: string | null;
         };
         Relationships: [];
       };
