@@ -206,7 +206,7 @@ export default function OfficeVendorsPage() {
     <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 max-w-7xl mx-auto w-full">
       <section className="space-y-1">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-100">Manajemen Mitra dan Vendor</h1>
-        <p className="text-sm md:text-base text-slate-300">Kelola data kontak pemasok dari tabel core.m_vendor.</p>
+        <p className="text-sm md:text-base text-slate-300">Kelola data kontak pemasok</p>
       </section>
 
       <section className="flex flex-col gap-3 md:gap-4 sm:flex-row sm:items-center sm:justify-between">
