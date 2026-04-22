@@ -225,7 +225,7 @@ export default function FinanceCashflowPage() {
         <button
           type="button"
           onClick={openAddModal}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-lime-400 hover:bg-lime-700 hover:text-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 hover:bg-green-600 hover:text-gray-300 px-4 py-2.5 text-sm font-semibold text-white transition-colors"
         >
           <PlusCircle className="h-4 w-4 md:h-5 md:w-5" />
           Catat Transaksi
