@@ -47,6 +47,7 @@ const navItems = [
       { label: 'Overview', href: '/hr', icon: 'LayoutDashboard' },
       { label: 'Kehadiran', href: '/hr/attendance', icon: 'CalendarDays' },
       { label: 'Karyawan', href: '/hr/karyawan', icon: 'Users' },
+      { label: 'PKWT/PKWTP', href: '/hr/pkwt', icon: 'ScrollText' },
       { label: 'Peringatan', href: '/hr/warnings', icon: 'BookAlert' },
       { label: 'SOP', href: '/hr/sop', icon: 'FileText' },
     ]

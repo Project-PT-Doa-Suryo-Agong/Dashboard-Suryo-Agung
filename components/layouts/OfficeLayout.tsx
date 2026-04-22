@@ -31,8 +31,8 @@ export default function OfficeClientLayout({
 
       {/* Kiri: Sidebar */}
       <Sidebar
-        title="Creative & Sales"
-        subtitle="Management Portal"
+        title="Office Support"
+        subtitle="Office Support Portal"
         logoIcon="Palette"
         navItems={navItems}
         footerAction={{ label: 'New Campaign', icon: 'Plus' }}

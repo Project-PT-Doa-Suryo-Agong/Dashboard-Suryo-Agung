@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Building2, Package, Users } from "lucide-react";
+import { ArrowRight, Building2, Package } from "lucide-react";
 import type { ApiError, ApiSuccess } from "@/types/api";
-import type { MKaryawan, MProduk, MVarian, MVendor } from "@/types/supabase";
+import type { MProduk, MVarian, MVendor } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
 
 type VendorsListPayload = {
@@ -29,14 +29,7 @@ type VariantsListPayload = {
   varian: MVarian[];
 };
 
-type EmployeesListPayload = {
-  karyawan: MKaryawan[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-  };
-};
+// Employees/HR data is not accessible to Office Support — removed
 
 const quick_links = [
   {
@@ -82,7 +75,6 @@ export default function OfficeDashboardPage() {
   const [vendors, setVendors] = useState<MVendor[]>([]);
   const [products, setProducts] = useState<MProduk[]>([]);
   const [variants, setVariants] = useState<MVarian[]>([]);
-  const [employees, setEmployees] = useState<MKaryawan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchVendors = async () => {
@@ -115,26 +107,11 @@ export default function OfficeDashboardPage() {
     setVariants(payload.data.varian ?? []);
   };
 
-  const fetchEmployees = async () => {
-    const response = await apiFetch("/api/hr/employees?page=1&limit=500", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-    });
-    const payload = await parseJsonResponse<EmployeesListPayload>(response);
-    setEmployees(payload.data.karyawan ?? []);
-  };
-
   useEffect(() => {
     const loadDashboardData = async () => {
       setIsLoading(true);
       try {
-        await Promise.all([
-          fetchVendors(),
-          fetchProducts(),
-          fetchVariants(),
-          fetchEmployees(),
-        ]);
+        await Promise.all([fetchVendors(), fetchProducts(), fetchVariants()]);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Gagal memuat dashboard office.";
@@ -149,7 +126,7 @@ export default function OfficeDashboardPage() {
 
   const total_vendor_aktif = vendors.length;
   const total_katalog_produk = variants.length;
-  const total_karyawan = employees.length;
+  const total_varian_aktif = variants.length;
 
   const vendor_update_terbaru = useMemo(() => {
     return [...vendors]
@@ -193,7 +170,7 @@ export default function OfficeDashboardPage() {
               <p className="text-base md:text-2xl font-bold text-slate-900">{total_vendor_aktif} Mitra</p>
               <p className="text-xs md:text-sm text-slate-600">Terdaftar dalam sistem</p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#BC934B]/15 text-[#BC934B] shrink-0">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-slate-500 text-white shrink-0">
               <Building2 className="h-5 w-5" />
             </span>
           </div>
@@ -207,7 +184,7 @@ export default function OfficeDashboardPage() {
               <p className="text-base md:text-2xl font-bold text-slate-900">{total_katalog_produk} Item</p>
               <p className="text-xs md:text-sm text-slate-600">{products.length} produk, varian produk aktif</p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700 shrink-0">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white shrink-0">
               <Package className="h-5 w-5" />
             </span>
           </div>
@@ -217,12 +194,12 @@ export default function OfficeDashboardPage() {
           <div className="absolute -top-10 -left-8 h-28 w-28 rounded-full bg-emerald-100/70" aria-hidden="true" />
           <div className="relative flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Karyawan (Office &amp; Pabrik)</p>
-              <p className="text-base md:text-2xl font-bold text-slate-900">{total_karyawan} Orang</p>
-              <p className="text-xs md:text-sm text-slate-600">Seluruh divisi</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Varian Aktif</p>
+              <p className="text-base md:text-2xl font-bold text-slate-900">{total_varian_aktif} Varian</p>
+              <p className="text-xs md:text-sm text-slate-600">Varian aktif dalam katalog</p>
             </div>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 shrink-0">
-              <Users className="h-5 w-5" />
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500 text-white shrink-0">
+              <Package className="h-5 w-5" />
             </span>
           </div>
         </article>
@@ -300,7 +277,7 @@ export default function OfficeDashboardPage() {
                           <div className="flex flex-col gap-1">
                             <span
                               className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                isUpdated ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                                isUpdated ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
                               }`}
                             >
                               {isUpdated ? "Updated" : "Baru"}
