@@ -262,16 +262,23 @@ function isLocalhostSubdomain(hostHeader: string) {
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
+  const pathname = url.pathname;
+  // Skip auth check for static files and Next.js internals
+  const shouldSkipAuth =
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    /\.(?:ico|png|jpg|jpeg|svg|css|js|woff2?|map)$/.test(pathname);
+
+  if (shouldSkipAuth) {
+    console.log("[PROXY] SKIP AUTH for static/internal path:", pathname);
+    return NextResponse.next();
+  }
   const hostHeader = request.headers.get("host") ?? "";
   const authRootHost = resolveAuthRootHost(hostHeader);
   const requestHeaders = new Headers(request.headers);
   let response = NextResponse.next();
 
-  console.log("[PROXY] incoming:", hostHeader, request.method, url.pathname);
-
-  if (url.pathname.includes(".")) {
-    return response;
-  }
+  console.log("[PROXY] incoming:", hostHeader, request.method, pathname);
 
   if (url.pathname.startsWith("/auth")) {
     if (isLocalhostSubdomain(hostHeader) && authRootHost) {

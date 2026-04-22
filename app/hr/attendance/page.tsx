@@ -146,6 +146,16 @@ export default function AttendancePage() {
     setEditData(null);
   };
 
+  const isFormValid =
+    !!formData.status &&
+    !!formData.jam_masuk &&
+    !!formData.jam_keluar &&
+    !!formData.is_dinas &&
+    formData.jarak_meter !== null &&
+    formData.jarak_meter !== undefined &&
+    typeof formData.laporan_harian === "string" &&
+    formData.laporan_harian.trim() !== "";
+
   const openAddModal = () => {
     resetForm();
     setIsFormModalOpen(true);
@@ -206,16 +216,25 @@ export default function AttendancePage() {
 
     setIsSubmitting(true);
 
-    const payload: Record<string, unknown> = {
-      employee_id: selectedEmployee.id,
-      tanggal: formData.tanggal,
+    const commonPayload: Record<string, unknown> = {
       status: formData.status,
       jam_masuk: formData.jam_masuk ?? null,
       jam_keluar: formData.jam_keluar ?? null,
-      jarak_meter: formData.jarak_meter ?? null,
       is_dinas: formData.is_dinas ?? "Tidak",
       laporan_harian: formData.laporan_harian ?? null,
     };
+
+    if (formData.jarak_meter !== null && formData.jarak_meter !== undefined) {
+      commonPayload.jarak_meter = formData.jarak_meter;
+    }
+
+    const payload: Record<string, unknown> = editData
+      ? commonPayload
+      : {
+          employee_id: selectedEmployee.id,
+          tanggal: formData.tanggal,
+          ...commonPayload,
+        };
 
     try {
       if (editData) {
@@ -230,7 +249,7 @@ export default function AttendancePage() {
             source_employee_id: sourceEmployeeId,
             source_tanggal: sourceTanggal,
           },
-          payload,
+          commonPayload,
         );
 
         if (!result) throw new Error("Gagal update presensi.");
@@ -504,7 +523,7 @@ export default function AttendancePage() {
             </label>
 
             <label className="space-y-1.5">
-              <span className="text-sm font-medium text-slate-700">Is Dinas</span>
+              <span className="text-sm font-medium text-slate-700">Dinas</span>
               <select value={formData.is_dinas} onChange={(e) => setFormData((p) => ({ ...p, is_dinas: e.target.value as "Ya" | "Tidak" }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20">
                 <option value="Tidak">Tidak</option>
                 <option value="Ya">Ya</option>
@@ -528,10 +547,10 @@ export default function AttendancePage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center justify-center rounded-xl bg-[#BC934B] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
+              disabled={isSubmitting || !isFormValid}
+              className="inline-flex items-center justify-center rounded-xl bg-[#BC934B] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Menyimpan..." : "Simpan Presensi"}
+              {isSubmitting ? "Menyimpan..." : editData ? "Simpan Perubahan" : "Simpan Presensi"}
             </button>
           </div>
         </form>
@@ -556,7 +575,7 @@ export default function AttendancePage() {
           <p className="text-sm text-slate-700">Jam Masuk: {detailItem?.jam_masuk ?? "-"}</p>
           <p className="text-sm text-slate-700">Jam Keluar: {detailItem?.jam_keluar ?? "-"}</p>
           <p className="text-sm text-slate-700">Jarak: {detailItem?.jarak_meter != null ? `${detailItem.jarak_meter} m` : "-"}</p>
-          <p className="text-sm text-slate-700">Is Dinas: {detailItem?.is_dinas ?? "Tidak"}</p>
+          <p className="text-sm text-slate-700">Dinas: {detailItem?.is_dinas ?? "Tidak"}</p>
           <p className="text-sm text-slate-700 whitespace-pre-line">Laporan Harian: {detailItem?.laporan_harian ?? "-"}</p>
         </div>
       </Modal>
