@@ -10,6 +10,7 @@ import {
   UserCheck,
   Users,
   FileText,
+  ScrollText,
 } from "lucide-react";
 import { apiFetch } from "@/lib/utils/api-fetch";
 import type { ApiError, ApiSuccess } from "@/types/api";
@@ -50,7 +51,13 @@ type WarningsListPayload = {
   meta: { page: number; limit: number; total: number };
 };
 
-const quickLinks = [
+const quickLinks = [ 
+  {
+    title: "Rekap Presensi",
+    description: "Rekap Presensi Harian",
+    href: "/hr/attendance",
+    icon: CalendarDays,
+  },
   {
     title: "Data Karyawan",
     description: "Kelola Database Karyawan",
@@ -58,10 +65,10 @@ const quickLinks = [
     icon: Users,
   },
   {
-    title: "Rekap Presensi",
-    description: "Rekap Presensi Harian",
-    href: "/hr/attendance",
-    icon: CalendarDays,
+    title: "PKWT dan PKWTP",
+    description: "Kelola PKWT & PKWTT",
+    href: "/hr/pkwt",
+    icon: ScrollText,
   },
   {
     title: "Surat Peringatan",
@@ -329,7 +336,7 @@ export default function HrDashboardPage() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#BC934B]"
+                className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-slate-700"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -340,11 +347,11 @@ export default function HrDashboardPage() {
                       {item.description}
                     </p>
                   </div>
-                  <div className="rounded-lg bg-slate-100 p-2 text-slate-700 transition group-hover:bg-[#BC934B] group-hover:text-white">
+                  <div className="rounded-lg bg-slate-100 p-2 text-slate-700 transition group-hover:bg-slate-700 group-hover:text-white">
                     <Icon size={18} />
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-end text-xs font-semibold text-slate-500 transition group-hover:text-[#BC934B]">
+                <div className="mt-4 flex items-center justify-end text-xs font-semibold text-slate-500 transition group-hover:text-slate-700">
                   Lihat Detail
                   <ArrowRight size={14} className="ml-1" />
                 </div>

@@ -457,7 +457,7 @@ export default function AttendancePage() {
                 onChange={(event) =>
                   setFormData((prev) => ({ ...prev, employee_id: event.target.value }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
               >
                 <option value="" disabled>
                   Pilih karyawan
@@ -479,7 +479,7 @@ export default function AttendancePage() {
                 onChange={(event) =>
                   setFormData((prev) => ({ ...prev, tanggal: event.target.value }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
               />
             </label>
 
@@ -494,7 +494,7 @@ export default function AttendancePage() {
                     status: event.target.value as AttendanceStatus,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
               >
                 <option value="hadir">hadir</option>
                 <option value="izin">izin</option>
@@ -507,24 +507,24 @@ export default function AttendancePage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-slate-700">Jam Masuk</span>
-              <input type="time" value={formData.jam_masuk ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jam_masuk: e.target.value }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20" />
+              <input type="time" value={formData.jam_masuk ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jam_masuk: e.target.value }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20" />
             </label>
 
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-slate-700">Jam Keluar</span>
-              <input type="time" value={formData.jam_keluar ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jam_keluar: e.target.value }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20" />
+              <input type="time" value={formData.jam_keluar ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jam_keluar: e.target.value }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20" />
             </label>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-slate-700">Jarak (meter)</span>
-              <input type="number" value={formData.jarak_meter ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jarak_meter: e.target.value ? Number(e.target.value) : null }))} min={0} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20" />
+              <input type="number" value={formData.jarak_meter ?? ""} onChange={(e) => setFormData((p) => ({ ...p, jarak_meter: e.target.value ? Number(e.target.value) : null }))} min={0} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20" />
             </label>
 
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-slate-700">Dinas</span>
-              <select value={formData.is_dinas} onChange={(e) => setFormData((p) => ({ ...p, is_dinas: e.target.value as "Ya" | "Tidak" }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20">
+              <select value={formData.is_dinas} onChange={(e) => setFormData((p) => ({ ...p, is_dinas: e.target.value as "Ya" | "Tidak" }))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20">
                 <option value="Tidak">Tidak</option>
                 <option value="Ya">Ya</option>
               </select>
@@ -533,7 +533,7 @@ export default function AttendancePage() {
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Laporan Harian</label>
-            <textarea rows={4} value={formData.laporan_harian ?? ""} onChange={(e) => setFormData((p) => ({ ...p, laporan_harian: e.target.value }))} placeholder="Ringkasan kegiatan..." className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20" />
+            <textarea rows={4} value={formData.laporan_harian ?? ""} onChange={(e) => setFormData((p) => ({ ...p, laporan_harian: e.target.value }))} placeholder="Ringkasan kegiatan..." className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20" />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
@@ -548,7 +548,7 @@ export default function AttendancePage() {
             <button
               type="submit"
               disabled={isSubmitting || !isFormValid}
-              className="inline-flex items-center justify-center rounded-xl bg-[#BC934B] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Menyimpan..." : editData ? "Simpan Perubahan" : "Simpan Presensi"}
             </button>

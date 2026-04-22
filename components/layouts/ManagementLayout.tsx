@@ -31,8 +31,8 @@ export default function ManagementClientLayout({
 
       {/* Kiri: Sidebar */}
       <Sidebar
-        title="Creative & Sales"
-        subtitle="Management Portal"
+        title="Management"
+        subtitle="Management Dashboard Page"
         logoIcon="Palette"
         navItems={navItems}
         footerAction={{ label: 'New Campaign', icon: 'Plus' }}

@@ -466,7 +466,7 @@ export default function KaryawanPage() {
                     onChange={(event) =>
                       setFormData((prev) => ({ ...prev, email: event.target.value }))
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
                   />
                 </label>
 
@@ -480,7 +480,7 @@ export default function KaryawanPage() {
                     onChange={(event) =>
                       setFormData((prev) => ({ ...prev, password: event.target.value }))
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
                   />
                 </label>
 
@@ -497,7 +497,7 @@ export default function KaryawanPage() {
                         divisi: !isDivisiManuallyEdited ? selectedRole : prev.divisi,
                       }));
                     }}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
                   >
                     <option value="" disabled>Pilih role</option>
                     {divisiOptions.map((role) => (
@@ -519,7 +519,7 @@ export default function KaryawanPage() {
                 onChange={(event) =>
                   setFormData((prev) => ({ ...prev, nama: event.target.value }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
               />
             </label>
 
@@ -532,7 +532,7 @@ export default function KaryawanPage() {
                 onChange={(event) =>
                   setFormData((prev) => ({ ...prev, posisi: event.target.value }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
               />
             </label>
 
@@ -544,7 +544,7 @@ export default function KaryawanPage() {
                   setIsDivisiManuallyEdited(true);
                   setFormData((prev) => ({ ...prev, divisi: event.target.value }));
                 }}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
               >
                 {divisiOptions.map((divisi) => (
                   <option key={divisi} value={divisi}>
@@ -564,7 +564,7 @@ export default function KaryawanPage() {
                     status: event.target.value as HrEmployeeStatus,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
               >
                 <option value="aktif">aktif</option>
                 <option value="nonaktif">nonaktif</option>
@@ -579,7 +579,7 @@ export default function KaryawanPage() {
                 required
                 value={gajiPokokInput}
                 onChange={(event) => setGajiPokokInput(event.target.value.replace(/[^0-9]/g, ""))}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-[#BC934B] focus:ring-2 focus:ring-[#BC934B]/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-300/20"
               />
             </label>
 

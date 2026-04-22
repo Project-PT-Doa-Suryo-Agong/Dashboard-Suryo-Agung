@@ -47,6 +47,7 @@ import {
   Building,
   Eye,
   FileText,
+  ShieldAlert,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -90,6 +91,7 @@ const ICONS: Record<string, LucideIcon> = {
   Building,
   Eye,
   FileText,
+  ShieldAlert,
 };
 
 export interface NavItem {
