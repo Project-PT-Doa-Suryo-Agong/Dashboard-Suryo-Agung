@@ -150,13 +150,11 @@ export function useUpdateAttendance() {
       if (!source.source_employee_id || !source.source_tanggal) {
         throw new Error("Identitas data attendance tidak lengkap.");
       }
-      const response = await apiFetch("/api/hr/attendance", {
+      const url = `/api/hr/attendance/${encodeURIComponent(source.source_employee_id)}/${encodeURIComponent(source.source_tanggal)}`;
+      const response = await apiFetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...source,
-          ...input,
-        }),
+        body: JSON.stringify(input),
       });
       const payload = await parseJsonResponse<{ attendance: TAttendance }>(response);
       return payload.data.attendance;
@@ -206,10 +204,10 @@ export function useDeleteAttendance() {
       if (!source.source_employee_id || !source.source_tanggal) {
         throw new Error("Identitas data attendance tidak lengkap.");
       }
-      const response = await apiFetch(`/api/hr/attendance`, {
+      const url = `/api/hr/attendance/${encodeURIComponent(source.source_employee_id)}/${encodeURIComponent(source.source_tanggal)}`;
+      const response = await apiFetch(url, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(source),
       });
       await parseJsonResponse<null>(response);
       return true;

@@ -32,7 +32,7 @@ export default function OfficeClientLayout({
       {/* Kiri: Sidebar */}
       <Sidebar
         title="Office Support"
-        subtitle="Office Support Portal"
+        subtitle="Office Support Dashboard Page"
         logoIcon="Palette"
         navItems={navItems}
         footerAction={{ label: 'New Campaign', icon: 'Plus' }}

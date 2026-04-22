@@ -33,7 +33,7 @@ export default function LogistikClientLayout({
       {/* Kiri: Sidebar */}
       <Sidebar
         title="Logistik"
-        subtitle="Logistics Portal"
+        subtitle="Logistics Dashboard Page"
         logoIcon="Palette"
         navItems={navItems}
         footerAction={{ label: 'New Campaign', icon: 'Plus' }}

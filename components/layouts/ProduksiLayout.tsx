@@ -41,7 +41,7 @@ export default function ProduksiClientLayout({
       {/* Kiri: Sidebar */}
       <Sidebar
         title="Production"
-        subtitle="Manufacturing Portal"
+        subtitle="Production Dashboard Page"
         logoIcon="Factory"
         navItems={navItems}
         footerAction={{ label: 'New Order', icon: 'Plus' }}

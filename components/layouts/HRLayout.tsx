@@ -11,7 +11,7 @@ const navItems = [
   { label: 'Karyawan', href: '/hr/karyawan', icon: 'Users' },
   { label: 'PKWT/PKWTP', href: '/hr/pkwt', icon: 'ScrollText' },
   { label: 'SOP', href: '/hr/sop', icon: 'FileText' }, 
-  { label: 'Peringatan', href: '/hr/warnings', icon: 'BookAlert' },
+  { label: 'Peringatan', href: '/hr/warnings', icon: 'ShieldAlert' },
 ];
 
 export default function HRClientLayout({
@@ -35,7 +35,7 @@ export default function HRClientLayout({
       {/* Kiri: Sidebar */}
       <Sidebar
         title="Human Resource"
-        subtitle="Human Resource Portal"
+        subtitle="Human Resource Dashboard Page"
         logoIcon="Palette"
         navItems={navItems}
         footerAction={{ label: 'New Campaign', icon: 'Plus' }}
