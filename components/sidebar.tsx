@@ -48,6 +48,8 @@ import {
   Eye,
   FileText,
   ShieldAlert,
+  BookMarked,
+  BookOpen,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -92,6 +94,8 @@ const ICONS: Record<string, LucideIcon> = {
   Eye,
   FileText,
   ShieldAlert,
+  BookMarked,
+  BookOpen,
 };
 
 export interface NavItem {
