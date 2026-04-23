@@ -424,7 +424,7 @@ export default function FinanceJournalPage() {
         <p className="text-sm md:text-base text-slate-300">Catat jurnal transaksi keuangan dan pastikan debit/kredit seimbang.</p>
       </section>
 
-      <section className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 md:p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+      <section className="rounded-xl md:flex flex-col lg:flex-row items-start lg:items-center justify-between">
         <SearchBar
           value={searchTerm}
           onChange={setSearchTerm}
@@ -452,7 +452,6 @@ export default function FinanceJournalPage() {
               <tr>
                 <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">No Bukti</th>
                 <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Tanggal</th>
-                <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Keterangan</th>
                 <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 text-center">Jumlah Item</th>
                 <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 text-right">Aksi</th>
               </tr>
@@ -460,18 +459,17 @@ export default function FinanceJournalPage() {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 md:px-6 py-10 text-center text-sm text-slate-500">Memuat data...</td>
+                  <td colSpan={4} className="px-4 md:px-6 py-10 text-center text-sm text-slate-500">Memuat data...</td>
                 </tr>
               ) : filteredJournals.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 md:px-6 py-10 text-center text-sm text-slate-500">Tidak ada jurnal ditemukan.</td>
+                  <td colSpan={4} className="px-4 md:px-6 py-10 text-center text-sm text-slate-500">Tidak ada jurnal ditemukan.</td>
                 </tr>
               ) : (
                 filteredJournals.map((journal) => (
                   <tr key={journal.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="px-4 md:px-6 py-3 text-sm font-medium text-slate-900 whitespace-nowrap">{journal.no_bukti ?? "-"}</td>
                     <td className="px-4 md:px-6 py-3 text-sm text-slate-700 whitespace-nowrap">{formatDate(journal.tanggal)}</td>
-                    <td className="px-4 md:px-6 py-3 text-sm text-slate-700">{journal.keterangan ?? "-"}</td>
                     <td className="px-4 md:px-6 py-3 text-sm text-center text-slate-900">{journal.t_journal_item?.length ?? 0}</td>
                     <td className="px-4 md:px-6 py-3 text-right whitespace-nowrap">
                       <RowActions>
