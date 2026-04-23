@@ -1,11 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { BookOpen, Edit, PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { SearchBar } from "@/components/ui/search-bar";
-import { RowActions, EditButton, DeleteButton } from "@/components/ui/RowActions";
+import { RowActions, EditButton, DetailButton, DeleteButton } from "@/components/ui/RowActions";
 import type { ApiError, ApiSuccess } from "@/types/api";
 import type { MCOA } from "@/types/supabase";
 import { apiFetch } from "@/lib/utils/api-fetch";
@@ -71,6 +71,8 @@ export default function FinanceCoaPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editData, setEditData] = useState<MCOA | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [detailData, setDetailData] = useState<MCOA | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [formState, setFormState] = useState<FormState>({
     kode_akun: "",
     nama_akun: "",
@@ -155,6 +157,16 @@ export default function FinanceCoaPage() {
     setIsDeleteModalOpen(false);
   };
 
+  const openDetailModal = (item: MCOA) => {
+    setDetailData(item);
+    setIsDetailModalOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setDetailData(null);
+    setIsDetailModalOpen(false);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting) return;
@@ -223,7 +235,7 @@ export default function FinanceCoaPage() {
         <p className="text-sm md:text-base text-slate-300">Kelola COA, sub-akun, dan struktur akun utama.</p>
       </section>
 
-      <section className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 md:p-6 flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
+      <section className=" rounded-xl md:flex flex-col lg:flex-row items-start lg:items-center justify-between">
         <SearchBar
           value={searchTerm}
           onChange={setSearchTerm}
@@ -248,46 +260,33 @@ export default function FinanceCoaPage() {
         <div className="overflow-x-auto w-full -mx-4 md:mx-0 px-4 md:px-0">
           <table className="w-full min-w-max text-left">
             <thead className="bg-slate-50/80">
-              <tr>
-                <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kode Akun</th>
-                <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Nama Akun</th>
-                <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kategori</th>
-                <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Sub Akun</th>
-                <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Parent Akun</th>
-                <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 text-right">Aksi</th>
-              </tr>
+                <tr>
+                  <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kode Akun</th>
+                  <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Nama Akun</th>
+                  <th className="px-4 md:px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 text-right">Aksi</th>
+                </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 md:px-6 py-10 text-center text-sm text-slate-500">Memuat data COA...</td>
+                    <td colSpan={3} className="px-4 md:px-6 py-10 text-center text-sm text-slate-500">Memuat data COA...</td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 md:px-6 py-10 text-center text-sm text-slate-500">Tidak ada COA.</td>
+                    <td colSpan={3} className="px-4 md:px-6 py-10 text-center text-sm text-slate-500">Tidak ada COA.</td>
                 </tr>
               ) : (
                 filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-4 md:px-6 py-3 text-sm font-medium text-slate-900 whitespace-nowrap">{item.kode_akun}</td>
-                    <td className="px-4 md:px-6 py-3 text-sm text-slate-700">{item.nama_akun}</td>
-                    <td className="px-4 md:px-6 py-3 text-sm">
-                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${formatCategoryBadge(item.kategori)}`}>
-                        {item.kategori}
-                      </span>
-                    </td>
-                    <td className="px-4 md:px-6 py-3 text-sm">
-                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${item.is_sub_account ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"}`}>
-                        {item.is_sub_account ? "Ya" : "Tidak"}
-                      </span>
-                    </td>
-                    <td className="px-4 md:px-6 py-3 text-sm text-slate-700">{item.parent?.kode_akun ? `${item.parent.kode_akun} - ${item.parent.nama_akun}` : "-"}</td>
-                    <td className="px-4 md:px-6 py-3 text-right whitespace-nowrap">
-                      <RowActions>
-                        <EditButton onClick={() => openEditModal(item)} disabled={isSubmitting} />
-                        <DeleteButton onClick={() => openDeleteModal(item.id)} disabled={isSubmitting} />
-                      </RowActions>
-                    </td>
+                      <td className="px-4 md:px-6 py-3 text-sm font-medium text-slate-900 whitespace-nowrap">{item.kode_akun}</td>
+                      <td className="px-4 md:px-6 py-3 text-sm text-slate-700">{item.nama_akun}</td>
+                      <td className="px-4 md:px-6 py-3 text-right whitespace-nowrap">
+                        <RowActions>
+                          <DetailButton onClick={() => openDetailModal(item)} disabled={isSubmitting} />
+                          <EditButton onClick={() => openEditModal(item)} disabled={isSubmitting} />
+                          <DeleteButton onClick={() => openDeleteModal(item.id)} disabled={isSubmitting} />
+                        </RowActions>
+                      </td>
                   </tr>
                 ))
               )}
@@ -392,6 +391,49 @@ export default function FinanceCoaPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={isDetailModalOpen} onClose={closeDetailModal} title="Detail COA" maxWidth="max-w-md">
+        <div className="space-y-4">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kode Akun</div>
+            <div className="text-sm text-slate-900">{detailData?.kode_akun ?? "-"}</div>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Akun</div>
+            <div className="text-sm text-slate-900">{detailData?.nama_akun ?? "-"}</div>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kategori</div>
+            <div className="mt-1">
+              {detailData ? (
+                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${formatCategoryBadge(detailData.kategori)}`}>
+                  {detailData.kategori}
+                </span>
+              ) : (
+                "-"
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sub Akun</div>
+            <div className="text-sm text-slate-900">{detailData?.is_sub_account ? "Ya" : "Tidak"}</div>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Parent Akun</div>
+            <div className="text-sm text-slate-900">{detailData?.parent?.kode_akun ? `${detailData.parent.kode_akun} - ${detailData.parent.nama_akun}` : "-"}</div>
+          </div>
+
+          <div className="flex justify-end">
+            <button onClick={closeDetailModal} className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              Tutup
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <ConfirmDialog
