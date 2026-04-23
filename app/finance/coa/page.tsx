@@ -235,7 +235,7 @@ export default function FinanceCoaPage() {
         <p className="text-sm md:text-base text-slate-300">Kelola COA, sub-akun, dan struktur akun utama.</p>
       </section>
 
-      <section className=" rounded-xl md:flex flex-col lg:flex-row items-start lg:items-center justify-between">
+      <section className="rounded-xl md:flex flex-col lg:flex-row items-start lg:items-center justify-between">
         <SearchBar
           value={searchTerm}
           onChange={setSearchTerm}
