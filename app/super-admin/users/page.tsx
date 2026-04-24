@@ -6,6 +6,7 @@ import type { ApiError, ApiSuccess } from '@/types/api';
 import type { CoreUserRole, Profile } from '@/types/supabase';
 import { apiFetch } from "@/lib/utils/api-fetch";
 import { RowActions, EditButton, DetailButton, DeleteButton } from "@/components/ui/RowActions";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 type UserRole = CoreUserRole;
 
@@ -82,6 +83,8 @@ export default function SuperAdminUsersPage() {
 	const [nama, setNama] = useState('');
 	const [phone, setPhone] = useState('');
 	const [role, setRole] = useState<SystemRoleKey>('Super Admin');
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+	const [deleteId, setDeleteId] = useState<string | null>(null);
 
 	const submitLabel = editingId ? 'Update User' : 'Tambah User';
 
@@ -182,21 +185,29 @@ export default function SuperAdminUsersPage() {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 	};
 
-	const handleDelete = async (id: string) => {
-		if (!window.confirm('Yakin ingin menghapus user ini?')) return;
+	const handleDelete = async () => {
+		if (!deleteId) return;
 		setErrorMessage(null);
 		try {
-			const response = await apiFetch(`/api/profiles/${id}`, {
+			const response = await apiFetch(`/api/profiles/${deleteId}`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 			});
 			await parseJsonResponse<null>(response);
 			await fetchUsers();
-			if (editingId === id) resetForm();
+			if (editingId === deleteId) resetForm();
 		} catch (error) {
 			const message = error instanceof Error ? error.message : 'Gagal menghapus user.';
 			setErrorMessage(message);
+		} finally {
+			setIsDeleteModalOpen(false);
+			setDeleteId(null);
 		}
+	};
+
+	const openDeleteDialog = (id: string) => {
+		setDeleteId(id);
+		setIsDeleteModalOpen(true);
 	};
 
 	return (
@@ -308,15 +319,13 @@ export default function SuperAdminUsersPage() {
 							<span className="hidden md:inline">{submitLabel}</span>
 							<span className="md:hidden">{submitLabel.split(' ')[0]}</span>
 						</button>
-						{editingId && (
-							<button
-								type="button"
-								onClick={resetForm}
-								className="inline-flex items-center h-10 md:h-11 px-3 md:px-5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-semibold transition-colors"
-							>
-								Batal Edit
-							</button>
-						)}
+						<button
+							type="button"
+							onClick={resetForm}
+							className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+						>
+							Batal
+						</button>
 					</div>
 				</form>
 				{errorMessage ? <p className="text-sm text-rose-600">{errorMessage}</p> : null}
@@ -373,7 +382,7 @@ export default function SuperAdminUsersPage() {
 									<td className="sticky right-0 z-10 border-b border-slate-100 bg-white px-3 py-2 text-xs hover:bg-slate-50/70 md:px-4 md:py-3">
 										<RowActions>
 											<EditButton onClick={() => handleEdit(user)} />
-											<DeleteButton onClick={() => void handleDelete(user.id)} />
+											<DeleteButton onClick={() => openDeleteDialog(user.id)} />
 										</RowActions>
 									</td>
 								</tr>
@@ -383,6 +392,17 @@ export default function SuperAdminUsersPage() {
 					</table>
 				</div>
 			</section>
+
+			<ConfirmDialog
+				isOpen={isDeleteModalOpen}
+				onClose={() => { setIsDeleteModalOpen(false); setDeleteId(null); }}
+				onConfirm={() => void handleDelete()}
+				title="Hapus User"
+				description="Apakah Anda yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan."
+				confirmText="Ya, Hapus"
+				cancelText="Batal"
+				variant="danger"
+			/>
 		</div>
 	);
 }

@@ -32,10 +32,10 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 function levelBadgeClass(level: string) {
-  if (level === "SP1") return "bg-amber-100 text-amber-700";
-  if (level === "SP2") return "bg-orange-100 text-orange-700";
-  if (level === "SP3") return "bg-red-100 text-red-700";
-  return "bg-slate-200 text-slate-700";
+  if (level === "SP1") return "bg-amber-500 text-white";
+  if (level === "SP2") return "bg-orange-500 text-white";
+  if (level === "SP3") return "bg-red-500 text-white";
+  return "bg-slate-500 text-white";
 }
 
 export default function EmployeeWarningsPage() {
@@ -46,7 +46,6 @@ export default function EmployeeWarningsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const [employeeSearchTerm, setEmployeeSearchTerm] = useState<string>("");
   const [formData, setFormData] = useState<{
     employee_id: string;
     level: string;
@@ -98,24 +97,12 @@ export default function EmployeeWarningsPage() {
     return warnings.filter((item) => (employeeById[item.employee_id ?? ""]?.nama ?? "").toLowerCase().includes(keyword));
   }, [warnings, searchTerm, employeeById]);
 
-  const filteredEmployeeOptions = useMemo(() => {
-    const keyword = employeeSearchTerm.trim().toLowerCase();
-    if (!keyword) return employees;
-    return employees.filter((employee) =>
-      employee.nama.toLowerCase().includes(keyword),
-    );
-  }, [employeeSearchTerm, employees]);
-
-  const employeeSelectOptions =
-    filteredEmployeeOptions.length > 0 ? filteredEmployeeOptions : employees;
-
   const resetForm = () => {
     setFormData({
       employee_id: employees[0]?.id ?? "",
       level: warningLevelOptions[0],
       alasan: "",
     });
-    setEmployeeSearchTerm("");
     setEditData(null);
   };
 
@@ -131,7 +118,6 @@ export default function EmployeeWarningsPage() {
       level: item.level ?? warningLevelOptions[0],
       alasan: item.alasan ?? "",
     });
-    setEmployeeSearchTerm("");
     setIsFormModalOpen(true);
   };
 
@@ -320,36 +306,25 @@ export default function EmployeeWarningsPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Cari Karyawan
+            {!editData ? (
+              <label className="space-y-1.5 md:col-span-2">
+                <span className="text-sm font-medium text-slate-700">Pilih Karyawan</span>
+                <select
+                  required
+                  value={formData.employee_id}
+                  onChange={(event) =>
+                    setFormData((prev) => ({ ...prev, employee_id: event.target.value }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
+                >
+                  {employees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.nama} - {employee.posisi}
+                    </option>
+                  ))}
+                </select>
               </label>
-              <input
-                type="text"
-                value={employeeSearchTerm}
-                onChange={(event) => setEmployeeSearchTerm(event.target.value)}
-                placeholder="Ketik nama karyawan..."
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
-              />
-            </div>
-
-            <label className="space-y-1.5 md:col-span-2">
-              <span className="text-sm font-medium text-slate-700">Pilih Karyawan</span>
-              <select
-                required
-                value={formData.employee_id}
-                onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, employee_id: event.target.value }))
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-200 focus:ring-2 focus:ring-slate-200/20"
-              >
-                {employeeSelectOptions.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.nama} - {employee.posisi}
-                  </option>
-                ))}
-              </select>
-            </label>
+            ) : null}
 
             <label className="space-y-1.5">
               <span className="text-sm font-medium text-slate-700">Level</span>
