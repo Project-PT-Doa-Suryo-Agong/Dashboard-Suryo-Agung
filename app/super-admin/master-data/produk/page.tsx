@@ -348,7 +348,14 @@ export default function ProdukPage() {
           </div>
 
           {/* Submit button */}
-          <div className="md:col-span-2 flex justify-end">
+          <div className="md:col-span-2 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={resetForm}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Batal
+            </button>
             <button
               type="submit"
               disabled={isSubmitting}
