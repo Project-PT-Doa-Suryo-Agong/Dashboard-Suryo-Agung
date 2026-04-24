@@ -433,6 +433,17 @@ export default function KaryawanPage() {
     }
   };
 
+  // ── Form Validation ──
+  const isFormValid =
+    !!formData.nama.trim() &&
+    !!formData.posisi.trim() &&
+    !!formData.divisi &&
+    !!formData.nik &&
+    !!formData.alamat_domisili.trim() &&
+    !!formData.nomor_whatsapp &&
+    !!formData.pendidikan_terakhir.trim() &&
+    !!formData.jurusan.trim();
+
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 max-w-7xl mx-auto w-full">
       <div className="space-y-1">
@@ -665,7 +676,8 @@ export default function KaryawanPage() {
               <label className="space-y-1.5">
                 <span className="text-sm font-medium text-slate-700">NIK (Nomor KTP)</span>
                 <input
-                  type="text"
+                  type="number"
+                  inputMode="numeric"
                   required
                   value={formData.nik}
                   onChange={(event) => setFormData((prev) => ({ ...prev, nik: event.target.value }))}
@@ -676,7 +688,8 @@ export default function KaryawanPage() {
               <label className="space-y-1.5">
                 <span className="text-sm font-medium text-slate-700">Nomor WhatsApp</span>
                 <input
-                  type="text"
+                  type="number"
+                  inputMode="numeric"
                   required
                   value={formData.nomor_whatsapp}
                   onChange={(event) => setFormData((prev) => ({ ...prev, nomor_whatsapp: event.target.value }))}
@@ -852,8 +865,8 @@ export default function KaryawanPage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center justify-center rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
+              disabled={isSubmitting || !isFormValid}
+              className="inline-flex items-center justify-center rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Menyimpan..." : "Simpan Data"}
             </button>
