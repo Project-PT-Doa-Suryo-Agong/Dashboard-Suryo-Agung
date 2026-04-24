@@ -32,10 +32,10 @@ const dateFormatter = new Intl.DateTimeFormat("id-ID", {
 });
 
 function levelBadgeClass(level: string) {
-  if (level === "SP1") return "bg-amber-100 text-amber-700";
-  if (level === "SP2") return "bg-orange-100 text-orange-700";
-  if (level === "SP3") return "bg-red-100 text-red-700";
-  return "bg-slate-200 text-slate-700";
+  if (level === "SP1") return "bg-amber-500 text-white";
+  if (level === "SP2") return "bg-orange-500 text-white";
+  if (level === "SP3") return "bg-red-500 text-white";
+  return "bg-slate-500 text-white";
 }
 
 export default function EmployeeWarningsPage() {
