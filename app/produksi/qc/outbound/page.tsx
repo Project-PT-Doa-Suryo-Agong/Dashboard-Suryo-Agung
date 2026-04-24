@@ -54,12 +54,12 @@ const statusLabel: Record<ProductionQcResult, string> = {
 };
 
 const statusBadgeClass: Record<ProductionQcResult, string> = {
-  pass: "bg-emerald-100 text-emerald-700",
-  reject: "bg-rose-100 text-rose-700",
+  pass: "bg-emerald-500 text-white",
+  reject: "bg-rose-500 text-white",
 };
 
 const CRUD_PRIMARY_BUTTON_CLASS =
-  "inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/30 disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/30 disabled:opacity-50";
 const CRUD_CANCEL_BUTTON_CLASS =
   "inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 disabled:opacity-50";
 
