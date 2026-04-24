@@ -29,6 +29,9 @@ function randomSuffix() {
 function extractStoragePathFromPublicUrl(urlValue: string | null | undefined): string | null {
   if (!urlValue) return null;
 
+  // New format: store raw object path directly in DB.
+  if (!/^https?:\/\//i.test(urlValue)) return urlValue;
+
   try {
     const parsed = new URL(urlValue);
     const marker = `/storage/v1/object/public/${EMPLOYEE_PHOTO_BUCKET}/`;
@@ -117,9 +120,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return fail(ErrorCode.DB_ERROR, `Gagal upload ${item.field} ke storage.`, 500, uploadError.message);
     }
 
-    const publicUrl = supabaseAdmin.storage.from(EMPLOYEE_PHOTO_BUCKET).getPublicUrl(filePath).data.publicUrl;
-    updatePayload[column] = publicUrl;
-    uploadedByField[item.field] = publicUrl;
+    // Persist object path so read API can always resolve from Storage bucket.
+    updatePayload[column] = filePath;
+    uploadedByField[item.field] = filePath;
 
     const oldPath = extractStoragePathFromPublicUrl(existingEmployee[column]);
     if (oldPath && oldPath !== filePath) {

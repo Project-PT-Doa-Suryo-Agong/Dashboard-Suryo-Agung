@@ -8,6 +8,84 @@ type DbClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 type SchemaClient = DbClient & { schema: (schema: string) => any };
 const schema = (client: DbClient, name: string) => (client as unknown as SchemaClient).schema(name) as any;
 const db = (client: DbClient) => schema(client, "hr");
+const EMPLOYEE_PHOTO_BUCKET = "employee_documents";
+const EMPLOYEE_PHOTO_TTL_SECONDS = 60 * 60;
+
+const EMPLOYEE_PHOTO_FIELDS = ["foto_perorangan_url", "foto_ktp_url", "foto_kk_url"] as const;
+type EmployeePhotoField = (typeof EMPLOYEE_PHOTO_FIELDS)[number];
+
+function extractStoragePathFromPhotoValue(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  // New format: raw object path in bucket, e.g. karyawan/<id>/foto_ktp-*.jpg
+  if (!/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  try {
+    const parsed = new URL(trimmed);
+    const publicMarker = `/storage/v1/object/public/${EMPLOYEE_PHOTO_BUCKET}/`;
+    const signedMarker = `/storage/v1/object/sign/${EMPLOYEE_PHOTO_BUCKET}/`;
+    if (parsed.pathname.includes(publicMarker)) {
+      return decodeURIComponent(parsed.pathname.split(publicMarker)[1] ?? "");
+    }
+    if (parsed.pathname.includes(signedMarker)) {
+      return decodeURIComponent(parsed.pathname.split(signedMarker)[1] ?? "");
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+async function hydrateEmployeePhotoUrls(rows: MKaryawan[]): Promise<MKaryawan[]> {
+  if (rows.length === 0) return rows;
+
+  const uniquePaths = new Set<string>();
+  const pathByRow = new Map<string, Partial<Record<EmployeePhotoField, string>>>();
+
+  for (const row of rows) {
+    const perRow: Partial<Record<EmployeePhotoField, string>> = {};
+    for (const field of EMPLOYEE_PHOTO_FIELDS) {
+      const path = extractStoragePathFromPhotoValue(row[field]);
+      if (path) {
+        perRow[field] = path;
+        uniquePaths.add(path);
+      }
+    }
+    pathByRow.set(row.id, perRow);
+  }
+
+  if (uniquePaths.size === 0) return rows;
+
+  const paths = Array.from(uniquePaths);
+  const { data } = await supabaseAdmin.storage
+    .from(EMPLOYEE_PHOTO_BUCKET)
+    .createSignedUrls(paths, EMPLOYEE_PHOTO_TTL_SECONDS);
+
+  const signedByPath = new Map<string, string>();
+  for (const item of data ?? []) {
+    if (item.path && item.signedUrl) {
+      signedByPath.set(item.path, item.signedUrl);
+    }
+  }
+
+  return rows.map((row) => {
+    const rowPaths = pathByRow.get(row.id);
+    if (!rowPaths) return row;
+
+    const next: MKaryawan = { ...row };
+    for (const field of EMPLOYEE_PHOTO_FIELDS) {
+      const path = rowPaths[field];
+      if (!path) continue;
+      const signed = signedByPath.get(path);
+      if (signed) next[field] = signed;
+    }
+
+    return next;
+  });
+}
 
 function normalizeAttendanceRow(row: Record<string, unknown>): TAttendance {
   // New DB schema uses composite PK (employee_id + tanggal) and no single `id` column.
@@ -28,7 +106,9 @@ export async function listKaryawan(client: DbClient, page = 1, limit = 50) {
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, from + limit - 1);
-  return { data: (data ?? []) as MKaryawan[], error, meta: { page, limit, total: count ?? 0 } };
+  const normalized = (data ?? []) as MKaryawan[];
+  const hydrated = await hydrateEmployeePhotoUrls(normalized);
+  return { data: hydrated, error, meta: { page, limit, total: count ?? 0 } };
 }
 
 export async function updateKaryawan(client: DbClient, id: string, input: Record<string, unknown>) {
@@ -221,6 +301,18 @@ export async function createKaryawan(client: DbClient, input: CreateEmployeeWith
     divisi: input.divisi,
     status: input.status,
     gaji_pokok: input.gaji_pokok,
+    nik: input.nik,
+    alamat_domisili: input.alamat_domisili,
+    nomor_whatsapp: input.nomor_whatsapp,
+    email_pribadi: input.email_pribadi,
+    foto_perorangan_url: input.foto_perorangan_url,
+    foto_ktp_url: input.foto_ktp_url,
+    foto_kk_url: input.foto_kk_url,
+    pendidikan_terakhir: input.pendidikan_terakhir,
+    jurusan: input.jurusan,
+    pengalaman_kerja_sebelumnya: input.pengalaman_kerja_sebelumnya,
+    keahlian_khusus: input.keahlian_khusus,
+    motivasi_kerja: input.motivasi_kerja,
   };
 
   const { data: employee, error: employeeError } = await db(client)
