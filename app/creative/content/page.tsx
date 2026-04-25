@@ -14,7 +14,7 @@ import Modal from '@/components/ui/Modal';
 import type { ApiError, ApiSuccess } from '@/types/api';
 import type { MAfiliator, SalesContentStatus, SalesContentType, TContentPlanner } from '@/types/supabase';
 import { apiFetch } from "@/lib/utils/api-fetch";
-import { RowActions, EditButton, DeleteButton } from "@/components/ui/RowActions";
+import { RowActions, EditButton, DeleteButton, DetailButton } from "@/components/ui/RowActions";
 
 type Platform = 'TikTok' | 'Instagram' | 'YouTube Shorts' | 'LinkedIn' | 'Twitter / X' | 'Lainnya'| 'Website';
 
@@ -270,6 +270,8 @@ export default function ContentPlannerPage() {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<TContentPlanner | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [detailData, setDetailData] = useState<(TContentPlanner & { m_affiliator?: { nama: string } | null }) | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -387,6 +389,11 @@ export default function ContentPlannerPage() {
     }
   };
 
+  const handleOpenDetail = (item: TContentPlanner & { m_affiliator?: { nama: string } | null }) => {
+    setDetailData(item);
+    setIsDetailModalOpen(true);
+  };
+
   const handleOpenDelete = (id: string) => {
     setDeleteId(id);
     setIsDeleteModalOpen(true);
@@ -466,25 +473,20 @@ export default function ContentPlannerPage() {
               <tr>
                 <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Content ID</th>
                 <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Title</th>
-                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Platform</th>
                 <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Affiliator</th>
-                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Jadwal</th>
-                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Tipe</th>
-                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Status</th>
-                <th className="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Date Added</th>
                 <th className="px-4 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 md:px-6">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-sm text-slate-500 md:px-6">
+                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-500 md:px-6">
                     Memuat data...
                   </td>
                 </tr>
               ) : contents.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-sm text-slate-500 md:px-6">
+                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-500 md:px-6">
                     Belum ada konten.
                   </td>
                 </tr>
@@ -493,32 +495,10 @@ export default function ContentPlannerPage() {
                 <tr key={item.id} className="transition-colors hover:bg-slate-50/50">
                   <td className="px-4 py-4 font-mono text-sm text-slate-500 md:px-6">{item.id}</td>
                   <td className="px-4 py-4 text-sm font-medium text-slate-800 md:px-6">{item.judul}</td>
-                  <td className="px-4 py-4 md:px-6">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold before:h-1.5 before:w-1.5 before:rounded-full ${item.platform ? PLATFORM_BADGE[(item.platform as Platform)] || PLATFORM_BADGE['Lainnya'] : PLATFORM_BADGE['Lainnya']}`}>
-                      {item.platform ?? '-'}
-                    </span>
-                  </td>
                   <td className="px-4 py-4 text-sm font-medium text-slate-800 md:px-6">{item.m_affiliator?.nama ?? '-'}</td>
-                  <td className="px-4 py-4 text-sm text-slate-500 md:px-6">
-                    {item.jadwal ? new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(item.jadwal)) : '-'}
-                  </td>
-                  <td className="px-4 py-4 md:px-6">
-                    {item.tipe ? <span className="inline-flex rounded-full bg-slate-500 px-2.5 py-1 text-xs font-bold text-white">{item.tipe}</span> : '-'}
-                  </td>
-                  <td className="px-4 py-4 md:px-6">
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${item.status === 'terupload' ? 'bg-green-500 text-white' : item.status === 'dihapus' ? 'bg-red-500 text-white' : 'bg-yellow-500 text-white'}`}>
-                      {item.status ?? '-'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-sm text-slate-500 md:px-6">
-                    {item.created_at ? new Intl.DateTimeFormat('id-ID', {
-                      month: 'short',
-                      day: '2-digit',
-                      year: 'numeric',
-                    }).format(new Date(item.created_at)) : '-'}
-                  </td>
-                  <td className="px-4 py-4 md:px-6">
+                  <td className="px-4 py-4 text-right md:px-6">
                     <RowActions>
+                      <DetailButton onClick={() => handleOpenDetail(item)} disabled={isSubmitting} />
                       <EditButton onClick={() => handleOpenEdit(item)} disabled={isSubmitting} />
                       <DeleteButton onClick={() => handleOpenDelete(item.id)} disabled={isSubmitting} />
                     </RowActions>
@@ -597,6 +577,90 @@ export default function ContentPlannerPage() {
         cancelText="Batal"
         variant="danger"
       />
+
+      {isDetailModalOpen && detailData && (
+        <Modal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setDetailData(null);
+          }}
+          maxWidth="max-w-md"
+          title={
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Detail Content</h3>
+              <p className="mt-1 text-sm text-slate-500">Informasi lengkap konten yang dipilih.</p>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Content ID</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">{detailData.id}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Title</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">{detailData.judul}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Platform</label>
+              <p className="mt-1">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold before:h-1.5 before:w-1.5 before:rounded-full ${detailData.platform ? PLATFORM_BADGE[(detailData.platform as Platform)] || PLATFORM_BADGE['Lainnya'] : PLATFORM_BADGE['Lainnya']}`}>
+                  {detailData.platform ?? '-'}
+                </span>
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Affiliator</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">
+                {detailData.m_affiliator?.nama ?? '-'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Jadwal</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">
+                {detailData.jadwal ? new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(detailData.jadwal)) : '-'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Tipe</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">
+                 {detailData.tipe ? <span className="inline-flex rounded-full bg-slate-500 px-2.5 py-1 text-xs font-bold text-white">{detailData.tipe}</span> : '-'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Status</label>
+              <p className="mt-1">
+                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${detailData.status === 'terupload' ? 'bg-green-500 text-white' : detailData.status === 'dihapus' ? 'bg-red-500 text-white' : 'bg-yellow-500 text-white'}`}>
+                  {detailData.status ?? '-'}
+                </span>
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Date Added</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">
+                {detailData.created_at ? new Intl.DateTimeFormat('id-ID', {
+                  month: 'short',
+                  day: '2-digit',
+                  year: 'numeric',
+                }).format(new Date(detailData.created_at)) : '-'}
+              </p>
+            </div>
+            <div className="flex justify-end pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDetailModalOpen(false);
+                  setDetailData(null);
+                }}
+                className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
