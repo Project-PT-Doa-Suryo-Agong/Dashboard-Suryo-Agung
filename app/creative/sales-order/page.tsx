@@ -119,6 +119,8 @@ export default function SalesOrderPage() {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<TSalesOrder | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [detailData, setDetailData] = useState<TSalesOrderWithCoa | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -251,6 +253,16 @@ export default function SalesOrderPage() {
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     resetForm();
+  };
+
+  const openDetailModal = (item: TSalesOrderWithCoa) => {
+    setDetailData(item);
+    setIsDetailModalOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setDetailData(null);
+    setIsDetailModalOpen(false);
   };
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
@@ -474,8 +486,6 @@ export default function SalesOrderPage() {
               <tr className="bg-slate-50/80">
                 <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Order Code</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Product Variant</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">COA</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Affiliator</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-center">Qty</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Total Price</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Order Date</th>
@@ -485,13 +495,13 @@ export default function SalesOrderPage() {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-slate-500">
                     Memuat data...
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-slate-500">
                     Belum ada sales order.
                   </td>
                 </tr>
@@ -505,13 +515,12 @@ export default function SalesOrderPage() {
                     <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4 text-sm font-bold text-slate-700 font-mono">{getOrderDisplayCode(item)}</td>
                       <td className="px-6 py-4 text-sm font-medium text-slate-800">{varian?.nama_varian ?? "-"}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{item.m_coa ? `${item.m_coa.kode_akun} - ${item.m_coa.nama_akun}` : (coa ? `${coa.kode_akun} - ${coa.nama_akun}` : "-")}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{affiliator ? `${affiliator.nama} (${affiliator.platform ?? "-"})` : "-"}</td>
                       <td className="px-6 py-4 text-sm text-slate-700 text-center font-bold">{item.quantity}</td>
                       <td className="px-6 py-4 text-sm font-bold text-slate-900 text-right">{formatRupiah(item.total_price)}</td>
                       <td className="px-6 py-4 text-sm text-slate-500 text-right">{formatDate(item.created_at)}</td>
                       <td className="px-6 py-4 text-right">
                         <RowActions>
+                          <DetailButton onClick={() => openDetailModal(item)} disabled={isSubmitting} />
                           <EditButton onClick={() => openEditModal(item)} disabled={isSubmitting} />
                           <DeleteButton onClick={() => openDeleteModal(item.id)} disabled={isSubmitting} />
                         </RowActions>
@@ -622,6 +631,74 @@ export default function SalesOrderPage() {
         cancelText="Batal"
         variant="danger"
       />
+
+      {isDetailModalOpen && detailData && (
+        <Modal
+          isOpen={isDetailModalOpen}
+          onClose={closeDetailModal}
+          maxWidth="max-w-md"
+          title={
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Detail Sales Order</h3>
+              <p className="mt-1 text-sm text-slate-500">Informasi lengkap pesanan afiliasi.</p>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Order Code</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium font-mono">{getOrderDisplayCode(detailData)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Product Variant</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">
+                {detailData.varian_id ? variantMap.get(detailData.varian_id)?.nama_varian ?? "-" : "-"}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">COA</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">
+                {detailData.m_coa 
+                  ? `${detailData.m_coa.kode_akun} - ${detailData.m_coa.nama_akun}` 
+                  : (detailData.coa_id && coaMap.get(detailData.coa_id) 
+                      ? `${coaMap.get(detailData.coa_id)?.kode_akun} - ${coaMap.get(detailData.coa_id)?.nama_akun}` 
+                      : "-")}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Affiliator</label>
+              <p className="mt-1 text-sm text-slate-800 font-medium">
+                {detailData.affiliator_id && affiliatorMap.get(detailData.affiliator_id)
+                  ? `${affiliatorMap.get(detailData.affiliator_id)?.nama} (${affiliatorMap.get(detailData.affiliator_id)?.platform ?? "-"})`
+                  : "-"}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Quantity</label>
+              <p className="mt-1 text-sm text-slate-800 font-bold">{detailData.quantity}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Total Price</label>
+              <p className="mt-1 text-sm text-slate-900 font-bold">{formatRupiah(detailData.total_price)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-500">Order Date</label>
+              <p className="mt-1 text-sm text-slate-500">
+                {formatDate(detailData.created_at)}
+              </p>
+            </div>
+            <div className="flex justify-end pt-4">
+              <button
+                type="button"
+                onClick={closeDetailModal}
+                className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
