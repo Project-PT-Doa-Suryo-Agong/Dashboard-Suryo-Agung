@@ -267,7 +267,7 @@ export default function CreativeDashboard() {
                 Content Stats Revenue
               </h3>
               <p className="text-xs text-slate-500 md:text-sm lg:text-base">
-                  Akumulasi monetasi dari data content stats.
+                Akumulasi monetasi dari data content stats.
               </p>
             </div>
             <div className="flex flex-shrink-0 items-center gap-2">
@@ -331,8 +331,8 @@ export default function CreativeDashboard() {
                     <p className="">{item.label}</p>
                   </div>
                   <div className="rounded-lg bg-primary/10 p-2">
-                      <ArrowRight className="h-2 w-2 flex-shrink-0 md:h-4 md:w-4" />
-                    </div>
+                    <ArrowRight className="h-2 w-2 flex-shrink-0 md:h-4 md:w-4" />
+                  </div>
                 </div>
               </Link>
             ))}
